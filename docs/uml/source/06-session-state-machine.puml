@@ -1,0 +1,15 @@
+@startuml QR-Guard-Session-State-Machine
+skinparam monochrome true
+skinparam shadowing false
+
+title Session Lifecycle
+
+[*] --> NotStarted
+
+NotStarted --> Active : instructor clicks "Start"
+
+Active --> Closed : instructor clicks "Stop"\nOR attendance window expires
+
+Closed --> [*]
+
+@enduml

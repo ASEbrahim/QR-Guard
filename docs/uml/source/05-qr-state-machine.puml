@@ -1,0 +1,19 @@
+@startuml QR-Guard-QR-State-Machine
+skinparam monochrome true
+skinparam shadowing false
+
+title QR Code Lifecycle
+
+[*] --> Idle
+
+Idle --> Active : instructor starts session
+
+Active --> Refreshing : 25-sec timer expires
+Refreshing --> Active : new token generated\n& pushed via WebSocket
+
+Active --> Expired : instructor stops session\nOR attendance window expires
+Refreshing --> Expired : instructor stops session\nOR attendance window expires
+
+Expired --> Idle : session closed
+
+@enduml

@@ -1,0 +1,72 @@
+@startuml QR-Guard-Sequence
+skinparam monochrome true
+skinparam shadowing false
+hide footbox
+
+actor "Student" as student <<actor>>
+participant "Web UI" as ui <<boundary>>
+participant "Scan Controller" as ctrl <<control>>
+participant "ip-api.com" as ipapi <<control>>
+database "Database" as db <<entity>>
+
+student -> ui: Tap "Scan"
+activate ui
+ui -> ui: Activate camera,\ndecode QR payload
+ui -> ui: Request GPS from browser\n(Geolocation API)
+ui -> ctrl: POST scan request\n(QR payload, GPS + accuracy,\ndevice fingerprint, client IP)
+activate ctrl
+ctrl -> ctrl: Validate QR token against\ncurrent refresh cycle
+
+break [QR expired]
+    ctrl --> ui: "QR expired — wait for refresh"
+    ui --> student: Show error
+end
+
+ctrl -> db: Lookup student's bound\ndevice fingerprint
+activate db
+db --> ctrl: Return stored fingerprint
+deactivate db
+
+break [device mismatch]
+    ctrl --> ui: "Device not recognized"
+    ui --> student: Show error
+end
+
+ctrl -> ipapi: GET /json/{studentIP}
+activate ipapi
+ipapi --> ctrl: Return country,\nVPN/proxy flag
+deactivate ipapi
+
+break [country ≠ Kuwait OR\nVPN/proxy = true]
+    ctrl --> ui: "Location verification failed"
+    ui --> student: Show error
+end
+
+ctrl -> ctrl: Check GPS accuracy field\n(reject if > 150m or === 0)
+
+break [GPS accuracy suspicious]
+    ctrl --> ui: "Location verification failed"
+    ui --> student: Show error
+end
+
+ctrl -> db: PostGIS ST_DWithin\n(student GPS, geofence, radius + 15m)
+activate db
+db --> ctrl: Return in/out result
+deactivate db
+
+break [outside geofence]
+    ctrl --> ui: "Outside classroom area"
+    ui --> student: Show error
+end
+
+ctrl -> db: INSERT attendance record\n(student ID, session ID,\ntimestamp, GPS, IP,\naccuracy, device hash)
+activate db
+db --> ctrl: Confirm write
+deactivate db
+
+ctrl --> ui: Green checkmark +\n"Attendance recorded"
+deactivate ctrl
+ui --> student: Display confirmation
+deactivate ui
+
+@enduml

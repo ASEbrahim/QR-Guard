@@ -1,0 +1,135 @@
+@startuml QR-Guard-Class-Diagram
+skinparam monochrome true
+skinparam shadowing false
+
+abstract class "User" as user {
+  - userId: String
+  - email: String
+  - passwordHash: String
+  - name: String
+  - emailVerified: Boolean
+  - createdAt: DateTime
+  --
+  + login(): Boolean
+  + verifyEmail(token): Boolean
+  + resetPassword(): void
+}
+
+class "Student" as student {
+  - universityId: String
+  - deviceFingerprint: String
+  - deviceBoundAt: DateTime
+  --
+  + scan(qrPayload, gps, ip): ScanResult
+  + enrollInCourse(code): Boolean
+  + rebindDevice(): Boolean
+  + viewAttendance(): List<Attendance>
+}
+
+class "Instructor" as inst {
+  - employeeId: String
+  --
+  + createCourse(): Course
+  + startSession(course): Session
+  + stopSession(session): void
+  + generateReport(course): Report
+  + overrideAttendance(stu, sess, stat, rsn): void
+}
+
+class "Course" as course {
+  - courseId: String
+  - name: String
+  - code: String
+  - section: String
+  - semester: String
+  - enrollmentCode: String
+  - geofence: Geofence
+  - warningThreshold: Float
+  - qrRefreshInterval: Integer
+  - attendanceWindow: Integer
+  --
+  + addStudent(student): Boolean
+  + removeStudent(student): void
+  + getEnrolledStudents(): List<Student>
+  + calculateAttendance(student): Float
+}
+
+class "Session" as session {
+  - sessionId: String
+  - startTime: DateTime
+  - endTime: DateTime
+  - status: String
+  --
+  + start(): void
+  + stop(): void
+  + getAttendanceList(): List<Attendance>
+}
+
+class "QRToken" as qrtoken {
+  - tokenId: String
+  - payload: String
+  - generatedAt: DateTime
+  - expiresAt: DateTime
+  - isUsed: Boolean
+  --
+  + generate(session, geofence): QRToken
+  + validate(payload): Boolean
+  + refresh(): QRToken
+}
+
+class "Attendance" as attendance {
+  - attendanceId: String
+  - timestamp: DateTime
+  - gpsLat: Float
+  - gpsLng: Float
+  - gpsAccuracy: Float
+  - ipAddress: String
+  - deviceHash: String
+  - status: String
+  --
+  + record(): Boolean
+  + markExcused(reason): void
+}
+
+class "Geofence" as geofence {
+  - centerLat: Float
+  - centerLng: Float
+  - radius: Float
+  --
+  + contains(lat, lng): Boolean
+}
+
+class "AuditLog" as audit {
+  - logId: String
+  - timestamp: DateTime
+  - userId: String
+  - action: String
+  - details: String
+  - result: String
+  --
+  + append(entry): void
+}
+
+class "Report" as report {
+  - reportId: String
+  - courseId: String
+  - generatedAt: DateTime
+  - type: String
+  --
+  + generatePerSession(): String
+  + generatePerStudent(): String
+  + exportCSV(): File
+}
+
+student --|> user
+inst --|> user
+course "1" *-- "1..*" session
+session "1" *-- "1..*" qrtoken
+course "1" *-- "1" geofence
+course "0..*" o-- "0..*" student
+session "1" -- "1..*" attendance
+student "1" -- "0..*" attendance
+inst "«creates»" ..> report
+inst "«logs override»" ..> audit
+
+@enduml

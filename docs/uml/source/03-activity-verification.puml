@@ -1,0 +1,63 @@
+@startuml QR-Guard-Activity
+skinparam monochrome true
+skinparam shadowing false
+skinparam nodesep 70
+skinparam ranksep 70
+skinparam padding 5
+
+start
+:Student taps "Scan";
+:Activate camera &\ndecode QR payload;
+:Request GPS from browser;
+
+if (  QR token valid?  ) then (  [No]  )
+  :Display "QR expired — wait for refresh";
+  stop
+else (  [Yes]  )
+endif
+
+:Lookup device fingerprint\nfrom database;
+
+if (  Device matches?  ) then (  [No]  )
+  :Display "Device not recognized";
+  stop
+else (  [Yes]  )
+endif
+
+:Call ip-api.com\nwith student IP;
+
+if (  Country = Kuwait AND  \n  no VPN/proxy?  ) then (  [No]  )
+  :Display "Location verification failed";
+  stop
+else (  [Yes]  )
+endif
+
+if (  GPS accuracy ≤ 150m  \n  AND ≠ 0?  ) then (  [No]  )
+  :Display "Location verification failed";
+  stop
+else (  [Yes]  )
+endif
+
+:Query PostGIS ST_DWithin\n(GPS vs geofence + 15m margin);
+
+if (  Within geofence?  ) then (  [No]  )
+  :Display "Outside classroom area";
+  stop
+else (  [Yes]  )
+endif
+
+fork
+  :Record attendance\n(student ID, session ID,\ntimestamp, GPS, IP,\naccuracy, device hash);
+fork again
+  :Log scan attempt\nto audit log;
+end fork
+
+if (  Attendance % dropped  \n  below threshold?  ) then (  [Yes]  )
+  :Queue warning email;
+else (  [No]  )
+endif
+
+:Display "Attendance recorded" ✓;
+stop
+
+@enduml

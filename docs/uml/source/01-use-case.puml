@@ -1,0 +1,53 @@
+@startuml QR-Guard-UseCase
+left to right direction
+skinparam monochrome true
+skinparam shadowing false
+
+actor "Student" as student
+actor "Instructor" as instructor
+actor "System" as system
+
+rectangle "QR-Guard" {
+    usecase "Register / Login" as UC_Login
+
+    usecase "Enroll in course" as UC_Enroll
+    usecase "Scan QR code" as UC_Scan
+    usecase "View attendance history" as UC_History
+
+    usecase "Manage course" as UC_Manage
+    usecase "Start QR session" as UC_Start
+    usecase "View reports" as UC_Reports
+    usecase "Manual override" as UC_Override
+
+    usecase "Send warning email" as UC_Warn
+    usecase "Auto-close session" as UC_Close
+
+    usecase "Verify location" as UC_Loc
+    usecase "Verify device" as UC_Dev
+    usecase "Verify IP" as UC_IP
+}
+
+student -- UC_Login
+instructor -- UC_Login
+
+student -- UC_Enroll
+student -- UC_Scan
+student -- UC_History
+
+instructor -- UC_Manage
+instructor -- UC_Start
+instructor -- UC_Reports
+instructor -- UC_Override
+
+UC_Warn -- system
+UC_Close -- system
+
+UC_Scan ..> UC_Loc : <<include>>
+UC_Scan ..> UC_Dev : <<include>>
+UC_Scan ..> UC_IP : <<include>>
+
+' By using <.. instead of ..>, the arrow still correctly points to the base use case,
+' but it instructs the layout engine to place the extensions on the right side.
+UC_Scan <.. UC_Warn : <<extend>>
+UC_Start <.. UC_Close : <<extend>>
+@enduml
