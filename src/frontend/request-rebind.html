@@ -7,18 +7,23 @@
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Request Device Rebind</h1>
+  <nav class="nav">
+    <a href="/" class="nav-brand">QR-Guard</a>
+    <div class="nav-links"><a href="/student/dashboard.html">Dashboard</a></div>
+  </nav>
+
+  <div class="container" style="max-width:520px;">
     <div id="error" class="message error"></div>
     <div id="success" class="message success"></div>
 
-    <div class="card">
-      <p>Your account is bound to a specific device. If you need to switch devices, click below to receive a rebind link via email.</p>
-      <p class="text-muted mt-1">You can only rebind once per semester.</p>
-      <button id="rebindBtn" class="btn btn-primary btn-block mt-2">Send Rebind Link</button>
+    <div class="card" style="text-align:center; padding:2.5rem 2rem;">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">&#128241;</div>
+      <h1 style="margin-bottom:0.5rem;">Device Rebind</h1>
+      <p class="text-muted" style="margin-bottom:1.5rem;">
+        Your account is bound to one device. To switch, we'll send a rebind link to your email. You can only rebind once per semester.
+      </p>
+      <button id="rebindBtn" class="btn btn-primary btn-lg">Send Rebind Link</button>
     </div>
-
-    <p class="text-center text-muted mt-2"><a href="/student/dashboard.html">Back to dashboard</a></p>
   </div>
 
   <script src="/scripts/api.js"></script>
@@ -30,6 +35,7 @@
       if (res.ok) {
         showSuccess('success', data.message);
         document.getElementById('rebindBtn').disabled = true;
+        document.getElementById('rebindBtn').textContent = 'Link Sent';
       } else {
         showError('error', data.error);
       }

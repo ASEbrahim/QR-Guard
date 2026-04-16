@@ -7,11 +7,23 @@
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
-  <div class="container text-center">
-    <h1>Email Verification</h1>
-    <div id="error" class="message error"></div>
-    <div id="success" class="message success"></div>
-    <p id="loading" class="text-muted">Verifying your email...</p>
+  <div class="auth-page">
+    <div class="auth-brand">
+      <h1>QR-Guard</h1>
+    </div>
+
+    <div id="error" class="message error" style="max-width:420px;"></div>
+    <div id="success" class="message success" style="max-width:420px;"></div>
+
+    <div class="auth-card" style="text-align:center;">
+      <div id="loading">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">&#9989;</div>
+        <p class="text-muted">Verifying your email...</p>
+      </div>
+      <div id="doneMsg" style="display:none;">
+        <a href="/login.html" class="btn btn-primary btn-lg" style="margin-top:1rem;">Go to Login</a>
+      </div>
+    </div>
   </div>
 
   <script src="/scripts/api.js"></script>
@@ -36,6 +48,7 @@
 
       if (res.ok) {
         showSuccess('success', data.message);
+        document.getElementById('doneMsg').style.display = '';
       } else {
         showError('error', data.error || 'Verification failed');
       }
