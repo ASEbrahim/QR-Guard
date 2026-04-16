@@ -15,6 +15,13 @@
       "when": 1776351854260,
       "tag": "0001_sudden_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776352493980,
+      "tag": "0002_known_aqueduct",
+      "breakpoints": true
     }
   ]
 }

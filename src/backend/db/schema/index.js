@@ -6,3 +6,4 @@ export { sessions } from './session.schema.js';
 export { qrTokens } from './qr-token.schema.js';
 export { attendance } from './attendance.schema.js';
 export { auditLog } from './audit-log.schema.js';
+export { warningEmailLog } from './warning-email-log.schema.js';
