@@ -76,11 +76,19 @@
           closed: '<span class="badge badge-warning">Closed</span>',
           cancelled: '<span class="badge badge-danger">Cancelled</span>',
         }[s.status];
+        const actions = [];
+        if (s.status === 'scheduled') {
+          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Start</a>`);
+          actions.push(`<button class="btn btn-danger" onclick="cancelSession('${s.sessionId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Cancel</button>`);
+        }
+        if (s.status === 'active') {
+          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary" style="padding:0.25rem 0.5rem;font-size:0.75rem;">View QR</a>`);
+        }
         return `<tr>
           <td>${start.toLocaleDateString()}</td>
           <td>${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
           <td>${statusBadge}</td>
-          <td>${s.status === 'scheduled' ? `<button class="btn btn-danger" onclick="cancelSession('${s.sessionId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Cancel</button>` : ''}</td>
+          <td style="display:flex;gap:0.25rem;">${actions.join('')}</td>
         </tr>`;
       }).join('');
 

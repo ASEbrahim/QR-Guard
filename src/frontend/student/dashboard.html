@@ -57,10 +57,13 @@
       }
 
       container.innerHTML = courses.map(c => `
-        <div class="card">
-          <h2>${c.code} — ${c.name}</h2>
-          <p class="text-muted">Section ${c.section} · ${c.semester}</p>
-          <p class="mt-1">Attendance: <strong>${c.attendancePct ?? 'N/A'}</strong></p>
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2>${c.code} — ${c.name}</h2>
+            <p class="text-muted">Section ${c.section} · ${c.semester}</p>
+            <p class="mt-1">Attendance: <strong>${c.attendancePct !== null && c.attendancePct !== undefined ? c.attendancePct.toFixed(1) + '%' : 'N/A'}</strong></p>
+          </div>
+          <a href="/student/scan.html" class="btn btn-primary" style="white-space:nowrap;">Scan QR</a>
         </div>
       `).join('');
     }
