@@ -34,13 +34,18 @@
           <div class="form-group"><label>Semester End</label><input type="date" id="cEnd" required></div>
         </div>
 
-        <div class="form-group mt-2">
-          <label>Weekly Schedule (JSON)</label>
-          <textarea id="cSchedule" rows="3" placeholder='[{"day":"mon","start":"09:00","end":"10:15"},{"day":"wed","start":"09:00","end":"10:15"}]' required></textarea>
+        <div class="mt-2">
+          <label style="margin-bottom:0.5rem;">Weekly Schedule</label>
+          <div id="scheduleSlots"></div>
+          <button type="button" class="btn btn-secondary mt-1" id="addSlotBtn" style="font-size:0.875rem;">+ Add time slot</button>
         </div>
 
         <h2 class="mt-2">Geofence</h2>
         <p class="text-muted">Click the map to set the center point.</p>
+        <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+          <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;">
+          <button type="button" class="btn btn-secondary" id="mapSearchBtn">Search</button>
+        </div>
         <div id="map"></div>
         <input type="hidden" id="cLat">
         <input type="hidden" id="cLng">
@@ -76,9 +81,20 @@
     function initMap() {
       // Default: AUK campus approximate location
       map = L.map('map').setView([29.3117, 47.9835], 16);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
+      const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri', maxZoom: 19
+      });
+      const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+      });
+      const street = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OSM &copy; CARTO', maxZoom: 20
+      });
+
+      satellite.addTo(map);
+      labels.addTo(map);
+
+      L.control.layers({ 'Satellite': satellite, 'Street': street }, { 'Labels': labels }, { position: 'topright' }).addTo(map);
 
       map.on('click', (e) => {
         const { lat, lng } = e.latlng;
@@ -98,7 +114,90 @@
           circle.setRadius(parseInt(document.getElementById('cRadius').value) || 100);
         }
       });
+
+      // Location search via Nominatim (free, no API key)
+      const searchInput = document.getElementById('mapSearch');
+      const searchBtn = document.getElementById('mapSearchBtn');
+
+      async function searchLocation() {
+        const q = searchInput.value.trim();
+        if (!q) return;
+        searchBtn.textContent = '...';
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          const results = await res.json();
+          if (results.length === 0) { searchBtn.textContent = 'Not found'; setTimeout(() => searchBtn.textContent = 'Search', 2000); return; }
+          const { lat, lon } = results[0];
+          map.setView([parseFloat(lat), parseFloat(lon)], 17);
+          searchBtn.textContent = 'Search';
+        } catch { searchBtn.textContent = 'Search'; }
+      }
+
+      searchBtn.addEventListener('click', searchLocation);
+      searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchLocation(); } });
     }
+
+    // --- Schedule slot builder ---
+    const DAYS = [
+      { value: 'sun', label: 'Sunday' },
+      { value: 'mon', label: 'Monday' },
+      { value: 'tue', label: 'Tuesday' },
+      { value: 'wed', label: 'Wednesday' },
+      { value: 'thu', label: 'Thursday' },
+      { value: 'fri', label: 'Friday' },
+      { value: 'sat', label: 'Saturday' },
+    ];
+
+    // Common AUK class times
+    const TIMES = [
+      '08:00','08:30','09:00','09:15','09:30','10:00','10:15','10:30',
+      '11:00','11:15','11:30','12:00','12:15','12:30','13:00','13:15',
+      '13:30','14:00','14:15','14:30','15:00','15:15','15:30','16:00',
+      '16:15','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'
+    ];
+
+    let slotCount = 0;
+
+    function addSlot() {
+      slotCount++;
+      const id = slotCount;
+      const container = document.getElementById('scheduleSlots');
+      const row = document.createElement('div');
+      row.id = `slot-${id}`;
+      row.style.cssText = 'display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem;';
+      row.innerHTML = `
+        <select data-field="day" style="flex:1;">
+          ${DAYS.map(d => `<option value="${d.value}">${d.label}</option>`).join('')}
+        </select>
+        <select data-field="start" style="flex:0.7;">
+          ${TIMES.map(t => `<option value="${t}">${t}</option>`).join('')}
+        </select>
+        <span style="color:#64748b;">to</span>
+        <select data-field="end" style="flex:0.7;">
+          ${TIMES.map(t => `<option value="${t}"${t === '10:15' ? ' selected' : ''}>${t}</option>`).join('')}
+        </select>
+        <button type="button" onclick="document.getElementById('slot-${id}').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.25rem;">&times;</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function getScheduleFromSlots() {
+      const slots = document.querySelectorAll('#scheduleSlots > div');
+      const schedule = [];
+      slots.forEach(slot => {
+        const day = slot.querySelector('[data-field="day"]').value;
+        const start = slot.querySelector('[data-field="start"]').value;
+        const end = slot.querySelector('[data-field="end"]').value;
+        schedule.push({ day, start, end });
+      });
+      return schedule;
+    }
+
+    document.getElementById('addSlotBtn').addEventListener('click', addSlot);
+    // Start with one slot
+    addSlot();
 
     async function loadCourses() {
       const res = await apiGet('/api/courses');
@@ -132,11 +231,9 @@
         return;
       }
 
-      let schedule;
-      try {
-        schedule = JSON.parse(document.getElementById('cSchedule').value);
-      } catch {
-        showError('createError', 'Invalid weekly schedule JSON.');
+      const schedule = getScheduleFromSlots();
+      if (schedule.length === 0) {
+        showError('createError', 'Add at least one time slot.');
         return;
       }
 

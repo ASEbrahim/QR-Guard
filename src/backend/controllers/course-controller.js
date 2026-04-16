@@ -272,6 +272,52 @@ export async function enrollInCourse(req, res) {
 }
 
 /**
+ * POST /api/enroll
+ * Student enrolls using just the 6-char enrollment code (no course UUID needed).
+ */
+export async function enrollByCode(req, res) {
+  const parsed = enrollSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+
+  const [course] = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.enrollmentCode, parsed.data.enrollmentCode))
+    .limit(1);
+
+  if (!course) return res.status(404).json({ error: 'Invalid enrollment code' });
+
+  const courseId = course.courseId;
+
+  const [existing] = await db
+    .select()
+    .from(enrollments)
+    .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, req.session.userId)))
+    .limit(1);
+
+  if (existing && !existing.removedAt) {
+    return res.status(409).json({ error: 'Already enrolled in this course' });
+  }
+
+  if (existing && existing.removedAt) {
+    await db
+      .update(enrollments)
+      .set({ removedAt: null, enrolledAt: new Date() })
+      .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, req.session.userId)));
+    return res.json({ message: 'Re-enrolled successfully', courseName: `${course.code} — ${course.name}` });
+  }
+
+  await db.insert(enrollments).values({
+    courseId,
+    studentId: req.session.userId,
+  });
+
+  res.json({ message: 'Enrolled successfully', courseName: `${course.code} — ${course.name}` });
+}
+
+/**
  * DELETE /api/courses/:id/students/:studentId
  * Instructor soft-removes a student (sets removed_at, history retained).
  */

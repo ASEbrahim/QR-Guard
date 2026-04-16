@@ -5,6 +5,7 @@ import {
   getCourse,
   updateCourse,
   enrollInCourse,
+  enrollByCode,
   removeStudent,
   addSession,
   updateSession,
@@ -19,6 +20,7 @@ router.use(requireAuth);
 
 router.post('/', requireRole('instructor'), createCourse);
 router.get('/', listCourses);
+router.post('/enroll', requireRole('student'), enrollByCode);
 router.get('/:id', getCourse);
 router.put('/:id', requireRole('instructor'), updateCourse);
 router.post('/:id/enroll', requireRole('student'), enrollInCourse);
