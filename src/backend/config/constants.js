@@ -32,3 +32,8 @@ export const AUK_EMAIL_REGEX = /^[^@\s]+@auk\.edu\.kw$/i;
 
 // Session config
 export const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// Scan pipeline
+export const GPS_MAX_ACCURACY_M = 150;
+export const IP_API_TIMEOUT_MS = 3000;
+export const IP_API_EXPECTED_COUNTRY = 'Kuwait';

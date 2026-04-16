@@ -15,6 +15,8 @@ export default [
         clearInterval: 'readonly',
         URL: 'readonly',
         fetch: 'readonly',
+        Buffer: 'readonly',
+        AbortController: 'readonly',
         // Vitest globals
         describe: 'readonly',
         it: 'readonly',
@@ -31,6 +33,7 @@ export default [
       'no-console': 'off',
       'prefer-const': 'error',
       'no-var': 'error',
+      'no-useless-assignment': 'off',
     },
   },
   {
