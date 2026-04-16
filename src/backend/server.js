@@ -7,9 +7,12 @@ import helmet from 'helmet';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { pool } from './config/database.js';
+import { pool, db } from './config/database.js';
 import { SESSION_MAX_AGE_MS } from './config/constants.js';
 import { initSocketIO } from './services/socket-service.js';
+import { cleanupExpiredTokens } from './services/qr-service.js';
+import { sessions } from './db/schema/index.js';
+import { eq } from 'drizzle-orm';
 import authRoutes from './routes/auth-routes.js';
 import courseRoutes from './routes/course-routes.js';
 import sessionRoutes from './routes/session-routes.js';
@@ -29,7 +32,7 @@ app.use(helmet({
   noSniff: true,
 }));
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 app.use(globalLimiter);
 
 app.use(
@@ -84,6 +87,13 @@ initSocketIO(httpServer);
 const HOST = process.env.HOST || '0.0.0.0';
 httpServer.listen(PORT, HOST, () => {
   console.log(`QR-Guard server running on http://${HOST}:${PORT}`);
+
+  // Clean up expired QR tokens every 10 minutes
+  setInterval(cleanupExpiredTokens, 10 * 60 * 1000);
+  cleanupExpiredTokens(); // run once on startup
+
+  // Close any sessions left in 'active' state from a previous server instance
+  db.update(sessions).set({ status: 'closed', actualEnd: new Date() }).where(eq(sessions.status, 'active')).then(() => {}).catch(err => console.error('[startup] Failed to close orphaned sessions:', err.message));
 });
 
 export default app;

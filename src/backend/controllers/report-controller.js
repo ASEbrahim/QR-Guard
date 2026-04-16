@@ -95,8 +95,10 @@ export async function getPerStudentReport(req, res) {
     .where(and(eq(sessions.courseId, id), eq(sessions.status, 'closed')))
     .orderBy(sessions.scheduledStart);
 
-  const attendanceRows = await db.select().from(attendance)
-    .where(eq(attendance.studentId, studentId));
+  const sessionIds = closedSessions.map(s => s.sessionId);
+  const attendanceRows = sessionIds.length > 0
+    ? await db.select().from(attendance).where(and(eq(attendance.studentId, studentId), inArray(attendance.sessionId, sessionIds)))
+    : [];
   const attendanceMap = new Map(attendanceRows.map((row) => [row.sessionId, row]));
 
   const sessionStatuses = closedSessions.map((s) => {
@@ -144,10 +146,24 @@ export async function exportCsv(req, res) {
     .innerJoin(students, eq(enrollments.studentId, students.userId))
     .where(and(eq(enrollments.courseId, id), isNull(enrollments.removedAt)));
 
+  // Fetch ALL attendance rows for closed sessions in one query (avoids N+1)
+  const closedSessionIds = closedSessions.map((sess) => sess.sessionId);
+  const allAttendance = closedSessionIds.length > 0
+    ? await db.select().from(attendance).where(inArray(attendance.sessionId, closedSessionIds))
+    : [];
+
+  // Build a Map keyed by sessionId -> Map(studentId -> row)
+  const attendanceBySession = new Map();
+  for (const row of allAttendance) {
+    if (!attendanceBySession.has(row.sessionId)) {
+      attendanceBySession.set(row.sessionId, new Map());
+    }
+    attendanceBySession.get(row.sessionId).set(row.studentId, row);
+  }
+
   const rows = [];
   for (const sess of closedSessions) {
-    const attendanceRows = await db.select().from(attendance).where(eq(attendance.sessionId, sess.sessionId));
-    const attendanceMap = new Map(attendanceRows.map((a) => [a.studentId, a]));
+    const attendanceMap = attendanceBySession.get(sess.sessionId) || new Map();
 
     for (const s of enrolled) {
       const a = attendanceMap.get(s.studentId);

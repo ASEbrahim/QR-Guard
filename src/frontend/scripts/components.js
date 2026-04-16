@@ -9,6 +9,12 @@
  * @param {string} userName — display name (empty string if unknown yet)
  */
 function renderNav(userName) {
+  const skip = document.createElement('a');
+  skip.className = 'skip-link';
+  skip.href = '#main-content';
+  skip.textContent = 'Skip to main content';
+  document.body.prepend(skip);
+
   const nav = document.createElement('nav');
   nav.className = 'nav';
   nav.innerHTML = `

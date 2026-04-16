@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { qrTokens } from '../db/schema/index.js';
 
@@ -101,4 +101,13 @@ export async function getCurrentToken(sessionId) {
 
   if (!token || new Date(token.expiresAt) < new Date()) return null;
   return token;
+}
+
+/** Cleans up expired QR tokens. Runs periodically to prevent table growth. */
+export async function cleanupExpiredTokens() {
+  try {
+    await db.execute(sql`DELETE FROM qr_tokens WHERE expires_at < now() - INTERVAL '1 hour'`);
+  } catch (err) {
+    console.error('[qr-service] Token cleanup failed:', err.message);
+  }
 }

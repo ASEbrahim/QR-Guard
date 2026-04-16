@@ -250,7 +250,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(141, 34, 34, 0.12);
+  box-shadow: 0 0 0 3px rgba(154,24,43,0.35);
 }
 
 input::placeholder { color: #94a3b8; }
@@ -688,6 +688,10 @@ th {
   color: white;
   margin-bottom: 0.25rem;
 }
+
+/* --- Skip-to-content (accessibility) --- */
+.skip-link { position: absolute; transform: translateY(-100%); background: var(--primary); color: white; padding: 0.5rem 1rem; z-index: 9999; font-weight: 600; text-decoration: none; }
+.skip-link:focus { transform: translateY(0); }
 
 /* --- Mobile responsive --- */
 @media (max-width: 640px) {
