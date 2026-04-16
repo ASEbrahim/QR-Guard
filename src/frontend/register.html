@@ -117,7 +117,13 @@
       const data = await res.json();
 
       if (res.ok) {
-        window.location.href = '/login.html';
+        document.getElementById('verifyCard').innerHTML = `
+          <div style="text-align:center;padding:1rem 0;">
+            <div style="font-size:3rem;margin-bottom:0.75rem;">&#10003;</div>
+            <h2 style="color:var(--success);margin-bottom:0.5rem;">Email Verified!</h2>
+            <p class="text-muted" style="margin-bottom:1.5rem;">Your account is ready. You can now log in.</p>
+            <a href="/login.html" class="btn btn-primary btn-lg">Go to Login</a>
+          </div>`;
       } else {
         showError('verifyError', data.error);
       }

@@ -20,14 +20,14 @@ import {
 
 const registerSchema = z
   .object({
-    email: z.string().email().refine((e) => AUK_EMAIL_REGEX.test(e), {
+    email: z.string({ required_error: 'Email is required' }).email('Enter a valid email').refine((e) => AUK_EMAIL_REGEX.test(e), {
       message: 'Must be an @auk.edu.kw email address',
     }),
-    password: z.string().min(PASSWORD_MIN_LENGTH),
-    name: z.string().min(1).max(200),
+    password: z.string({ required_error: 'Password is required' }).min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`),
+    name: z.string({ required_error: 'Name is required' }).min(1, 'Name is required').max(200),
     role: z.enum(['student', 'instructor']),
-    universityId: z.string().min(1).optional(),
-    employeeId: z.string().min(1).optional(),
+    universityId: z.string().min(1, 'University ID is required').nullish(),
+    employeeId: z.string().min(1, 'Employee ID is required').nullish(),
   })
   .refine(
     (data) => {
@@ -35,13 +35,13 @@ const registerSchema = z
       if (data.role === 'instructor') return !!data.employeeId;
       return false;
     },
-    { message: 'Students require universityId, instructors require employeeId' },
+    { message: 'University ID is required' },
   );
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
-  deviceFingerprint: z.string().optional(),
+  password: z.string().min(1),
+  deviceFingerprint: z.string().nullish(),
 });
 
 const resetPasswordSchema = z.object({
