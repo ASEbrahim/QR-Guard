@@ -7,13 +7,13 @@
 }
 
 :root {
-  /* AUK Brand — change these to retheme the entire app */
-  --primary: #1B3A5C;
-  --primary-hover: #142d47;
-  --primary-light: #e8eef5;
-  --accent: #C5A55A;
-  --accent-hover: #b8963e;
-  --accent-light: #fdf8ee;
+  /* AUK Brand: Garnet & Gold — change these to retheme the entire app */
+  --primary: #862633;
+  --primary-hover: #6e1f2a;
+  --primary-light: #f9ecee;
+  --accent: #C6993E;
+  --accent-hover: #b08530;
+  --accent-light: #fdf6e8;
 
   /* Semantic colors */
   --danger: #dc2626;

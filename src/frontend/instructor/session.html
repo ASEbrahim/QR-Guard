@@ -94,6 +94,16 @@
     <div class="nav-links"><a href="javascript:history.back()">&larr; Back to Course</a></div>
   </nav>
 
+  <!-- Error state (hidden by default) -->
+  <div class="session-layout" id="errorView" style="display:none;">
+    <div style="padding:3rem 1rem; text-align:center;">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">&#9888;</div>
+      <h2 id="errorTitle" style="color:var(--danger); margin-bottom:0.5rem;">Error</h2>
+      <p class="text-muted mb-2" id="errorMsg"></p>
+      <a href="javascript:history.back()" class="btn btn-primary btn-lg">Back to Course</a>
+    </div>
+  </div>
+
   <div class="session-layout" id="activeView">
     <div class="session-status status-active" id="statusBadge">
       <span class="status-dot"></span>
@@ -141,8 +151,10 @@
       const data = await res.json();
 
       if (!res.ok) {
-        document.getElementById('statusText').textContent = data.error || 'Failed to start';
-        document.getElementById('qrLoading').textContent = data.error || 'Failed';
+        document.getElementById('activeView').style.display = 'none';
+        document.getElementById('errorView').style.display = '';
+        document.getElementById('errorTitle').textContent = 'Could not start session';
+        document.getElementById('errorMsg').textContent = data.error || 'Something went wrong.';
         return;
       }
 
