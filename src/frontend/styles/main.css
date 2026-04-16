@@ -118,8 +118,8 @@ body {
   padding: 1.5rem 1.5rem;
 }
 
-h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
-h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.75rem; }
+h1 { font-size: clamp(1.25rem, 4vw, 1.5rem); font-weight: 700; margin-bottom: 1.5rem; }
+h2 { font-size: clamp(1.05rem, 3vw, 1.2rem); font-weight: 600; margin-bottom: 0.75rem; }
 
 /* --- Cards --- */
 .card {
@@ -279,10 +279,17 @@ button:active:not(.password-toggle), .btn:active {
 
 .nav-brand {
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: clamp(0.95rem, 3vw, 1.15rem);
   color: var(--accent);
   text-decoration: none;
   letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-brand img {
+  height: clamp(24px, 5vw, 32px);
 }
 
 .nav-left {
