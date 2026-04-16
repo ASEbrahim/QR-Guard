@@ -41,13 +41,6 @@
     </div>
   </div>
 
-  <script>
-    function togglePassword(id, btn) {
-      const input = document.getElementById(id);
-      if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
-      else { input.type = 'password'; btn.textContent = 'Show'; }
-    }
-  </script>
   <script src="/scripts/api.js"></script>
   <script src="/scripts/fingerprint.js"></script>
   <script>
@@ -79,12 +72,18 @@
       } else {
         if (data.code === 'not_verified') {
           const errEl = document.getElementById('error');
-          errEl.innerHTML = `${data.error} <a href="#" id="resendLink" style="color:var(--primary);font-weight:600;">Resend verification email</a>`;
+          errEl.textContent = data.error + ' ';
+          const resendLink = document.createElement('a');
+          resendLink.href = '#';
+          resendLink.id = 'resendLink';
+          resendLink.style.cssText = 'color:var(--primary);font-weight:600;';
+          resendLink.textContent = 'Resend verification email';
+          errEl.appendChild(resendLink);
           errEl.style.display = 'block';
-          document.getElementById('resendLink').addEventListener('click', async (ev) => {
+          resendLink.addEventListener('click', async (ev) => {
             ev.preventDefault();
             const r = await apiPost('/api/auth/resend-verification', { email: document.getElementById('email').value });
-            if (r && r.ok) { const d = await r.json(); errEl.innerHTML = d.message; errEl.className = 'message success'; }
+            if (r && r.ok) { const d = await r.json(); errEl.textContent = d.message; errEl.className = 'message success'; }
           });
         } else {
           showError('error', data.error || 'Login failed');

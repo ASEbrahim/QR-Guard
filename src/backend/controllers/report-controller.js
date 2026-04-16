@@ -1,4 +1,4 @@
-import { eq, and, isNull, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, isNull, gte, lte, sql, inArray } from 'drizzle-orm';
 import { stringify } from 'csv-stringify/sync';
 import { db } from '../config/database.js';
 import {
@@ -30,29 +30,42 @@ export async function getPerSessionReport(req, res) {
     .innerJoin(users, eq(enrollments.studentId, users.userId))
     .where(and(eq(enrollments.courseId, id), isNull(enrollments.removedAt)));
 
-  // Build report: for each session, LEFT JOIN enrolled students to attendance
+  // Fetch ALL attendance rows for the course in one query (avoids N+1)
+  const closedSessionIds = closedSessions.map((sess) => sess.sessionId);
+  const allAttendance = closedSessionIds.length > 0
+    ? await db.select().from(attendance).where(inArray(attendance.sessionId, closedSessionIds))
+    : [];
+
+  // Build a Map keyed by sessionId → Map(studentId → row)
+  const attendanceBySession = new Map();
+  for (const row of allAttendance) {
+    if (!attendanceBySession.has(row.sessionId)) {
+      attendanceBySession.set(row.sessionId, new Map());
+    }
+    attendanceBySession.get(row.sessionId).set(row.studentId, row);
+  }
+
+  // Build report using the pre-fetched map
   const report = [];
   for (const sess of closedSessions) {
-    const attendanceRows = await db.select().from(attendance)
-      .where(eq(attendance.sessionId, sess.sessionId));
-    const attendanceMap = new Map(attendanceRows.map((a) => [a.studentId, a]));
+    const attendanceMap = attendanceBySession.get(sess.sessionId) || new Map();
 
-    const studentStatuses = enrolled.map((s) => {
-      const a = attendanceMap.get(s.studentId);
+    const studentStatuses = enrolled.map((enrolledStudent) => {
+      const attendanceRecord = attendanceMap.get(enrolledStudent.studentId);
       return {
-        studentId: s.studentId,
-        name: s.name,
-        status: a ? a.status : 'absent',
-        recordedAt: a?.recordedAt || null,
-        gpsLat: a?.gpsLat || null,
-        gpsLng: a?.gpsLng || null,
+        studentId: enrolledStudent.studentId,
+        name: enrolledStudent.name,
+        status: attendanceRecord ? attendanceRecord.status : 'absent',
+        recordedAt: attendanceRecord?.recordedAt || null,
+        gpsLat: attendanceRecord?.gpsLat || null,
+        gpsLng: attendanceRecord?.gpsLng || null,
       };
     });
 
     report.push({
       session: sess,
       students: studentStatuses,
-      presentCount: studentStatuses.filter((s) => s.status === 'present').length,
+      presentCount: studentStatuses.filter((enrolledStudent) => enrolledStudent.status === 'present').length,
       totalEnrolled: enrolled.length,
     });
   }
@@ -84,15 +97,15 @@ export async function getPerStudentReport(req, res) {
 
   const attendanceRows = await db.select().from(attendance)
     .where(eq(attendance.studentId, studentId));
-  const attendanceMap = new Map(attendanceRows.map((a) => [a.sessionId, a]));
+  const attendanceMap = new Map(attendanceRows.map((row) => [row.sessionId, row]));
 
   const sessionStatuses = closedSessions.map((s) => {
-    const a = attendanceMap.get(s.sessionId);
+    const row = attendanceMap.get(s.sessionId);
     return {
       sessionId: s.sessionId,
       date: s.scheduledStart,
-      status: a ? a.status : 'absent',
-      recordedAt: a?.recordedAt || null,
+      status: row ? row.status : 'absent',
+      recordedAt: row?.recordedAt || null,
     };
   });
 

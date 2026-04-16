@@ -25,7 +25,7 @@ export async function checkGeofence(courseId, lat, lng) {
   `);
 
   if (!result.rows || result.rows.length === 0) {
-    throw new ScanError('Course not found', 'outside_geofence');
+    throw new ScanError('Course not found', 'course_not_found');
   }
 
   if (!result.rows[0].within) {

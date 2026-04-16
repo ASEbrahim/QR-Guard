@@ -94,6 +94,16 @@ function setButtonLoading(btn) {
   return () => { btn.classList.remove('loading'); btn.textContent = original; };
 }
 
+/** Escape HTML to prevent XSS when inserting user data into innerHTML */
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/** Toggle password visibility (shared across auth pages) */
+function togglePassword(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+  else { input.type = 'password'; btn.textContent = 'Show'; }
+}
+
 /** Shows skeleton cards in a container */
 function showSkeletons(containerId, count = 3) {
   const el = document.getElementById(containerId);

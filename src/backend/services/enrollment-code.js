@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { courses } from '../db/schema/index.js';
-import { ENROLLMENT_CODE_LENGTH, ENROLLMENT_CODE_ALPHABET } from '../config/constants.js';
+import { ENROLLMENT_CODE_LENGTH, ENROLLMENT_CODE_ALPHABET, ENROLLMENT_CODE_MAX_RETRIES } from '../config/constants.js';
 
 /**
  * Generates a unique 6-character enrollment code.
@@ -12,9 +12,7 @@ import { ENROLLMENT_CODE_LENGTH, ENROLLMENT_CODE_ALPHABET } from '../config/cons
  * @returns {Promise<string>} A unique enrollment code
  */
 export async function generateEnrollmentCode() {
-  const maxRetries = 10;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  for (let attempt = 0; attempt < ENROLLMENT_CODE_MAX_RETRIES; attempt++) {
     const bytes = crypto.randomBytes(ENROLLMENT_CODE_LENGTH);
     let code = '';
     for (let i = 0; i < ENROLLMENT_CODE_LENGTH; i++) {

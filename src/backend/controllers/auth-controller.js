@@ -51,11 +51,13 @@ const resetPasswordSchema = z.object({
 
 // --- Helpers ---
 
-function generateToken() {
+/** Generates a 64-char hex token for password reset and device rebind links. */
+function generateHexToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
-function generateCode() {
+/** Generates a 6-digit numeric verification code for email verification. */
+function generateSixDigitCode() {
   return String(crypto.randomInt(100000, 999999));
 }
 
@@ -94,7 +96,7 @@ export async function register(req, res) {
   });
 
   // Create 6-digit verification code
-  const code = generateCode();
+  const code = generateSixDigitCode();
   await db.insert(emailVerificationTokens).values({
     token: code,
     userId: newUser.userId,
@@ -252,26 +254,32 @@ export async function verifyEmail(req, res) {
   if (record.usedAt) return res.status(400).json({ error: 'Token already used' });
   if (new Date(record.expiresAt) < new Date()) return res.status(400).json({ error: 'Token expired' });
 
-  // Mark token as used
-  await db
-    .update(emailVerificationTokens)
-    .set({ usedAt: new Date() })
-    .where(eq(emailVerificationTokens.token, token));
+  // Mark token as used + apply purpose-specific update in a single transaction
+  const purpose = record.purpose;
+  await db.transaction(async (tx) => {
+    await tx
+      .update(emailVerificationTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(emailVerificationTokens.token, token));
 
-  if (record.purpose === 'email_verify') {
-    await db
-      .update(users)
-      .set({ emailVerifiedAt: new Date() })
-      .where(eq(users.userId, record.userId));
+    if (purpose === 'email_verify') {
+      await tx
+        .update(users)
+        .set({ emailVerifiedAt: new Date() })
+        .where(eq(users.userId, record.userId));
+    } else if (purpose === 'device_rebind') {
+      await tx
+        .update(students)
+        .set({ deviceFingerprint: null, deviceBoundAt: null })
+        .where(eq(students.userId, record.userId));
+    }
+  });
+
+  if (purpose === 'email_verify') {
     return res.json({ message: 'Email verified successfully. You can now log in.' });
   }
 
-  if (record.purpose === 'device_rebind') {
-    // Clear the student's device fingerprint so they can bind a new one on next login
-    await db
-      .update(students)
-      .set({ deviceFingerprint: null, deviceBoundAt: null })
-      .where(eq(students.userId, record.userId));
+  if (purpose === 'device_rebind') {
     return res.json({ message: 'Device unbound. Log in from your new device to bind it.' });
   }
 
@@ -288,7 +296,7 @@ export async function forgotPassword(req, res) {
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user) {
-    const token = generateToken();
+    const token = generateHexToken();
     await db.insert(emailVerificationTokens).values({
       token,
       userId: user.userId,
@@ -312,7 +320,7 @@ export async function resendVerification(req, res) {
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user && !user.emailVerifiedAt) {
-    const code = generateCode();
+    const code = generateSixDigitCode();
     await db.insert(emailVerificationTokens).values({
       token: code,
       userId: user.userId,
@@ -372,7 +380,7 @@ export async function requestRebind(req, res) {
   const [user] = await db.select().from(users).where(eq(users.userId, req.session.userId)).limit(1);
   if (!user) return res.status(401).json({ error: 'User not found' });
 
-  const token = generateToken();
+  const token = generateHexToken();
   await db.insert(emailVerificationTokens).values({
     token,
     userId: user.userId,

@@ -108,14 +108,14 @@
 
     async function cancelSession(sessionId) {
       if (!confirm('Cancel this session?')) return;
-      await apiPatch(`/api/courses/${courseId}/sessions/${sessionId}`, { status: 'cancelled' });
-      loadCourse();
+      const res = await apiPatch(`/api/courses/${courseId}/sessions/${sessionId}`, { status: 'cancelled' });
+      if (res && res.ok) loadCourse();
     }
 
     async function removeStudent(studentId) {
       if (!confirm('Remove this student? Historical records will be retained.')) return;
-      await apiDelete(`/api/courses/${courseId}/students/${studentId}`);
-      loadCourse();
+      const res = await apiDelete(`/api/courses/${courseId}/students/${studentId}`);
+      if (res && res.ok) loadCourse();
     }
 
     document.getElementById('addSessionBtn').addEventListener('click', async () => {
@@ -123,17 +123,11 @@
       const end = document.getElementById('sessEnd').value;
       if (!start || !end) return;
 
-      await apiPost(`/api/courses/${courseId}/sessions`, {
+      const res = await apiPost(`/api/courses/${courseId}/sessions`, {
         scheduledStart: new Date(start).toISOString(),
         scheduledEnd: new Date(end).toISOString(),
       });
-      loadCourse();
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await apiPost('/api/auth/logout');
-      window.location.href = '/login.html';
+      if (res && res.ok) loadCourse();
     });
 
     loadCourse();

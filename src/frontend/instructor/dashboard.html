@@ -217,10 +217,10 @@
 
       container.innerHTML = courses.map(c => `
         <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable course-card">
-          <h2>${c.code} — ${c.name}</h2>
-          <p class="course-card-meta">Section ${c.section} · ${c.semester}</p>
+          <h2>${esc(c.code)} — ${esc(c.name)}</h2>
+          <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
-            <span class="enrollment-code">${c.enrollmentCode}</span>
+            <span class="enrollment-code">${esc(c.enrollmentCode)}</span>
           </div>
         </a>
       `).join('');
@@ -232,7 +232,7 @@
 
       const lat = parseFloat(document.getElementById('cLat').value);
       const lng = parseFloat(document.getElementById('cLng').value);
-      if (!lat || !lng) {
+      if (isNaN(lat) || isNaN(lng)) {
         showError('createError', 'Click the map to set a geofence center.');
         return;
       }
@@ -275,11 +275,6 @@
       loadCourses();
     })();
 
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await apiPost('/api/auth/logout');
-      window.location.href = '/login.html';
-    });
   </script>
 </body>
 </html>

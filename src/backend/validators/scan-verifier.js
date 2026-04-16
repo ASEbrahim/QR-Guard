@@ -44,7 +44,7 @@ export async function verifyScan(scanData) {
     await checkGeofence(tokenData.courseId, scanData.gpsLat, scanData.gpsLng);
 
     // All checks passed
-    result = { success: true, sessionId: tokenData.sessionId };
+    result = { success: true, sessionId: tokenData.sessionId, courseId: tokenData.courseId };
   } catch (err) {
     if (err instanceof ScanError) {
       result = { success: false, reason: err.code, message: err.message };

@@ -12,8 +12,12 @@ export const EMAIL_VERIFY_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const PASSWORD_RESET_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 export const DEVICE_REBIND_EXPIRY_MS = 60 * 60 * 1000; // 1 hour
 
+// AUK policy
+export const AUK_ABSENCE_LIMIT_PCT = 15;
+
 // Enrollment code
 export const ENROLLMENT_CODE_LENGTH = 6;
+export const ENROLLMENT_CODE_MAX_RETRIES = 10;
 // Excludes 0/O, 1/I/L to avoid confusion
 export const ENROLLMENT_CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 

@@ -3,8 +3,7 @@ import { db } from '../config/database.js';
 import { warningEmailLog, courses, users } from '../db/schema/index.js';
 import { calculateAttendancePct } from './attendance-calculator.js';
 import { sendEmail } from './email-service.js';
-
-const AUK_ABSENCE_LIMIT_PCT = 15; // AUK policy: 15% absence = exceeded
+import { AUK_ABSENCE_LIMIT_PCT } from '../config/constants.js';
 
 /**
  * Checks if a student's attendance % crossed below the course warning threshold

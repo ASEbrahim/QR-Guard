@@ -84,10 +84,8 @@ export async function handleScan(req, res) {
 
   // Check threshold for notifications (fires after every successful scan)
   try {
-    // Decode the QR payload to get courseId
-    const decoded = JSON.parse(Buffer.from(qrPayload, 'base64').toString('utf-8'));
-    if (decoded.courseId) {
-      await checkThresholdAndNotify(decoded.courseId, req.session.userId);
+    if (result.courseId) {
+      await checkThresholdAndNotify(result.courseId, req.session.userId);
     }
   } catch (err) {
     console.error('[scan-controller] Threshold check failed:', err.message);

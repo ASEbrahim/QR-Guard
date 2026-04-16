@@ -60,6 +60,38 @@ async function getCourseForInstructor(courseId, instructorId) {
   return course || null;
 }
 
+/**
+ * Shared enrollment logic: checks for existing enrollment, re-enrolls if soft-deleted,
+ * or creates a new enrollment row.
+ * @returns {{ status: number, body: object }}
+ */
+async function executeEnrollment(courseId, studentId, courseName) {
+  const [existing] = await db
+    .select()
+    .from(enrollments)
+    .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, studentId)))
+    .limit(1);
+
+  if (existing && !existing.removedAt) {
+    return { status: 409, body: { error: 'Already enrolled in this course' } };
+  }
+
+  if (existing && existing.removedAt) {
+    await db
+      .update(enrollments)
+      .set({ removedAt: null, enrolledAt: new Date() })
+      .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, studentId)));
+    const body = { message: 'Re-enrolled successfully' };
+    if (courseName) body.courseName = courseName;
+    return { status: 200, body };
+  }
+
+  await db.insert(enrollments).values({ courseId, studentId });
+  const body = { message: 'Enrolled successfully' };
+  if (courseName) body.courseName = courseName;
+  return { status: 200, body };
+}
+
 // --- Route handlers ---
 
 /**
@@ -243,32 +275,8 @@ export async function enrollInCourse(req, res) {
 
   if (!course) return res.status(404).json({ error: 'Invalid course or enrollment code' });
 
-  // Check for existing enrollment (including soft-deleted)
-  const [existing] = await db
-    .select()
-    .from(enrollments)
-    .where(and(eq(enrollments.courseId, id), eq(enrollments.studentId, req.session.userId)))
-    .limit(1);
-
-  if (existing && !existing.removedAt) {
-    return res.status(409).json({ error: 'Already enrolled in this course' });
-  }
-
-  if (existing && existing.removedAt) {
-    // Re-enroll: clear the removed_at
-    await db
-      .update(enrollments)
-      .set({ removedAt: null, enrolledAt: new Date() })
-      .where(and(eq(enrollments.courseId, id), eq(enrollments.studentId, req.session.userId)));
-    return res.json({ message: 'Re-enrolled successfully' });
-  }
-
-  await db.insert(enrollments).values({
-    courseId: id,
-    studentId: req.session.userId,
-  });
-
-  res.json({ message: 'Enrolled successfully' });
+  const result = await executeEnrollment(id, req.session.userId, null);
+  res.status(result.status).json(result.body);
 }
 
 /**
@@ -289,32 +297,8 @@ export async function enrollByCode(req, res) {
 
   if (!course) return res.status(404).json({ error: 'Invalid enrollment code' });
 
-  const courseId = course.courseId;
-
-  const [existing] = await db
-    .select()
-    .from(enrollments)
-    .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, req.session.userId)))
-    .limit(1);
-
-  if (existing && !existing.removedAt) {
-    return res.status(409).json({ error: 'Already enrolled in this course' });
-  }
-
-  if (existing && existing.removedAt) {
-    await db
-      .update(enrollments)
-      .set({ removedAt: null, enrolledAt: new Date() })
-      .where(and(eq(enrollments.courseId, courseId), eq(enrollments.studentId, req.session.userId)));
-    return res.json({ message: 'Re-enrolled successfully', courseName: `${course.code} — ${course.name}` });
-  }
-
-  await db.insert(enrollments).values({
-    courseId,
-    studentId: req.session.userId,
-  });
-
-  res.json({ message: 'Enrolled successfully', courseName: `${course.code} — ${course.name}` });
+  const result = await executeEnrollment(course.courseId, req.session.userId, `${course.code} — ${course.name}`);
+  res.status(result.status).json(result.body);
 }
 
 /**
@@ -347,8 +331,6 @@ export async function removeStudent(req, res) {
 
   res.json({ message: 'Student removed. Historical records retained.' });
 }
-
-// getEnrolledStudents moved to report-controller.js as getEnrolledStudentsWithPct (Sprint C)
 
 /**
  * POST /api/courses/:id/sessions
