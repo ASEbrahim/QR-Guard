@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <style>
+      .red-fill { fill: #8D2222; }
+      .gold-fill { fill: #D4A037; }
+      .text-bold { font-family: 'Times New Roman', Times, serif; font-weight: bold; }
+      .text-normal { font-family: 'Times New Roman', Times, serif; }
+      .text-italic { font-family: 'Georgia', serif; font-style: italic; }
+    </style>
+  </defs>
+
+  <rect x="145" y="195" width="15" height="12" class="gold-fill" />
+  <rect x="170" y="195" width="15" height="12" class="gold-fill" />
+  <rect x="195" y="195" width="15" height="12" class="gold-fill" />
+  <rect x="220" y="195" width="15" height="12" class="gold-fill" />
+  
+  <rect x="145" y="207" width="90" height="8" class="gold-fill" />
+  
+  <path d="M235 207 L235 140 C235 100 210 70 190 40 L187 40 L187 70 C205 95 218 115 218 140 L218 207 Z" class="gold-fill" />
+  
+  <polygon points="187,40 188,15 189,40" class="gold-fill" />
+
+  <path d="M185 70 C175 80 170 95 170 110 L172 110 C172 98 177 85 185 75 Z" class="gold-fill" />
+
+  <rect x="170" y="125" width="3" height="25" class="red-fill" />
+  <rect x="190" y="125" width="3" height="25" class="red-fill" />
+  
+  <rect x="190" y="147" width="10" height="3" class="red-fill" />
+  <rect x="164" y="147" width="9" height="3" class="red-fill" />
+
+  <polyline points="152,175 170,175 170,160" fill="none" stroke="#8D2222" stroke-width="2.5" />
+  
+  <path d="M160 180 C160 198 185 198 185 180 C180 192 165 192 160 180 Z" class="red-fill" />
+
+  <text x="190" y="245" class="red-fill text-bold" font-size="36" text-anchor="middle" letter-spacing="1">AUK</text>
+  
+  <rect x="145" y="252" width="90" height="4" class="gold-fill" />
+
+  <text x="190" y="282" class="red-fill text-normal" font-size="26" text-anchor="middle" letter-spacing="1">AMERICAN</text>
+
+  <text x="190" y="308" class="red-fill text-normal" font-size="26" text-anchor="middle" letter-spacing="1">UNIVERSITY</text>
+
+  <text x="190" y="335" class="red-fill text-normal" font-size="26" text-anchor="middle" letter-spacing="0.5">
+    <tspan class="text-italic" font-size="22">of </tspan>KUWAIT<tspan font-size="12" baseline-shift="super">®</tspan>
+  </text>
+</svg>

@@ -3,6 +3,7 @@ import {
   register,
   login,
   logout,
+  verifyCode,
   verifyEmail,
   forgotPassword,
   resendVerification,
@@ -18,6 +19,7 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', requireAuth, logout);
+router.post('/verify-code', verifyCode);
 router.get('/verify-email', verifyEmail);
 router.post('/forgot-password', forgotPassword);
 router.post('/resend-verification', resendVerification);

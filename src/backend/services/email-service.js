@@ -52,8 +52,9 @@ function buildHtmlEmail(heading, bodyHtml) {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f1f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:480px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <div style="background:#862633;padding:24px 32px;text-align:center;">
-      <h1 style="margin:0;color:#C6993E;font-size:24px;font-weight:800;letter-spacing:-0.02em;">QR-Guard</h1>
+    <div style="background:#8D2222;padding:24px 32px;text-align:center;">
+      <h1 style="margin:0;color:#D4A037;font-size:24px;font-weight:800;letter-spacing:-0.02em;">QR-Guard</h1>
+      <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:12px;">American University of Kuwait</p>
     </div>
     <div style="padding:32px;">
       <h2 style="margin:0 0 16px;color:#1e293b;font-size:20px;font-weight:700;">${heading}</h2>
@@ -109,7 +110,7 @@ export async function sendTokenEmail(email, token, purpose) {
   const html = buildHtmlEmail(config.heading, `
       <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">${config.message}</p>
       <div style="text-align:center;margin:24px 0;">
-        <a href="${url}" style="display:inline-block;background:#862633;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;">${config.buttonText}</a>
+        <a href="${url}" style="display:inline-block;background:#8D2222;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;">${config.buttonText}</a>
       </div>
       <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">This link expires in ${expiry}. If you didn't request this, you can ignore this email.</p>
       <p style="margin:12px 0 0;color:#cbd5e1;font-size:11px;word-break:break-all;">${url}</p>
@@ -118,4 +119,25 @@ export async function sendTokenEmail(email, token, purpose) {
   const text = `${config.heading}\n\n${config.message}\n\nClick here: ${url}\n\nThis link expires in ${expiry}.`;
 
   await sendEmail({ to: email, subject: config.subject, text, html });
+}
+
+/**
+ * Sends a 6-digit verification code email (for registration).
+ * @param {string} email
+ * @param {string} code — 6-digit numeric code
+ */
+export async function sendVerificationCode(email, code) {
+  const html = buildHtmlEmail('Verify Your Email', `
+      <p style="margin:0 0 8px;color:#475569;font-size:15px;line-height:1.6;">Enter this code on the registration page to verify your email:</p>
+      <div style="text-align:center;margin:24px 0;">
+        <div style="display:inline-block;background:#f1f4f8;border:2px dashed #d4a037;border-radius:12px;padding:16px 40px;">
+          <span style="font-size:36px;font-weight:800;letter-spacing:0.3em;color:#1e293b;font-family:'SF Mono','Fira Code',monospace;">${code}</span>
+        </div>
+      </div>
+      <p style="margin:0;color:#94a3b8;font-size:13px;">This code expires in 24 hours. If you didn't create an account, ignore this email.</p>
+  `);
+
+  const text = `Your QR-Guard verification code is: ${code}\n\nEnter this code on the registration page. It expires in 24 hours.`;
+
+  await sendEmail({ to: email, subject: `${code} — QR-Guard verification code`, text, html });
 }

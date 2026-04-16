@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
 import { users, students, instructors, emailVerificationTokens } from '../db/schema/index.js';
-import { sendTokenEmail } from '../services/email-service.js';
+import { sendTokenEmail, sendVerificationCode } from '../services/email-service.js';
 import {
   BCRYPT_ROUNDS,
   PASSWORD_MIN_LENGTH,
@@ -55,6 +55,10 @@ function generateToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+function generateCode() {
+  return String(crypto.randomInt(100000, 999999));
+}
+
 // --- Route handlers ---
 
 /**
@@ -89,16 +93,16 @@ export async function register(req, res) {
     return [user];
   });
 
-  // Create verification token
-  const token = generateToken();
+  // Create 6-digit verification code
+  const code = generateCode();
   await db.insert(emailVerificationTokens).values({
-    token,
+    token: code,
     userId: newUser.userId,
     purpose: 'email_verify',
     expiresAt: new Date(Date.now() + EMAIL_VERIFY_EXPIRY_MS),
   });
 
-  await sendTokenEmail(email, token, 'email_verify');
+  await sendVerificationCode(email, code);
 
   res.status(201).json({ userId: newUser.userId });
 }
@@ -198,8 +202,41 @@ export async function logout(req, res) {
 }
 
 /**
- * GET /api/auth/verify-email?token=...&purpose=...
- * Verifies email or processes device rebind.
+ * POST /api/auth/verify-code
+ * Verifies email using the 6-digit code sent during registration.
+ */
+export async function verifyCode(req, res) {
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'Email and code required' });
+
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (!user) return res.status(400).json({ error: 'Invalid code' });
+  if (user.emailVerifiedAt) return res.json({ message: 'Email already verified.' });
+
+  const [record] = await db
+    .select()
+    .from(emailVerificationTokens)
+    .where(and(
+      eq(emailVerificationTokens.token, code),
+      eq(emailVerificationTokens.userId, user.userId),
+      eq(emailVerificationTokens.purpose, 'email_verify'),
+    ))
+    .limit(1);
+
+  if (!record || record.usedAt) return res.status(400).json({ error: 'Invalid code' });
+  if (new Date(record.expiresAt) < new Date()) return res.status(400).json({ error: 'Code expired. Request a new one.' });
+
+  await db.transaction(async (tx) => {
+    await tx.update(emailVerificationTokens).set({ usedAt: new Date() }).where(eq(emailVerificationTokens.token, code));
+    await tx.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.userId, user.userId));
+  });
+
+  res.json({ message: 'Email verified! You can now log in.' });
+}
+
+/**
+ * GET /api/auth/verify-email?token=...
+ * Link-based verification (for password reset and device rebind).
  */
 export async function verifyEmail(req, res) {
   const { token } = req.query;
@@ -275,14 +312,14 @@ export async function resendVerification(req, res) {
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user && !user.emailVerifiedAt) {
-    const token = generateToken();
+    const code = generateCode();
     await db.insert(emailVerificationTokens).values({
-      token,
+      token: code,
       userId: user.userId,
       purpose: 'email_verify',
       expiresAt: new Date(Date.now() + EMAIL_VERIFY_EXPIRY_MS),
     });
-    await sendTokenEmail(email, token, 'email_verify');
+    await sendVerificationCode(email, code);
   }
 
   res.json({ message: 'If that email needs verification, a new link has been sent.' });
