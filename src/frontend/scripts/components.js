@@ -87,6 +87,16 @@ function renderBottomNav(role, activePage) {
  * Renders the site footer with campus background.
  */
 function renderFooter() {
+  // Wrap all content between nav and bottom-nav in a flex container
+  // so the footer sticks to the bottom of the viewport
+  document.body.style.display = 'flex';
+  document.body.style.flexDirection = 'column';
+  document.body.style.minHeight = '100vh';
+
+  // Find the main content (everything after the top nav, before bottom nav)
+  const contentEls = document.querySelectorAll('.container, .container-wide');
+  contentEls.forEach(el => { el.style.flex = '1'; });
+
   const footer = document.createElement('footer');
   footer.className = 'site-footer';
   footer.innerHTML = `
