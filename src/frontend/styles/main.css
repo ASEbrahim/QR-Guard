@@ -190,3 +190,29 @@ th {
 .mb-2 { margin-bottom: 1rem; }
 
 #map { height: 300px; border-radius: var(--radius); border: 1px solid var(--border); }
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 2.5rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.password-toggle:hover {
+  color: var(--text);
+}
