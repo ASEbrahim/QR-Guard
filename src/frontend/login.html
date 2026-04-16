@@ -7,30 +7,37 @@
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
-  <div class="container">
-    <h1>Log In</h1>
-    <div id="error" class="message error"></div>
+  <div class="auth-page">
+    <div class="auth-brand">
+      <h1>QR-Guard</h1>
+      <p>Location-based attendance for AUK</p>
+    </div>
 
-    <form id="loginForm" class="card">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" required>
-      </div>
+    <div id="error" class="message error" style="max-width:420px;"></div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="password-wrapper">
-          <input type="password" id="password" required>
-          <button type="button" class="password-toggle" onclick="togglePassword('password', this)">&#128065;</button>
+    <div class="auth-card">
+      <h2 style="text-align:center; margin-bottom:1.5rem;">Log In</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="name@auk.edu.kw" required>
         </div>
-      </div>
 
-      <button type="submit" class="btn btn-primary btn-block">Log In</button>
-    </form>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Min 8 characters" required>
+            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">&#128065;</button>
+          </div>
+        </div>
 
-    <p class="text-center text-muted mt-2">
-      <a href="/forgot-password.html">Forgot password?</a> · <a href="/register.html">Create account</a>
-    </p>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
+      </form>
+    </div>
+
+    <div class="auth-footer">
+      <a href="/forgot-password.html">Forgot password?</a> &middot; <a href="/register.html">Create account</a>
+    </div>
   </div>
 
   <script>

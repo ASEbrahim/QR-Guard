@@ -11,7 +11,7 @@
   <nav class="nav">
     <a href="/" class="nav-brand">QR-Guard</a>
     <div class="nav-links">
-      <span id="userName"></span>
+      <span class="nav-user" id="userName"></span>
       <a href="#" id="logoutBtn">Logout</a>
     </div>
   </nav>
@@ -212,10 +212,14 @@
       document.getElementById('noCourses').style.display = 'none';
 
       container.innerHTML = courses.map(c => `
-        <a href="/instructor/course.html?id=${c.courseId}" class="card" style="display:block; text-decoration:none; color:inherit;">
-          <h2>${c.code} — ${c.name}</h2>
-          <p class="text-muted">Section ${c.section} · ${c.semester}</p>
-          <p class="mt-1">Enrollment code: <strong>${c.enrollmentCode}</strong></p>
+        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable card-accent">
+          <div class="flex-between">
+            <div>
+              <h2 style="margin-bottom:0.25rem;">${c.code} — ${c.name}</h2>
+              <p class="text-muted">Section ${c.section} · ${c.semester}</p>
+            </div>
+            <span class="enrollment-code">${c.enrollmentCode}</span>
+          </div>
         </a>
       `).join('');
     }
