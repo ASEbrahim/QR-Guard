@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div class="container text-center" style="padding-top: 4rem;">
+    <h1>QR-Guard</h1>
+    <p class="text-muted">Redirecting...</p>
+  </div>
+  <script src="/scripts/api.js"></script>
+  <script>
+    // Auto-redirect: no session → login, student → student dash, instructor → instructor dash
+    checkAuthAndRedirect();
+  </script>
+</body>
+</html>

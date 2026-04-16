@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Email — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div class="container text-center">
+    <h1>Email Verification</h1>
+    <div id="error" class="message error"></div>
+    <div id="success" class="message success"></div>
+    <p id="loading" class="text-muted">Verifying your email...</p>
+  </div>
+
+  <script src="/scripts/api.js"></script>
+  <script>
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      const purpose = params.get('purpose') || 'email_verify';
+
+      if (!token) {
+        document.getElementById('loading').style.display = 'none';
+        showError('error', 'No verification token provided.');
+        return;
+      }
+
+      const endpoint = purpose === 'device_rebind' ? '/api/auth/verify-rebind' : '/api/auth/verify-email';
+      const res = await apiGet(`${endpoint}?token=${token}&purpose=${purpose}`);
+      document.getElementById('loading').style.display = 'none';
+
+      if (!res) return;
+      const data = await res.json();
+
+      if (res.ok) {
+        showSuccess('success', data.message);
+      } else {
+        showError('error', data.error || 'Verification failed');
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Dashboard — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-brand">QR-Guard</a>
+    <div class="nav-links">
+      <span id="userName"></span>
+      <a href="#" id="logoutBtn">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container-wide">
+    <h1>My Courses</h1>
+
+    <!-- Create course form (collapsible) -->
+    <div class="card">
+      <h2>
+        <a href="#" id="toggleCreate" style="text-decoration:none; color:inherit;">+ Create New Course</a>
+      </h2>
+      <form id="createForm" style="display:none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div class="form-group"><label>Course Name</label><input id="cName" required></div>
+          <div class="form-group"><label>Course Code</label><input id="cCode" placeholder="CSIS 330" required></div>
+          <div class="form-group"><label>Section</label><input id="cSection" placeholder="01" required></div>
+          <div class="form-group"><label>Semester</label><input id="cSemester" placeholder="Spring 2026" required></div>
+          <div class="form-group"><label>Semester Start</label><input type="date" id="cStart" required></div>
+          <div class="form-group"><label>Semester End</label><input type="date" id="cEnd" required></div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label>Weekly Schedule (JSON)</label>
+          <textarea id="cSchedule" rows="3" placeholder='[{"day":"mon","start":"09:00","end":"10:15"},{"day":"wed","start":"09:00","end":"10:15"}]' required></textarea>
+        </div>
+
+        <h2 class="mt-2">Geofence</h2>
+        <p class="text-muted">Click the map to set the center point.</p>
+        <div id="map"></div>
+        <input type="hidden" id="cLat">
+        <input type="hidden" id="cLng">
+        <div class="form-group mt-1">
+          <label>Radius (meters, 10-500)</label>
+          <input type="number" id="cRadius" min="10" max="500" value="100" required>
+        </div>
+
+        <div id="createError" class="message error mt-2"></div>
+        <button type="submit" class="btn btn-primary btn-block mt-2">Create Course</button>
+      </form>
+    </div>
+
+    <!-- Course list -->
+    <div id="coursesList"></div>
+    <p id="noCourses" class="text-muted text-center" style="display:none;">No courses yet. Create one above.</p>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/scripts/api.js"></script>
+  <script>
+    let map, marker, circle;
+
+    document.getElementById('toggleCreate').addEventListener('click', (e) => {
+      e.preventDefault();
+      const form = document.getElementById('createForm');
+      form.style.display = form.style.display === 'none' ? '' : 'none';
+      if (form.style.display !== 'none' && !map) {
+        initMap();
+      }
+    });
+
+    function initMap() {
+      // Default: AUK campus approximate location
+      map = L.map('map').setView([29.3117, 47.9835], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        document.getElementById('cLat').value = lat;
+        document.getElementById('cLng').value = lng;
+
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+
+        marker = L.marker([lat, lng]).addTo(map);
+        const radius = parseInt(document.getElementById('cRadius').value) || 100;
+        circle = L.circle([lat, lng], { radius, color: '#1a56db', fillOpacity: 0.15 }).addTo(map);
+      });
+
+      document.getElementById('cRadius').addEventListener('input', () => {
+        if (circle && marker) {
+          circle.setRadius(parseInt(document.getElementById('cRadius').value) || 100);
+        }
+      });
+    }
+
+    async function loadCourses() {
+      const res = await apiGet('/api/courses');
+      if (!res || !res.ok) return;
+      const { courses } = await res.json();
+
+      const container = document.getElementById('coursesList');
+      if (courses.length === 0) {
+        document.getElementById('noCourses').style.display = 'block';
+        return;
+      }
+      document.getElementById('noCourses').style.display = 'none';
+
+      container.innerHTML = courses.map(c => `
+        <a href="/instructor/course.html?id=${c.courseId}" class="card" style="display:block; text-decoration:none; color:inherit;">
+          <h2>${c.code} — ${c.name}</h2>
+          <p class="text-muted">Section ${c.section} · ${c.semester}</p>
+          <p class="mt-1">Enrollment code: <strong>${c.enrollmentCode}</strong></p>
+        </a>
+      `).join('');
+    }
+
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('createError').style.display = 'none';
+
+      const lat = parseFloat(document.getElementById('cLat').value);
+      const lng = parseFloat(document.getElementById('cLng').value);
+      if (!lat || !lng) {
+        showError('createError', 'Click the map to set a geofence center.');
+        return;
+      }
+
+      let schedule;
+      try {
+        schedule = JSON.parse(document.getElementById('cSchedule').value);
+      } catch {
+        showError('createError', 'Invalid weekly schedule JSON.');
+        return;
+      }
+
+      const res = await apiPost('/api/courses', {
+        name: document.getElementById('cName').value,
+        code: document.getElementById('cCode').value,
+        section: document.getElementById('cSection').value,
+        semester: document.getElementById('cSemester').value,
+        semesterStart: document.getElementById('cStart').value,
+        semesterEnd: document.getElementById('cEnd').value,
+        weeklySchedule: schedule,
+        geofenceLat: lat,
+        geofenceLng: lng,
+        geofenceRadius: parseInt(document.getElementById('cRadius').value),
+      });
+
+      if (!res) return;
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('createForm').style.display = 'none';
+        loadCourses();
+      } else {
+        showError('createError', data.error);
+      }
+    });
+
+    // Init
+    (async () => {
+      const meRes = await apiGet('/api/auth/me');
+      if (!meRes || !meRes.ok) return;
+      const { user } = await meRes.json();
+      document.getElementById('userName').textContent = user.name;
+      loadCourses();
+    })();
+
+    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await apiPost('/api/auth/logout');
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>

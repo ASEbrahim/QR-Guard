@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Device Rebind — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Request Device Rebind</h1>
+    <div id="error" class="message error"></div>
+    <div id="success" class="message success"></div>
+
+    <div class="card">
+      <p>Your account is bound to a specific device. If you need to switch devices, click below to receive a rebind link via email.</p>
+      <p class="text-muted mt-1">You can only rebind once per semester.</p>
+      <button id="rebindBtn" class="btn btn-primary btn-block mt-2">Send Rebind Link</button>
+    </div>
+
+    <p class="text-center text-muted mt-2"><a href="/student/dashboard.html">Back to dashboard</a></p>
+  </div>
+
+  <script src="/scripts/api.js"></script>
+  <script>
+    document.getElementById('rebindBtn').addEventListener('click', async () => {
+      const res = await apiPost('/api/auth/request-rebind');
+      if (!res) return;
+      const data = await res.json();
+      if (res.ok) {
+        showSuccess('success', data.message);
+        document.getElementById('rebindBtn').disabled = true;
+      } else {
+        showError('error', data.error);
+      }
+    });
+  </script>
+</body>
+</html>

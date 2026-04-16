@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Log In</h1>
+    <div id="error" class="message error"></div>
+
+    <form id="loginForm" class="card">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Log In</button>
+    </form>
+
+    <p class="text-center text-muted mt-2">
+      <a href="/forgot-password.html">Forgot password?</a> · <a href="/register.html">Create account</a>
+    </p>
+  </div>
+
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/fingerprint.js"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('error').style.display = 'none';
+
+      let deviceFingerprint = null;
+      try {
+        deviceFingerprint = await getFingerprint();
+      } catch (err) {
+        console.warn('FingerprintJS failed, proceeding without:', err);
+      }
+
+      const res = await apiPost('/api/auth/login', {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        deviceFingerprint,
+      });
+      if (!res) return;
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = data.redirectUrl;
+      } else {
+        showError('error', data.error || 'Login failed');
+      }
+    });
+  </script>
+</body>
+</html>

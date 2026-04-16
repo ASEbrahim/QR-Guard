@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Detail — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-brand">QR-Guard</a>
+    <div class="nav-links">
+      <a href="/instructor/dashboard.html">Dashboard</a>
+      <a href="#" id="logoutBtn">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container-wide">
+    <div id="courseInfo" class="card">
+      <h1 id="courseTitle">Loading...</h1>
+      <p id="courseMeta" class="text-muted"></p>
+      <p class="mt-1">Enrollment code: <strong id="enrollCode"></strong></p>
+      <p>Geofence radius: <span id="geoRadius"></span>m · Attendance window: <span id="attWindow"></span>s · QR refresh: <span id="qrRefresh"></span>s</p>
+    </div>
+
+    <!-- Enrolled students -->
+    <div class="card">
+      <h2>Enrolled Students</h2>
+      <table>
+        <thead><tr><th>Name</th><th>University ID</th><th>Email</th><th>Enrolled</th><th></th></tr></thead>
+        <tbody id="studentsBody"></tbody>
+      </table>
+      <p id="noStudents" class="text-muted text-center mt-1" style="display:none;">No students enrolled yet.</p>
+    </div>
+
+    <!-- Sessions -->
+    <div class="card">
+      <h2>Sessions</h2>
+      <div id="addSessionForm" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+        <input type="datetime-local" id="sessStart" style="flex:1;">
+        <input type="datetime-local" id="sessEnd" style="flex:1;">
+        <button class="btn btn-primary" id="addSessionBtn">Add Session</button>
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Time</th><th>Status</th><th></th></tr></thead>
+        <tbody id="sessionsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/scripts/api.js"></script>
+  <script>
+    const courseId = new URLSearchParams(window.location.search).get('id');
+    if (!courseId) window.location.href = '/instructor/dashboard.html';
+
+    async function loadCourse() {
+      const res = await apiGet(`/api/courses/${courseId}`);
+      if (!res || !res.ok) { window.location.href = '/instructor/dashboard.html'; return; }
+      const { course, sessions } = await res.json();
+
+      document.getElementById('courseTitle').textContent = `${course.code} — ${course.name}`;
+      document.getElementById('courseMeta').textContent = `Section ${course.section} · ${course.semester}`;
+      document.getElementById('enrollCode').textContent = course.enrollmentCode;
+      document.getElementById('geoRadius').textContent = course.geofenceRadiusM;
+      document.getElementById('attWindow').textContent = course.attendanceWindowSeconds;
+      document.getElementById('qrRefresh').textContent = course.qrRefreshIntervalSeconds;
+
+      // Sessions
+      const sessBody = document.getElementById('sessionsBody');
+      sessBody.innerHTML = sessions.map(s => {
+        const start = new Date(s.scheduledStart);
+        const end = new Date(s.scheduledEnd);
+        const statusBadge = {
+          scheduled: '<span class="badge badge-muted">Scheduled</span>',
+          active: '<span class="badge badge-success">Active</span>',
+          closed: '<span class="badge badge-warning">Closed</span>',
+          cancelled: '<span class="badge badge-danger">Cancelled</span>',
+        }[s.status];
+        return `<tr>
+          <td>${start.toLocaleDateString()}</td>
+          <td>${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${statusBadge}</td>
+          <td>${s.status === 'scheduled' ? `<button class="btn btn-danger" onclick="cancelSession('${s.sessionId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Cancel</button>` : ''}</td>
+        </tr>`;
+      }).join('');
+
+      // Students
+      const studRes = await apiGet(`/api/courses/${courseId}/students`);
+      if (!studRes || !studRes.ok) return;
+      const { students } = await studRes.json();
+
+      const studBody = document.getElementById('studentsBody');
+      if (students.length === 0) {
+        document.getElementById('noStudents').style.display = 'block';
+      } else {
+        studBody.innerHTML = students.map(s => `<tr>
+          <td>${s.name}</td>
+          <td>${s.universityId}</td>
+          <td>${s.email}</td>
+          <td>${new Date(s.enrolledAt).toLocaleDateString()}</td>
+          <td><button class="btn btn-danger" onclick="removeStudent('${s.userId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Remove</button></td>
+        </tr>`).join('');
+      }
+    }
+
+    async function cancelSession(sessionId) {
+      if (!confirm('Cancel this session?')) return;
+      await apiPatch(`/api/courses/${courseId}/sessions/${sessionId}`, { status: 'cancelled' });
+      loadCourse();
+    }
+
+    async function removeStudent(studentId) {
+      if (!confirm('Remove this student? Historical records will be retained.')) return;
+      await apiDelete(`/api/courses/${courseId}/students/${studentId}`);
+      loadCourse();
+    }
+
+    document.getElementById('addSessionBtn').addEventListener('click', async () => {
+      const start = document.getElementById('sessStart').value;
+      const end = document.getElementById('sessEnd').value;
+      if (!start || !end) return;
+
+      await apiPost(`/api/courses/${courseId}/sessions`, {
+        scheduledStart: new Date(start).toISOString(),
+        scheduledEnd: new Date(end).toISOString(),
+      });
+      loadCourse();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await apiPost('/api/auth/logout');
+      window.location.href = '/login.html';
+    });
+
+    loadCourse();
+  </script>
+</body>
+</html>
