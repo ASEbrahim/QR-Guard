@@ -1,7 +1,7 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
-import { courses, enrollments, sessions, students, users } from '../db/schema/index.js';
+import { courses, enrollments, sessions } from '../db/schema/index.js';
 import { generateEnrollmentCode } from '../services/enrollment-code.js';
 import { generateSessions } from '../services/session-generator.js';
 import {
@@ -302,33 +302,7 @@ export async function removeStudent(req, res) {
   res.json({ message: 'Student removed. Historical records retained.' });
 }
 
-/**
- * GET /api/courses/:id/students
- * Instructor gets enrolled roster. Attendance % placeholder (Sprint C).
- */
-export async function getEnrolledStudents(req, res) {
-  const { id } = req.params;
-  const course = await getCourseForInstructor(id, req.session.userId);
-  if (!course) return res.status(404).json({ error: 'Course not found or not authorized' });
-
-  const result = await db
-    .select({
-      userId: students.userId,
-      name: users.name,
-      email: users.email,
-      universityId: students.universityId,
-      enrolledAt: enrollments.enrolledAt,
-    })
-    .from(enrollments)
-    .innerJoin(students, eq(enrollments.studentId, students.userId))
-    .innerJoin(users, eq(students.userId, users.userId))
-    .where(and(eq(enrollments.courseId, id), isNull(enrollments.removedAt)));
-
-  // Attendance % will be computed in Sprint C (reports)
-  const studentsWithPct = result.map((s) => ({ ...s, attendancePct: null }));
-
-  res.json({ students: studentsWithPct });
-}
+// getEnrolledStudents moved to report-controller.js as getEnrolledStudentsWithPct (Sprint C)
 
 /**
  * POST /api/courses/:id/sessions

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { qrTokens } from '../db/schema/index.js';
 
@@ -96,7 +96,7 @@ export async function getCurrentToken(sessionId) {
     .select({ payload: qrTokens.payload, expiresAt: qrTokens.expiresAt })
     .from(qrTokens)
     .where(eq(qrTokens.sessionId, sessionId))
-    .orderBy(qrTokens.generatedAt)
+    .orderBy(desc(qrTokens.generatedAt))
     .limit(1);
 
   if (!token || new Date(token.expiresAt) < new Date()) return null;

@@ -78,7 +78,7 @@ export async function checkThresholdAndNotify(courseId, studentId) {
       }
 
       // Check AUK 15% absence limit (100 - pct > 15 means absences exceed 15%)
-      if (100 - pct >= AUK_ABSENCE_LIMIT_PCT) {
+      if (student && 100 - pct >= AUK_ABSENCE_LIMIT_PCT) {
         await notifyInstructorAukLimit(course, student, pct);
       }
     }

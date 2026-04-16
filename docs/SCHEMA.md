@@ -71,12 +71,14 @@ Instructor-specific fields. One-to-one with `users` where `role = 'instructor'`.
 | `section` | `text` | NOT NULL | e.g., `01` |
 | `semester` | `text` | NOT NULL | e.g., `Spring 2026` |
 | `enrollment_code` | `text` | UNIQUE, NOT NULL | 6-char alphanumeric |
-| `geofence_center` | `geography(Point, 4326)` | NOT NULL | PostGIS point |
-| `geofence_radius_m` | `integer` | NOT NULL, CHECK between 10 and 500 | |
+| `geofence_center` | `text` | NOT NULL | WKT string, e.g. `SRID=4326;POINT(47.98 29.31)`. Cast via `ST_GeogFromText()` for PostGIS queries. |
+| `geofence_radius_m` | `integer` | NOT NULL, CHECK between 10 and 500 (app-side) | |
 | `attendance_window_seconds` | `integer` | NOT NULL, default `300` | 5 min default |
 | `warning_threshold_pct` | `numeric(5,2)` | NOT NULL, default `85.00` | |
 | `qr_refresh_interval_seconds` | `integer` | NOT NULL, default `25` | |
 | `weekly_schedule` | `jsonb` | NOT NULL | `[{day: 'mon', start: '09:00', end: '10:15'}, ...]` |
+| `semester_start` | `date` | NOT NULL | Start of semester for session auto-generation |
+| `semester_end` | `date` | NOT NULL | End of semester for session auto-generation |
 | `created_at` | `timestamptz` | NOT NULL, default `now()` | |
 
 **Index:** `CREATE INDEX courses_instructor_idx ON courses(instructor_id);`
@@ -139,7 +141,7 @@ The persistent record of a student's attendance for a session.
 | `gps_lat` | `numeric(10,7)` | NULL | NULL for absent/excused |
 | `gps_lng` | `numeric(10,7)` | NULL | |
 | `gps_accuracy_m` | `numeric(8,2)` | NULL | |
-| `ip_address` | `inet` | NULL | |
+| `ip_address` | `text` | NULL | Stored as text, not inet (Drizzle compatibility) |
 | `device_hash` | `text` | NULL | FingerprintJS visitor ID at scan time |
 | `excuse_reason` | `text` | NULL | Required when status = 'excused' |
 

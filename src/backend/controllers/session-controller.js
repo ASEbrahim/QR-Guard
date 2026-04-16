@@ -1,6 +1,6 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { db } from '../config/database.js';
-import { sessions, courses } from '../db/schema/index.js';
+import { sessions, courses, enrollments } from '../db/schema/index.js';
 import { startRefreshLoop, stopRefreshLoop, getCurrentToken } from '../services/qr-service.js';
 import { emitQrRefresh, emitSessionClosed } from '../services/socket-service.js';
 
@@ -74,9 +74,31 @@ export async function stopSession(req, res) {
 /**
  * GET /api/sessions/:id/qr
  * HTTP polling fallback — returns the current QR token.
+ * Only accessible to the course instructor or enrolled students.
  */
 export async function getQr(req, res) {
   const { id } = req.params;
+
+  // Verify the caller has access to this session's course
+  const [session] = await db.select().from(sessions).where(eq(sessions.sessionId, id)).limit(1);
+  if (!session) return res.status(404).json({ error: 'Session not found' });
+
+  if (req.session.role === 'instructor') {
+    const [course] = await db.select().from(courses)
+      .where(and(eq(courses.courseId, session.courseId), eq(courses.instructorId, req.session.userId)))
+      .limit(1);
+    if (!course) return res.status(403).json({ error: 'Not your course' });
+  } else {
+    const [enrollment] = await db.select().from(enrollments)
+      .where(and(
+        eq(enrollments.courseId, session.courseId),
+        eq(enrollments.studentId, req.session.userId),
+        isNull(enrollments.removedAt),
+      ))
+      .limit(1);
+    if (!enrollment) return res.status(403).json({ error: 'Not enrolled' });
+  }
+
   const token = await getCurrentToken(id);
   if (!token) return res.status(404).json({ error: 'No active QR token' });
   res.json(token);
