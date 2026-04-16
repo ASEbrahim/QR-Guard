@@ -200,7 +200,7 @@ button, .btn {
   transition: background 0.15s, transform 0.1s;
 }
 
-button:active, .btn:active {
+button:active:not(.password-toggle), .btn:active {
   transform: scale(0.98);
 }
 
@@ -480,13 +480,21 @@ th {
   border: none;
   cursor: pointer;
   color: var(--text-muted);
-  font-size: 1.1rem;
-  padding: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.4rem;
   line-height: 1;
+  transition: none;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .password-toggle:hover {
   color: var(--text);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%);
 }
 
 /* --- Mobile responsive --- */
