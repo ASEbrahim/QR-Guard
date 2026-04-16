@@ -7,17 +7,30 @@
 }
 
 :root {
-  --primary: #1a56db;
-  --primary-hover: #1e40af;
-  --primary-light: #eff6ff;
+  /* AUK Brand — change these to retheme the entire app */
+  --primary: #1B3A5C;
+  --primary-hover: #142d47;
+  --primary-light: #e8eef5;
+  --accent: #C5A55A;
+  --accent-hover: #b8963e;
+  --accent-light: #fdf8ee;
+
+  /* Semantic colors */
   --danger: #dc2626;
+  --danger-light: #fef2f2;
   --success: #16a34a;
+  --success-light: #dcfce7;
   --warning: #d97706;
-  --bg: #f1f5f9;
+  --warning-light: #fef3c7;
+
+  /* Surfaces */
+  --bg: #f1f4f8;
   --surface: #ffffff;
   --text: #1e293b;
   --text-muted: #64748b;
-  --border: #e2e8f0;
+  --border: #dfe4eb;
+
+  /* Shape */
   --radius: 10px;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
@@ -40,7 +53,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #f0f4ff 0%, #f1f5f9 50%, #fef9f0 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg) 50%, var(--accent-light) 100%);
 }
 
 .auth-brand {
@@ -54,6 +67,10 @@ body {
   color: var(--primary);
   margin-bottom: 0.25rem;
   letter-spacing: -0.02em;
+}
+
+.auth-brand .brand-accent {
+  color: var(--accent);
 }
 
 .auth-brand p {
@@ -252,9 +269,9 @@ button:active, .btn:active {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  background: var(--primary);
+  border-bottom: none;
+  box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -263,25 +280,96 @@ button:active, .btn:active {
 .nav-brand {
   font-weight: 800;
   font-size: 1.15rem;
-  color: var(--primary);
+  color: var(--accent);
   text-decoration: none;
   letter-spacing: -0.01em;
 }
 
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.nav-user-name {
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  font-size: 0.875rem;
+}
+
+.nav-right { position: relative; }
+
+.nav-menu-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.nav-menu-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  min-width: 180px;
+  padding: 0.5rem 0;
+  z-index: 200;
+}
+
+.nav-dropdown.open { display: block; }
+
+.nav-dropdown a, .nav-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.nav-dropdown a:hover, .nav-dropdown button:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
+.nav-dropdown .divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.35rem 0;
+}
+
+/* Legacy nav-links for simple pages */
 .nav-links { display: flex; gap: 1.25rem; align-items: center; }
 .nav-links a {
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.75);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
   transition: color 0.15s;
 }
-.nav-links a:hover { color: var(--primary); }
-.nav-links .nav-user {
-  font-weight: 600;
-  color: var(--text);
-  font-size: 0.875rem;
-}
+.nav-links a:hover { color: white; }
 
 /* --- Tables --- */
 table {
@@ -333,14 +421,15 @@ th {
 
 .enrollment-code {
   display: inline-block;
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--accent-light);
+  color: var(--accent-hover);
   padding: 0.3rem 0.75rem;
   border-radius: 6px;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-weight: 700;
   font-size: 1rem;
   letter-spacing: 0.12em;
+  border: 1px solid var(--accent);
 }
 
 /* --- Empty state --- */

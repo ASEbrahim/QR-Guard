@@ -6,23 +6,124 @@
   <title>Live Session — QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
   <style>
-    body { background: #000; color: #fff; }
-    .session-container { text-align: center; padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-    #qrImage { max-width: 400px; width: 80vw; margin: 1rem auto; border-radius: 12px; background: #fff; padding: 1rem; }
-    .counter { font-size: 3rem; font-weight: 700; margin: 1rem 0; }
-    .counter-label { font-size: 1rem; color: #aaa; }
-    #stopBtn { background: #dc2626; color: #fff; font-size: 1.25rem; padding: 0.75rem 2rem; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
-    #status { color: #4ade80; font-size: 0.875rem; margin-top: 0.5rem; }
+    .session-layout {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+    .session-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .status-active {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .qr-frame {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+    #qrImage {
+      width: 280px;
+      height: 280px;
+      border-radius: 8px;
+      display: block;
+    }
+    .counter-section {
+      margin-bottom: 2rem;
+    }
+    .counter-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+    }
+    .counter-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    .stop-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.75rem 2.5rem;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .stop-btn:hover { background: #b91c1c; }
+    .stop-btn:active { transform: scale(0.97); }
+    .session-closed-msg {
+      padding: 2rem;
+      text-align: center;
+    }
+    .session-closed-msg h2 {
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <div class="session-container">
-    <h1 id="sessionTitle">Starting session...</h1>
-    <img id="qrImage" alt="QR Code">
-    <div class="counter" id="counter">0 / 0</div>
-    <div class="counter-label">students checked in</div>
-    <div id="status">Connecting...</div>
-    <button id="stopBtn">Stop Session</button>
+  <nav class="nav">
+    <div class="nav-left">
+      <a href="/" class="nav-brand">QR-Guard</a>
+    </div>
+    <div class="nav-links"><a href="javascript:history.back()">&larr; Back to Course</a></div>
+  </nav>
+
+  <div class="session-layout" id="activeView">
+    <div class="session-status status-active" id="statusBadge">
+      <span class="status-dot"></span>
+      <span id="statusText">Starting...</span>
+    </div>
+
+    <div class="qr-frame" id="qrFrame">
+      <img id="qrImage" alt="QR Code" style="display:none;">
+      <div id="qrLoading" class="text-muted" style="width:280px;height:280px;display:flex;align-items:center;justify-content:center;">
+        Generating QR code...
+      </div>
+    </div>
+
+    <div class="counter-section">
+      <div class="counter-value" id="counter">0 / 0</div>
+      <div class="counter-label">students checked in</div>
+    </div>
+
+    <button class="stop-btn" id="stopBtn">End Session</button>
+  </div>
+
+  <div class="session-layout" id="closedView" style="display:none;">
+    <div class="session-closed-msg">
+      <div style="font-size:2.5rem; margin-bottom:0.75rem;">&#9989;</div>
+      <h2>Session Ended</h2>
+      <p class="text-muted mb-2">Attendance has been recorded.</p>
+      <div class="counter-value" id="finalCount" style="margin-bottom:0.5rem;"></div>
+      <div class="counter-label mb-2">students attended</div>
+      <a href="javascript:history.back()" class="btn btn-primary btn-lg">Back to Course</a>
+    </div>
   </div>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -32,46 +133,36 @@
     if (!sessionId) window.location.href = '/instructor/dashboard.html';
 
     const socket = io({ withCredentials: true });
-    let qrPayload = null;
+    let currentCount = '0 / 0';
 
-    // Start the session
     (async () => {
       const res = await apiPost(`/api/sessions/${sessionId}/start`);
       if (!res) return;
       const data = await res.json();
 
       if (!res.ok) {
-        document.getElementById('sessionTitle').textContent = data.error || 'Failed to start';
+        document.getElementById('statusText').textContent = data.error || 'Failed to start';
+        document.getElementById('qrLoading').textContent = data.error || 'Failed';
         return;
       }
 
-      document.getElementById('sessionTitle').textContent = 'Session Active';
-      document.getElementById('status').textContent = 'QR refreshing via WebSocket';
+      document.getElementById('statusText').textContent = 'Live';
       renderQr(data.qrPayload);
-
-      // Join the Socket.IO room
       socket.emit('join-session', sessionId);
     })();
 
-    socket.on('qr:refresh', (data) => {
-      renderQr(data.payload);
-    });
+    socket.on('qr:refresh', (data) => renderQr(data.payload));
 
     socket.on('attendance:update', (data) => {
-      document.getElementById('counter').textContent = `${data.present} / ${data.total}`;
+      currentCount = `${data.present} / ${data.total}`;
+      document.getElementById('counter').textContent = currentCount;
     });
 
-    socket.on('session:closed', () => {
-      document.getElementById('sessionTitle').textContent = 'Session Closed';
-      document.getElementById('qrImage').style.display = 'none';
-      document.getElementById('status').textContent = 'Session ended';
-      document.getElementById('stopBtn').style.display = 'none';
-    });
+    socket.on('session:closed', () => showClosed());
 
     // HTTP polling fallback
     let pollInterval = null;
     socket.on('disconnect', () => {
-      document.getElementById('status').textContent = 'WebSocket disconnected — polling...';
       pollInterval = setInterval(async () => {
         const res = await apiGet(`/api/sessions/${sessionId}/qr`);
         if (res && res.ok) {
@@ -83,21 +174,27 @@
 
     socket.on('connect', () => {
       if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
-      document.getElementById('status').textContent = 'QR refreshing via WebSocket';
       socket.emit('join-session', sessionId);
     });
 
     function renderQr(payload) {
-      // Generate QR image URL from the payload — simple data URL approach
-      // We'll use a QR code API for the display (avoids loading qrcode.js on frontend)
       const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(payload)}`;
-      document.getElementById('qrImage').src = url;
-      qrPayload = payload;
+      const img = document.getElementById('qrImage');
+      img.src = url;
+      img.style.display = 'block';
+      document.getElementById('qrLoading').style.display = 'none';
+    }
+
+    function showClosed() {
+      document.getElementById('activeView').style.display = 'none';
+      document.getElementById('closedView').style.display = '';
+      document.getElementById('finalCount').textContent = currentCount;
     }
 
     document.getElementById('stopBtn').addEventListener('click', async () => {
-      if (!confirm('Stop this session?')) return;
+      if (!confirm('End this session? Students will no longer be able to scan.')) return;
       await apiPost(`/api/sessions/${sessionId}/stop`);
+      showClosed();
     });
   </script>
 </body>
