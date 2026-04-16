@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan Attendance — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+  <style>
+    #reader { width: 100%; max-width: 400px; margin: 0 auto; }
+    #result { text-align: center; margin-top: 1rem; padding: 1rem; border-radius: 8px; }
+    .result-success { background: #dcfce7; color: #16a34a; }
+    .result-error { background: #fef2f2; color: #dc2626; }
+    .result-info { background: #eff6ff; color: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="nav-brand">QR-Guard</a>
+    <div class="nav-links">
+      <a href="/student/dashboard.html">Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Scan QR Code</h1>
+    <p class="text-muted mb-2">Point your camera at the QR code displayed by your instructor.</p>
+
+    <div id="reader"></div>
+    <div id="result" style="display:none;"></div>
+    <div id="gpsStatus" class="text-muted text-center mt-1"></div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/fingerprint.js"></script>
+  <script>
+    let scanning = false;
+    let gpsData = null;
+
+    // Request GPS immediately
+    document.getElementById('gpsStatus').textContent = 'Requesting GPS...';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        gpsData = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        };
+        document.getElementById('gpsStatus').textContent =
+          `GPS: ${gpsData.lat.toFixed(5)}, ${gpsData.lng.toFixed(5)} (±${gpsData.accuracy.toFixed(0)}m)`;
+      },
+      (err) => {
+        document.getElementById('gpsStatus').textContent = `GPS error: ${err.message}`;
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+
+    // Start camera scanner
+    const scanner = new Html5Qrcode('reader');
+    scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      onScanSuccess,
+      () => {} // ignore scan errors (no QR in frame)
+    ).catch((err) => {
+      showResult('Camera error: ' + err, 'error');
+    });
+
+    async function onScanSuccess(decodedText) {
+      if (scanning) return; // Prevent double-scan
+      scanning = true;
+
+      // Stop the scanner
+      try { await scanner.stop(); } catch {}
+
+      if (!gpsData) {
+        showResult('GPS not available yet. Please allow location access and try again.', 'error');
+        scanning = false;
+        return;
+      }
+
+      showResult('Verifying...', 'info');
+
+      let fingerprint = null;
+      try {
+        fingerprint = await getFingerprint();
+      } catch {
+        showResult('Device fingerprint failed. Please try again.', 'error');
+        scanning = false;
+        return;
+      }
+
+      const res = await apiPost('/api/scan', {
+        qrPayload: decodedText,
+        gpsLat: gpsData.lat,
+        gpsLng: gpsData.lng,
+        gpsAccuracy: gpsData.accuracy,
+        deviceFingerprint: fingerprint,
+      });
+
+      if (!res) { scanning = false; return; }
+      const data = await res.json();
+
+      if (res.ok) {
+        showResult('✓ ' + data.message, 'success');
+      } else {
+        showResult(data.error || 'Scan failed', 'error');
+        // Allow retry after 3 seconds
+        setTimeout(() => {
+          scanning = false;
+          document.getElementById('result').style.display = 'none';
+          scanner.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onScanSuccess,
+            () => {}
+          ).catch(() => {});
+        }, 3000);
+      }
+    }
+
+    function showResult(message, type) {
+      const el = document.getElementById('result');
+      el.textContent = message;
+      el.className = `result-${type}`;
+      el.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

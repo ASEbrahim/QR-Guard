@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Session — QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+  <style>
+    body { background: #000; color: #fff; }
+    .session-container { text-align: center; padding: 1rem; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    #qrImage { max-width: 400px; width: 80vw; margin: 1rem auto; border-radius: 12px; background: #fff; padding: 1rem; }
+    .counter { font-size: 3rem; font-weight: 700; margin: 1rem 0; }
+    .counter-label { font-size: 1rem; color: #aaa; }
+    #stopBtn { background: #dc2626; color: #fff; font-size: 1.25rem; padding: 0.75rem 2rem; border: none; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
+    #status { color: #4ade80; font-size: 0.875rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="session-container">
+    <h1 id="sessionTitle">Starting session...</h1>
+    <img id="qrImage" alt="QR Code">
+    <div class="counter" id="counter">0 / 0</div>
+    <div class="counter-label">students checked in</div>
+    <div id="status">Connecting...</div>
+    <button id="stopBtn">Stop Session</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="/scripts/api.js"></script>
+  <script>
+    const sessionId = new URLSearchParams(window.location.search).get('id');
+    if (!sessionId) window.location.href = '/instructor/dashboard.html';
+
+    const socket = io({ withCredentials: true });
+    let qrPayload = null;
+
+    // Start the session
+    (async () => {
+      const res = await apiPost(`/api/sessions/${sessionId}/start`);
+      if (!res) return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('sessionTitle').textContent = data.error || 'Failed to start';
+        return;
+      }
+
+      document.getElementById('sessionTitle').textContent = 'Session Active';
+      document.getElementById('status').textContent = 'QR refreshing via WebSocket';
+      renderQr(data.qrPayload);
+
+      // Join the Socket.IO room
+      socket.emit('join-session', sessionId);
+    })();
+
+    socket.on('qr:refresh', (data) => {
+      renderQr(data.payload);
+    });
+
+    socket.on('attendance:update', (data) => {
+      document.getElementById('counter').textContent = `${data.present} / ${data.total}`;
+    });
+
+    socket.on('session:closed', () => {
+      document.getElementById('sessionTitle').textContent = 'Session Closed';
+      document.getElementById('qrImage').style.display = 'none';
+      document.getElementById('status').textContent = 'Session ended';
+      document.getElementById('stopBtn').style.display = 'none';
+    });
+
+    // HTTP polling fallback
+    let pollInterval = null;
+    socket.on('disconnect', () => {
+      document.getElementById('status').textContent = 'WebSocket disconnected — polling...';
+      pollInterval = setInterval(async () => {
+        const res = await apiGet(`/api/sessions/${sessionId}/qr`);
+        if (res && res.ok) {
+          const data = await res.json();
+          renderQr(data.payload);
+        }
+      }, 10000);
+    });
+
+    socket.on('connect', () => {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      document.getElementById('status').textContent = 'QR refreshing via WebSocket';
+      socket.emit('join-session', sessionId);
+    });
+
+    function renderQr(payload) {
+      // Generate QR image URL from the payload — simple data URL approach
+      // We'll use a QR code API for the display (avoids loading qrcode.js on frontend)
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(payload)}`;
+      document.getElementById('qrImage').src = url;
+      qrPayload = payload;
+    }
+
+    document.getElementById('stopBtn').addEventListener('click', async () => {
+      if (!confirm('Stop this session?')) return;
+      await apiPost(`/api/sessions/${sessionId}/stop`);
+    });
+  </script>
+</body>
+</html>

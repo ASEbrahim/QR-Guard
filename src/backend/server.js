@@ -4,12 +4,16 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import cors from 'cors';
 import helmet from 'helmet';
+import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from './config/database.js';
 import { SESSION_MAX_AGE_MS } from './config/constants.js';
+import { initSocketIO } from './services/socket-service.js';
 import authRoutes from './routes/auth-routes.js';
 import courseRoutes from './routes/course-routes.js';
+import sessionRoutes from './routes/session-routes.js';
+import scanRoutes from './routes/scan-routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -35,9 +39,14 @@ app.use(
   }),
 );
 
+// --- Trust proxy for X-Forwarded-For behind reverse proxy ---
+app.set('trust proxy', 1);
+
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/scan', scanRoutes);
 
 // --- Static frontend ---
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -53,9 +62,12 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// --- Start ---
+// --- Start with HTTP server (needed for Socket.IO) ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+initSocketIO(httpServer);
+
+httpServer.listen(PORT, () => {
   console.log(`QR-Guard server running on http://localhost:${PORT}`);
 });
 

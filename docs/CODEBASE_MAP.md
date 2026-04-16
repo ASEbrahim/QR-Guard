@@ -50,8 +50,32 @@ Sprint A (Auth + Courses) ✅ complete. Sprint B next.
 | `src/frontend/student/dashboard.html` | Student dashboard: enrolled courses, enrollment form |
 | `src/frontend/styles/main.css` | Shared CSS: mobile-first, clean, professional |
 | `src/frontend/verify-email.html` | Email verification + device rebind landing page |
+| `src/backend/controllers/scan-controller.js` | Receives scan POST, delegates to ScanVerifier, records attendance |
+| `src/backend/controllers/session-controller.js` | Start/stop session, QR generation loop, HTTP polling fallback |
+| `src/backend/db/schema/attendance.schema.js` | Drizzle schema: attendance table (ip_address as text, not inet) |
+| `src/backend/db/schema/audit-log.schema.js` | Drizzle schema: audit_log table (append-only via DB triggers) |
+| `src/backend/db/schema/qr-token.schema.js` | Drizzle schema: qr_tokens table |
+| `src/backend/routes/scan-routes.js` | Express router for POST /api/scan |
+| `src/backend/routes/session-routes.js` | Express router for /api/sessions/:id/start, stop, qr |
+| `src/backend/services/qr-service.js` | QR token generation, refresh loop, HTTP polling |
+| `src/backend/services/socket-service.js` | Socket.IO init, room management, event emitters |
+| `src/backend/validators/audit-logger.js` | Layer 6: append to audit_log (always runs in finally) |
+| `src/backend/validators/device-checker.js` | Layer 2: fingerprint matches stored binding |
+| `src/backend/validators/geofence-checker.js` | Layer 5: PostGIS ST_DWithin with ST_GeogFromText cast + 15m margin |
+| `src/backend/validators/gps-accuracy-checker.js` | Layer 4: accuracy <= 150m and != 0 |
+| `src/backend/validators/ip-validator.js` | Layer 3: ip-api.com country + VPN check (FAIL-OPEN) |
+| `src/backend/validators/qr-validator.js` | Layer 1: token valid for current refresh cycle |
+| `src/backend/validators/scan-error.js` | Custom ScanError class with code property |
+| `src/backend/validators/scan-verifier.js` | Orchestrator: runs layers 1-5, short-circuits, 6 in finally |
+| `src/frontend/instructor/session.html` | Full-screen QR display, live counter, Socket.IO, stop button |
+| `src/frontend/student/scan.html` | Camera QR scanner, GPS request, scan UI, result display |
 | `tests/integration/auth-flow.test.js` | Integration tests: registration, login, verification, lockout, reset |
 | `src/backend/services/session-generator.test.js` | Unit tests: session generation from weekly schedule |
+| `src/backend/validators/qr-validator.test.js` | Unit tests: token validation (current, expired, malformed) |
+| `src/backend/validators/device-checker.test.js` | Unit tests: fingerprint match, mismatch, not found |
+| `src/backend/validators/ip-validator.test.js` | Unit tests: Kuwait pass, non-Kuwait, VPN, timeout FAIL-OPEN |
+| `src/backend/validators/gps-accuracy-checker.test.js` | Unit tests: valid, >150m, ===0, null, boundary |
+| `src/backend/validators/scan-verifier.test.js` | Unit tests: pipeline order (spies), short-circuit at each layer |
 
 ---
 
