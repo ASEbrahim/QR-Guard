@@ -7,20 +7,21 @@
   <link rel="stylesheet" href="/styles/main.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<body>
+<body class="has-bottom-nav">
   <nav class="nav">
     <div class="nav-left">
       <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
       <span class="nav-user-name" id="userName"></span>
     </div>
-    <div class="nav-right">
-      <button class="nav-menu-btn" onclick="document.getElementById('navMenu').classList.toggle('open')">&#9776;</button>
-      <div class="nav-dropdown" id="navMenu">
-        <a href="/instructor/dashboard.html">My Courses</a>
-        <div class="divider"></div>
-        <button id="logoutBtn">Logout</button>
-      </div>
-    </div>
+  </nav>
+
+  <nav class="bottom-nav">
+    <a href="/instructor/dashboard.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">&#128218;</span> Courses
+    </a>
+    <button class="bottom-nav-item" id="logoutBtn">
+      <span class="bottom-nav-icon">&#9211;</span> Logout
+    </button>
   </nav>
 
   <div class="container-wide">
@@ -229,12 +230,10 @@
       document.getElementById('noCourses').style.display = 'none';
 
       container.innerHTML = courses.map(c => `
-        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable card-accent">
-          <div class="flex-between">
-            <div>
-              <h2 style="margin-bottom:0.25rem;">${c.code} — ${c.name}</h2>
-              <p class="text-muted">Section ${c.section} · ${c.semester}</p>
-            </div>
+        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable course-card">
+          <h2>${c.code} — ${c.name}</h2>
+          <p class="course-card-meta">Section ${c.section} · ${c.semester}</p>
+          <div class="course-card-actions">
             <span class="enrollment-code">${c.enrollmentCode}</span>
           </div>
         </a>

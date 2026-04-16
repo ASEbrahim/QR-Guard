@@ -52,7 +52,7 @@ function buildHtmlEmail(heading, bodyHtml) {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f1f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:480px;margin:40px auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <div style="background:#2596be;padding:24px 32px;text-align:center;">
+    <div style="background:#9a182b;padding:24px 32px;text-align:center;">
       <h1 style="margin:0;color:#D4A037;font-size:24px;font-weight:800;letter-spacing:-0.02em;">QR-Guard</h1>
       <p style="margin:4px 0 0;color:rgba(255,255,255,0.7);font-size:12px;">American University of Kuwait</p>
     </div>
@@ -110,7 +110,7 @@ export async function sendTokenEmail(email, token, purpose) {
   const html = buildHtmlEmail(config.heading, `
       <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">${config.message}</p>
       <div style="text-align:center;margin:24px 0;">
-        <a href="${url}" style="display:inline-block;background:#2596be;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;">${config.buttonText}</a>
+        <a href="${url}" style="display:inline-block;background:#9a182b;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;">${config.buttonText}</a>
       </div>
       <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">This link expires in ${expiry}. If you didn't request this, you can ignore this email.</p>
       <p style="margin:12px 0 0;color:#cbd5e1;font-size:11px;word-break:break-all;">${url}</p>

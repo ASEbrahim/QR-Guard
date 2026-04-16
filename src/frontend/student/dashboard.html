@@ -6,22 +6,27 @@
   <title>Student Dashboard — QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
 </head>
-<body>
+<body class="has-bottom-nav">
   <nav class="nav">
     <div class="nav-left">
       <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
       <span class="nav-user-name" id="userName"></span>
     </div>
-    <div class="nav-right">
-      <button class="nav-menu-btn" onclick="document.getElementById('navMenu').classList.toggle('open')">&#9776;</button>
-      <div class="nav-dropdown" id="navMenu">
-        <a href="/student/dashboard.html">My Courses</a>
-        <a href="/student/scan.html">Scan QR</a>
-        <a href="/request-rebind.html">Rebind Device</a>
-        <div class="divider"></div>
-        <button id="logoutBtn">Logout</button>
-      </div>
-    </div>
+  </nav>
+
+  <nav class="bottom-nav">
+    <a href="/student/dashboard.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">&#128218;</span> Courses
+    </a>
+    <a href="/student/scan.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">&#128247;</span> Scan
+    </a>
+    <a href="/request-rebind.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">&#128241;</span> Device
+    </a>
+    <button class="bottom-nav-item" id="logoutBtn">
+      <span class="bottom-nav-icon">&#9211;</span> Logout
+    </button>
   </nav>
 
   <div class="container-wide">
@@ -77,16 +82,16 @@
         const pct = c.attendancePct !== null && c.attendancePct !== undefined ? c.attendancePct.toFixed(1) : null;
         const pctColor = pct === null ? 'var(--text-muted)' : parseFloat(pct) >= 85 ? 'var(--success)' : parseFloat(pct) >= 70 ? 'var(--warning)' : 'var(--danger)';
         return `
-        <div class="card card-accent" style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
-          <div style="flex:1;">
-            <h2 style="margin-bottom:0.25rem;">${c.code} — ${c.name}</h2>
-            <p class="text-muted">Section ${c.section} · ${c.semester}</p>
+        <div class="card course-card">
+          <h2>${c.code} — ${c.name}</h2>
+          <p class="course-card-meta">Section ${c.section} · ${c.semester}</p>
+          <div class="course-card-actions">
+            <a href="/student/scan.html" class="btn btn-primary" style="flex:1;">Scan QR</a>
+            <div class="course-card-pct">
+              <div class="course-card-pct-value" style="color:${pctColor};">${pct ? pct + '%' : 'N/A'}</div>
+              <div class="course-card-pct-label">attendance</div>
+            </div>
           </div>
-          <div style="text-align:center; min-width:70px;">
-            <div style="font-size:1.5rem; font-weight:800; color:${pctColor};">${pct ? pct + '%' : 'N/A'}</div>
-            <div class="text-muted" style="font-size:0.7rem;">attendance</div>
-          </div>
-          <a href="/student/scan.html" class="btn btn-primary btn-lg">Scan QR</a>
         </div>`;
       }).join('');
     }
