@@ -29,7 +29,7 @@ export async function sendEmail({ to, subject, text, html }) {
 
   if (provider === 'resend') {
     await resend.emails.send({
-      from: 'QR-Guard <noreply@qrguard.dev>',
+      from: 'QR-Guard <onboarding@resend.dev>',
       to,
       subject,
       text,
