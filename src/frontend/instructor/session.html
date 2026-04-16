@@ -87,12 +87,9 @@
   </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
-    </div>
-    <div class="nav-links"><a href="javascript:history.back()">Back to Course</a></div>
-  </nav>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>renderNavWithBack('javascript:history.back()', 'Back to Course');</script>
 
   <!-- Error state (hidden by default) -->
   <div class="session-layout" id="errorView" style="display:none;">
@@ -139,7 +136,6 @@
   </div>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="/scripts/api.js"></script>
   <script>
     const sessionId = new URLSearchParams(window.location.search).get('id');
     if (!sessionId) window.location.href = '/instructor/dashboard.html';

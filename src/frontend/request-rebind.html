@@ -7,12 +7,9 @@
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
-    </div>
-    <div class="nav-links"><a href="/student/dashboard.html">Back to Dashboard</a></div>
-  </nav>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>renderNavWithBack('/student/dashboard.html', 'Back to Dashboard'); renderBottomNav('student', 'device');</script>
 
   <div class="container" style="max-width:520px;">
     <div id="error" class="message error"></div>
@@ -28,7 +25,6 @@
     </div>
   </div>
 
-  <script src="/scripts/api.js"></script>
   <script>
     document.getElementById('rebindBtn').addEventListener('click', async () => {
       const res = await apiPost('/api/auth/request-rebind');

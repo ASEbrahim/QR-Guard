@@ -7,22 +7,10 @@
   <link rel="stylesheet" href="/styles/main.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
-<body class="has-bottom-nav">
-  <nav class="nav">
-    <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
-      <span class="nav-user-name" id="userName"></span>
-    </div>
-  </nav>
-
-  <nav class="bottom-nav">
-    <a href="/instructor/dashboard.html" class="bottom-nav-item active">
-      <span class="bottom-nav-icon">&#128218;</span> Courses
-    </a>
-    <button class="bottom-nav-item" id="logoutBtn">
-      <span class="bottom-nav-icon">&#9211;</span> Logout
-    </button>
-  </nav>
+<body>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>renderNav(''); renderBottomNav('instructor', 'courses'); renderFooter();</script>
 
   <div class="container-wide">
     <h1>My Courses</h1>
@@ -75,15 +63,7 @@
     <p id="noCourses" class="text-muted text-center" style="display:none;">No courses yet. Create one above.</p>
   </div>
 
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <div class="site-footer-brand">QR-Guard</div>
-      <p>American University of Kuwait — Attendance System</p>
-    </div>
-  </footer>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/scripts/api.js"></script>
   <script>
     let map, marker, circle;
 
@@ -170,10 +150,16 @@
 
     // Common AUK class times
     const TIMES = [
-      '08:00','08:30','09:00','09:15','09:30','10:00','10:15','10:30',
-      '11:00','11:15','11:30','12:00','12:15','12:30','13:00','13:15',
-      '13:30','14:00','14:15','14:30','15:00','15:15','15:30','16:00',
-      '16:15','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'
+      '08:00','08:15','08:30','08:45','08:50',
+      '09:00','09:15','09:30','09:45','09:50',
+      '10:00','10:15','10:30','10:45','10:50',
+      '11:00','11:15','11:30','11:45','11:50',
+      '12:00','12:15','12:30','12:45','12:50',
+      '13:00','13:15','13:30','13:45','13:50',
+      '14:00','14:15','14:30','14:45','14:50',
+      '15:00','15:15','15:30','15:45','15:50',
+      '16:00','16:15','16:30','16:45','16:50',
+      '17:00','17:30','18:00','18:30','19:00','19:30','20:00'
     ];
 
     let slotCount = 0;

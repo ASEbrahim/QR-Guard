@@ -6,28 +6,10 @@
   <title>Student Dashboard — QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
 </head>
-<body class="has-bottom-nav">
-  <nav class="nav">
-    <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
-      <span class="nav-user-name" id="userName"></span>
-    </div>
-  </nav>
-
-  <nav class="bottom-nav">
-    <a href="/student/dashboard.html" class="bottom-nav-item active">
-      <span class="bottom-nav-icon">&#128218;</span> Courses
-    </a>
-    <a href="/student/scan.html" class="bottom-nav-item">
-      <span class="bottom-nav-icon">&#128247;</span> Scan
-    </a>
-    <a href="/request-rebind.html" class="bottom-nav-item">
-      <span class="bottom-nav-icon">&#128241;</span> Device
-    </a>
-    <button class="bottom-nav-item" id="logoutBtn">
-      <span class="bottom-nav-icon">&#9211;</span> Logout
-    </button>
-  </nav>
+<body>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>renderNav(''); renderBottomNav('student', 'courses'); renderFooter();</script>
 
   <div class="container-wide">
     <h1>My Courses</h1>
@@ -53,14 +35,7 @@
     <p id="noCourses" class="text-muted text-center" style="display:none;">You're not enrolled in any courses yet.</p>
   </div>
 
-  <footer class="site-footer">
-    <div class="site-footer-inner">
-      <div class="site-footer-brand">QR-Guard</div>
-      <p>American University of Kuwait — Attendance System</p>
-    </div>
-  </footer>
-
-  <script src="/scripts/api.js"></script>
+  <!-- scripts already loaded above -->
   <script>
     async function loadDashboard() {
       const meRes = await apiGet('/api/auth/me');
@@ -116,12 +91,6 @@
       } else {
         showError('enrollError', data.error);
       }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await apiPost('/api/auth/logout');
-      window.location.href = '/login.html';
     });
 
     loadDashboard();

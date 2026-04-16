@@ -377,13 +377,13 @@ button:active:not(.password-toggle), .btn:active {
 .nav-left {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
 }
 
-.nav-user-name {
-  font-weight: 600;
-  color: rgba(255,255,255,0.9);
-  font-size: 0.875rem;
+.nav-user {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.7);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: 0.03em;
 }
 
 /* --- Bottom navigation bar --- */
@@ -433,6 +433,13 @@ button:active:not(.password-toggle), .btn:active {
 /* Add padding to body so content isn't hidden behind bottom nav */
 body.has-bottom-nav {
   padding-bottom: 70px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body.has-bottom-nav .container-wide {
+  flex: 1;
 }
 
 /* Legacy nav-links for simple pages */
@@ -684,9 +691,12 @@ th {
 
 /* --- Mobile responsive --- */
 @media (max-width: 640px) {
-  .container-wide { padding: 1rem; }
-  .nav { padding: 0.75rem 1rem; }
+  .container-wide { padding: 0.75rem; }
+  .nav { padding: 0.6rem 1rem; }
   .auth-card { padding: 1.5rem; margin: 0 0.5rem; }
   table { font-size: 0.8rem; }
+  /* Schedule slots: wrap on small screens */
+  #scheduleSlots > div { flex-wrap: wrap; }
+  #scheduleSlots select { min-width: 0; font-size: 0.85rem; }
   th, td { padding: 0.4rem 0.5rem; }
 }

@@ -7,17 +7,12 @@
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
-  <nav class="nav">
-    <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
-    </div>
-    <div class="nav-links">
-      <a href="/instructor/dashboard.html">Back to Courses</a>
-    </div>
-  </nav>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>renderNavWithBack('/instructor/dashboard.html', 'Back to Courses');</script>
 
   <div class="container-wide">
-    <div id="courseInfo" class="card card-accent">
+    <div id="courseInfo" class="card">
       <h1 id="courseTitle" style="margin-bottom:0.25rem;">Loading...</h1>
       <p id="courseMeta" class="text-muted"></p>
       <p class="mt-1">Enrollment code: <span class="enrollment-code" id="enrollCode"></span></p>
@@ -49,7 +44,6 @@
     </div>
   </div>
 
-  <script src="/scripts/api.js"></script>
   <script>
     const courseId = new URLSearchParams(window.location.search).get('id');
     if (!courseId) window.location.href = '/instructor/dashboard.html';
