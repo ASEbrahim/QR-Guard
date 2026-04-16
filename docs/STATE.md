@@ -12,9 +12,9 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Current sprint
 
-**Active increment:** Sprint B (Inc 3) ✅ Complete
-**Active sprint focus:** Sprint C (Inc 4 + Inc 5) — next
-**Last commit:** feat(sprint-b): dynamic QR + 6-layer scan pipeline
+**Active increment:** All complete — feature-complete
+**Active sprint focus:** none — ready for PR2
+**Last commit:** feat(sprint-c): reports + notifications + override + hardening
 
 ---
 
@@ -25,8 +25,8 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 | 1 | Authentication & accounts | ✅ Complete | Sprint A, 2026-04-16 |
 | 2 | Course management | ✅ Complete | Sprint A, 2026-04-16 |
 | 3 | Dynamic QR & scan pipeline | ✅ Complete | Sprint B, 2026-04-16 |
-| 4 | Reports & analytics | ⏳ Not started | Sprint C |
-| 5 | Notifications, override, audit, hardening | ⏳ Not started | Sprint C |
+| 4 | Reports & analytics | ✅ Complete | Sprint C, 2026-04-16 |
+| 5 | Notifications, override, audit, hardening | ✅ Complete | Sprint C, 2026-04-16 |
 
 **Status legend:** ⏳ Not started · 🛠 In progress · 🔍 In review · ✅ Complete · ⚠️ Blocked
 
@@ -61,10 +61,10 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Next steps
 
-1. Sprint C plan: Reports + Notifications + Hardening (FR5-FR7)
-2. Attendance % calculation, CSV export
-3. Warning emails with one-per-crossing semantics
-4. Override, rate limiting, security headers
+1. Write Progress Report 2 document
+2. Build presentation slides
+3. Push all commits to GitHub
+4. Deploy or set up local demo
 
 ---
 
@@ -74,3 +74,4 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 - 2026-04-16: Sprint A complete (Auth + Course Management). 14 tests pass, lint clean. Next: Sprint B.
 - 2026-04-16: Sprint B complete (Dynamic QR + Scan Pipeline). 36 tests pass, lint clean. Next: Sprint C.
+- 2026-04-16: Sprint C complete (Reports + Notifications + Hardening). 43 tests pass, lint clean. Feature-complete.

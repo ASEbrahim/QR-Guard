@@ -13,6 +13,7 @@ import { requireAuth } from '../middleware/auth-middleware.js';
 
 const router = Router();
 
+// Rate limiters applied in server.js, not here — keeps routes testable in isolation
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', requireAuth, logout);

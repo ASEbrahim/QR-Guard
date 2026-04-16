@@ -14,15 +14,23 @@ import authRoutes from './routes/auth-routes.js';
 import courseRoutes from './routes/course-routes.js';
 import sessionRoutes from './routes/session-routes.js';
 import scanRoutes from './routes/scan-routes.js';
+import reportRoutes from './routes/report-routes.js';
+import { globalLimiter, loginLimiter, registerLimiter, scanLimiter } from './middleware/rate-limiter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PgSession = connectPgSimple(session);
 
 // --- Middleware ---
-app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled for dev (inline scripts in HTML)
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled for dev (inline scripts in HTML)
+  hsts: { maxAge: 31536000, includeSubDomains: true },
+  frameguard: { action: 'deny' },
+  noSniff: true,
+}));
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(globalLimiter);
 
 app.use(
   session({
@@ -42,11 +50,17 @@ app.use(
 // --- Trust proxy for X-Forwarded-For behind reverse proxy ---
 app.set('trust proxy', 1);
 
+// --- Per-route rate limiters (applied here, not in route files, so tests stay clean) ---
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
+app.use('/api/scan', scanLimiter);
+
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/scan', scanRoutes);
+app.use('/api', reportRoutes);
 
 // --- Static frontend ---
 app.use(express.static(path.join(__dirname, '../frontend')));

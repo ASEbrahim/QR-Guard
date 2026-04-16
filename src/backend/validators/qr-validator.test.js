@@ -25,8 +25,10 @@ describe('QrValidator', () => {
   });
 
   afterAll(async () => {
+    await db.execute(sql`DELETE FROM attendance`);
     await db.execute(sql`DELETE FROM qr_tokens`);
     await db.execute(sql`DELETE FROM sessions`);
+    await db.execute(sql`DELETE FROM enrollments`);
     await db.execute(sql`DELETE FROM courses`);
     await db.execute(sql`DELETE FROM instructors`);
     await db.execute(sql`DELETE FROM users WHERE email = 'qrvtest@auk.edu.kw'`);

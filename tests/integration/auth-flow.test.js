@@ -30,20 +30,28 @@ describe('Auth Flow', () => {
   });
 
   afterAll(async () => {
-    // Clean up test data
-    await db.execute(sql`DELETE FROM email_verification_tokens`);
-    await db.execute(sql`DELETE FROM students`);
-    await db.execute(sql`DELETE FROM instructors`);
-    await db.execute(sql`DELETE FROM users`);
+    await cleanAll();
     await pool.end();
   });
 
   beforeEach(async () => {
-    await db.execute(sql`DELETE FROM email_verification_tokens`);
-    await db.execute(sql`DELETE FROM students`);
-    await db.execute(sql`DELETE FROM instructors`);
-    await db.execute(sql`DELETE FROM users`);
+    await cleanAll();
   });
+
+  async function cleanAll() {
+    // Delete in reverse FK order to avoid constraint violations
+    await db.execute(sql`DELETE FROM warning_email_log`);
+    await db.execute(sql`DELETE FROM attendance`);
+    await db.execute(sql`DELETE FROM audit_log`);
+    await db.execute(sql`DELETE FROM qr_tokens`);
+    await db.execute(sql`DELETE FROM sessions`);
+    await db.execute(sql`DELETE FROM enrollments`);
+    await db.execute(sql`DELETE FROM courses`);
+    await db.execute(sql`DELETE FROM email_verification_tokens`);
+    await db.execute(sql`DELETE FROM instructors`);
+    await db.execute(sql`DELETE FROM students`);
+    await db.execute(sql`DELETE FROM users`);
+  }
 
   // AC 1: Student registers with @auk.edu.kw + verification email
   it('should register a student with valid @auk.edu.kw email', async () => {

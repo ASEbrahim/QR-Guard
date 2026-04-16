@@ -4,6 +4,7 @@ import { db } from '../config/database.js';
 import { attendance } from '../db/schema/index.js';
 import { verifyScan } from '../validators/scan-verifier.js';
 import { emitAttendanceUpdate } from '../services/socket-service.js';
+import { checkThresholdAndNotify } from '../services/notification-service.js';
 
 const scanSchema = z.object({
   qrPayload: z.string().min(1),
@@ -79,6 +80,17 @@ export async function handleScan(req, res) {
     });
   } catch (err) {
     console.error('[scan-controller] Failed to broadcast attendance update:', err.message);
+  }
+
+  // Check threshold for notifications (fires after every successful scan)
+  try {
+    // Decode the QR payload to get courseId
+    const decoded = JSON.parse(Buffer.from(qrPayload, 'base64').toString('utf-8'));
+    if (decoded.courseId) {
+      await checkThresholdAndNotify(decoded.courseId, req.session.userId);
+    }
+  } catch (err) {
+    console.error('[scan-controller] Threshold check failed:', err.message);
   }
 
   res.json({ message: 'Attendance recorded' });

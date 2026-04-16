@@ -6,6 +6,7 @@ export default defineConfig({
     environment: 'node',
     testTimeout: 15000,
     hookTimeout: 15000,
+    fileParallelism: false,
     env: {
       DATABASE_URL: 'postgresql://qrguard:qrguard@localhost:5432/qrguard',
       SESSION_SECRET: 'test-secret',

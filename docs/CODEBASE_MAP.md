@@ -12,7 +12,7 @@ role: a one-line description of every code file in the project
 
 ## Status
 
-Sprint A (Auth + Courses) ✅ complete. Sprint B next.
+All 3 sprints ✅ complete. Feature-complete.
 
 ---
 
@@ -76,6 +76,15 @@ Sprint A (Auth + Courses) ✅ complete. Sprint B next.
 | `src/backend/validators/ip-validator.test.js` | Unit tests: Kuwait pass, non-Kuwait, VPN, timeout FAIL-OPEN |
 | `src/backend/validators/gps-accuracy-checker.test.js` | Unit tests: valid, >150m, ===0, null, boundary |
 | `src/backend/validators/scan-verifier.test.js` | Unit tests: pipeline order (spies), short-circuit at each layer |
+| `src/backend/controllers/override-controller.js` | Override attendance status + audit log entry + threshold check |
+| `src/backend/controllers/report-controller.js` | Per-session, per-student, CSV export, student self-view, audit log viewer, roster with % |
+| `src/backend/db/schema/warning-email-log.schema.js` | Drizzle schema: warning_email_log (one-per-crossing) |
+| `src/backend/middleware/rate-limiter.js` | express-rate-limit configs: login, register, scan, global |
+| `src/backend/routes/report-routes.js` | Express router for attendance reports, CSV, audit log |
+| `src/backend/services/attendance-calculator.js` | Shared % calculation with COALESCE for absent, excused excluded |
+| `src/backend/services/notification-service.js` | Warning email logic, one-per-crossing via warning_email_log |
+| `src/backend/services/attendance-calculator.test.js` | Unit tests: 0%, mixed, excused excluded, 100% |
+| `src/backend/services/notification-service.test.js` | Unit tests: threshold crossing, no duplicate emails, above threshold |
 
 ---
 
