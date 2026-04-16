@@ -7,10 +7,10 @@
 }
 
 :root {
-  /* AUK Brand: Garnet & Gold — change these to retheme the entire app */
-  --primary: #8D2222;
-  --primary-hover: #731b1b;
-  --primary-light: #faeaea;
+  /* AUK Brand — change these to retheme the entire app */
+  --primary: #2596be;
+  --primary-hover: #1e7fa3;
+  --primary-light: #e8f4f8;
   --accent: #D4A037;
   --accent-hover: #c09030;
   --accent-light: #fdf6e8;
@@ -69,11 +69,11 @@ select { cursor: pointer; }
 select:hover { border-color: var(--text-muted); }
 
 /* Custom scrollbar — accent-tinted, thin */
-* { scrollbar-width: thin; scrollbar-color: rgba(141,34,34,0.25) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(37,150,190,0.25) transparent; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(141,34,34,0.25); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(141,34,34,0.45); }
+::-webkit-scrollbar-thumb { background: rgba(37,150,190,0.25); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(37,150,190,0.45); }
 
 /* --- Auth pages: centered layout --- */
 .auth-page {
@@ -271,12 +271,12 @@ button:active:not(.password-toggle), .btn:active {
 .btn-primary {
   background: var(--primary);
   color: white;
-  box-shadow: 0 2px 4px rgba(141,34,34,0.2);
+  box-shadow: 0 2px 4px rgba(37,150,190,0.2);
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
-  box-shadow: 0 4px 8px rgba(141,34,34,0.25);
+  box-shadow: 0 4px 8px rgba(37,150,190,0.25);
 }
 
 .btn-danger {

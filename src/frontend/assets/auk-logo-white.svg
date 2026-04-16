@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 10 180 200" width="100%" height="100%">
+  <defs>
+    <style>
+      .w-fill { fill: #ffffff; }
+      .g-fill { fill: #D4A037; }
+      .text-bold { font-family: 'Times New Roman', Times, serif; font-weight: bold; }
+    </style>
+  </defs>
+  <rect x="145" y="195" width="15" height="12" class="g-fill" />
+  <rect x="170" y="195" width="15" height="12" class="g-fill" />
+  <rect x="195" y="195" width="15" height="12" class="g-fill" />
+  <rect x="220" y="195" width="15" height="12" class="g-fill" />
+  <rect x="145" y="207" width="90" height="8" class="g-fill" />
+  <path d="M235 207 L235 140 C235 100 210 70 190 40 L187 40 L187 70 C205 95 218 115 218 140 L218 207 Z" class="g-fill" />
+  <polygon points="187,40 188,15 189,40" class="g-fill" />
+  <path d="M185 70 C175 80 170 95 170 110 L172 110 C172 98 177 85 185 75 Z" class="g-fill" />
+  <rect x="170" y="125" width="3" height="25" class="w-fill" />
+  <rect x="190" y="125" width="3" height="25" class="w-fill" />
+  <rect x="190" y="147" width="10" height="3" class="w-fill" />
+  <rect x="164" y="147" width="9" height="3" class="w-fill" />
+  <polyline points="152,175 170,175 170,160" fill="none" stroke="#ffffff" stroke-width="2.5" />
+  <path d="M160 180 C160 198 185 198 185 180 C180 192 165 192 160 180 Z" class="w-fill" />
+</svg>
