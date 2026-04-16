@@ -42,7 +42,9 @@
     </div>
 
     <!-- Enrolled courses -->
-    <div id="coursesList"></div>
+    <div id="coursesList">
+      <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div></div>
+    </div>
     <p id="noCourses" class="text-muted text-center" style="display:none;">You're not enrolled in any courses yet.</p>
   </div>
 
@@ -86,10 +88,13 @@
       e.preventDefault();
       document.getElementById('enrollError').style.display = 'none';
       document.getElementById('enrollSuccess').style.display = 'none';
+      const btn = e.target.querySelector('button[type="submit"]');
+      const restore = setButtonLoading(btn);
 
       const code = document.getElementById('codeInput').value.toUpperCase();
 
       const res = await apiPost('/api/courses/enroll', { enrollmentCode: code });
+      restore();
       if (!res) return;
       const data = await res.json();
 

@@ -84,6 +84,8 @@
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       document.getElementById('error').style.display = 'none';
+      const btn = e.target.querySelector('button[type="submit"]');
+      const restore = setButtonLoading(btn);
 
       const body = {
         name: document.getElementById('name').value,
@@ -94,6 +96,7 @@
       };
 
       const res = await apiPost('/api/auth/register', body);
+      restore();
       if (!res) return;
       const data = await res.json();
 
@@ -110,9 +113,12 @@
     document.getElementById('verifyForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       document.getElementById('verifyError').style.display = 'none';
+      const btn = e.target.querySelector('button[type="submit"]');
+      const restore = setButtonLoading(btn);
       const code = document.getElementById('verifyCode').value.trim();
 
       const res = await apiPost('/api/auth/verify-code', { email: registeredEmail, code });
+      restore();
       if (!res) return;
       const data = await res.json();
 

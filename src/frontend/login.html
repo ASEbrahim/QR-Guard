@@ -54,6 +54,9 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       document.getElementById('error').style.display = 'none';
+      const btn = e.target.querySelector('button[type="submit"]');
+      const restore = setButtonLoading(btn);
+      const stopLoader = showPageLoader();
 
       let deviceFingerprint = null;
       try {
@@ -67,6 +70,7 @@
         password: document.getElementById('password').value,
         deviceFingerprint,
       });
+      restore(); stopLoader();
       if (!res) return;
       const data = await res.json();
 

@@ -72,3 +72,36 @@ function showSuccess(elementId, message) {
     el.className = 'message success';
   }
 }
+
+/** Shows a top loading bar. Returns a stop function. */
+function showPageLoader() {
+  let bar = document.getElementById('pageLoader');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'pageLoader';
+    bar.className = 'page-loader';
+    document.body.prepend(bar);
+  }
+  bar.style.display = 'block';
+  return () => { bar.style.display = 'none'; };
+}
+
+/** Sets a button to loading state. Returns a restore function. */
+function setButtonLoading(btn) {
+  const original = btn.textContent;
+  btn.classList.add('loading');
+  btn.textContent = original;
+  return () => { btn.classList.remove('loading'); btn.textContent = original; };
+}
+
+/** Shows skeleton cards in a container */
+function showSkeletons(containerId, count = 3) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = Array.from({ length: count }, () => `
+    <div class="skeleton-card">
+      <div class="skeleton skeleton-title"></div>
+      <div class="skeleton skeleton-text"></div>
+    </div>
+  `).join('');
+}
