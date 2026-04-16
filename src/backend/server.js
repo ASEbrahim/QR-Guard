@@ -81,8 +81,9 @@ const PORT = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
 initSocketIO(httpServer);
 
-httpServer.listen(PORT, () => {
-  console.log(`QR-Guard server running on http://localhost:${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+httpServer.listen(PORT, HOST, () => {
+  console.log(`QR-Guard server running on http://${HOST}:${PORT}`);
 });
 
 export default app;

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: qr-guard
+    runtime: node
+    buildCommand: npm install
+    startCommand: node src/backend/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set manually in Render dashboard (Neon connection string)
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: EMAIL_PROVIDER
+        value: console
+      - key: BASE_URL
+        sync: false  # Set to your Render URL, e.g. https://qr-guard.onrender.com

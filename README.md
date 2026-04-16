@@ -63,3 +63,22 @@ npm run lint            # check code style
 5. Notifications, override, audit, hardening (FR6-7)
 
 See `docs/INCREMENTS.md` for full acceptance criteria.
+
+## Deployment
+
+**Production: Render + Neon (free)**
+
+1. Create a database at [neon.tech](https://neon.tech) (free, PostGIS included)
+   - Run the 3 migration files in `drizzle/` against it
+2. Create a Web Service at [render.com](https://render.com) connected to this GitHub repo
+   - Set env vars: `DATABASE_URL` (Neon connection string), `NODE_ENV=production`, `BASE_URL=https://your-app.onrender.com`
+   - Render auto-detects `render.yaml` for build/start commands
+3. Done — HTTPS, WebSocket, GPS, camera all work on any device
+
+**Local development:**
+
+```bash
+npm install
+cp .env.example .env    # fill in local Postgres URL
+npm run dev             # http://localhost:3000
+```
