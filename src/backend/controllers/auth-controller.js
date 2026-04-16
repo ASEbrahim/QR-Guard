@@ -138,7 +138,7 @@ export async function login(req, res) {
 
   // Check email verification
   if (!user.emailVerifiedAt) {
-    return res.status(403).json({ error: 'Email not verified. Check your inbox.' });
+    return res.status(403).json({ error: 'Email not verified. Check your inbox.', code: 'not_verified' });
   }
 
   // Reset failed login count on success
@@ -263,6 +263,29 @@ export async function forgotPassword(req, res) {
 
   // Always 200 — don't reveal whether email exists
   res.json({ message: 'If that email exists, a reset link has been sent.' });
+}
+
+/**
+ * POST /api/auth/resend-verification
+ * Resends the verification email. Always returns 200 (no email leak).
+ */
+export async function resendVerification(req, res) {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email required' });
+
+  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (user && !user.emailVerifiedAt) {
+    const token = generateToken();
+    await db.insert(emailVerificationTokens).values({
+      token,
+      userId: user.userId,
+      purpose: 'email_verify',
+      expiresAt: new Date(Date.now() + EMAIL_VERIFY_EXPIRY_MS),
+    });
+    await sendTokenEmail(email, token, 'email_verify');
+  }
+
+  res.json({ message: 'If that email needs verification, a new link has been sent.' });
 }
 
 /**

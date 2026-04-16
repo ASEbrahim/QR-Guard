@@ -72,7 +72,18 @@
       if (res.ok) {
         window.location.href = data.redirectUrl;
       } else {
-        showError('error', data.error || 'Login failed');
+        if (data.code === 'not_verified') {
+          const errEl = document.getElementById('error');
+          errEl.innerHTML = `${data.error} <a href="#" id="resendLink" style="color:var(--primary);font-weight:600;">Resend verification email</a>`;
+          errEl.style.display = 'block';
+          document.getElementById('resendLink').addEventListener('click', async (ev) => {
+            ev.preventDefault();
+            const r = await apiPost('/api/auth/resend-verification', { email: document.getElementById('email').value });
+            if (r && r.ok) { const d = await r.json(); errEl.innerHTML = d.message; errEl.className = 'message success'; }
+          });
+        } else {
+          showError('error', data.error || 'Login failed');
+        }
       }
     });
   </script>
