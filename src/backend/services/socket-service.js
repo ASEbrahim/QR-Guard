@@ -1,15 +1,48 @@
 import { Server } from 'socket.io';
+import { eq, and, isNull } from 'drizzle-orm';
+import { db } from '../config/database.js';
+import { sessions, courses, enrollments } from '../db/schema/index.js';
 
 /** @type {Server|null} */
 let io = null;
+
+/** UUID v4 format check */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Checks if a user (by session data) is allowed to join a session room.
+ * Instructors must own the course. Students must be enrolled.
+ */
+async function canAccessSession(userId, role, sessionId) {
+  const [session] = await db.select().from(sessions).where(eq(sessions.sessionId, sessionId)).limit(1);
+  if (!session) return false;
+
+  if (role === 'instructor') {
+    const [course] = await db.select().from(courses)
+      .where(and(eq(courses.courseId, session.courseId), eq(courses.instructorId, userId)))
+      .limit(1);
+    return !!course;
+  }
+
+  // Student — must be enrolled
+  const [enrollment] = await db.select().from(enrollments)
+    .where(and(
+      eq(enrollments.courseId, session.courseId),
+      eq(enrollments.studentId, userId),
+      isNull(enrollments.removedAt),
+    ))
+    .limit(1);
+  return !!enrollment;
+}
 
 /**
  * Attaches Socket.IO to the HTTP server.
  * Called once from server.js after the HTTP server starts.
  *
  * @param {import('http').Server} httpServer
+ * @param {function} sessionMiddleware — express-session middleware for cookie parsing
  */
-export function initSocketIO(httpServer) {
+export function initSocketIO(httpServer, sessionMiddleware) {
   io = new Server(httpServer, {
     cors: {
       origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
@@ -17,9 +50,29 @@ export function initSocketIO(httpServer) {
     },
   });
 
+  // Authenticate Socket.IO connections using the express session cookie
+  if (sessionMiddleware) {
+    io.engine.use(sessionMiddleware);
+  }
+
   io.on('connection', (socket) => {
-    socket.on('join-session', (sessionId) => {
-      socket.join(`session-${sessionId}`);
+    // Reject unauthenticated connections
+    const session = socket.request?.session;
+    if (!session?.userId) {
+      socket.disconnect(true);
+      return;
+    }
+
+    socket.on('join-session', async (sessionId) => {
+      // Validate UUID format
+      if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) return;
+      // Limit rooms per socket
+      if (socket.rooms.size > 5) return;
+      // Verify authorization
+      const allowed = await canAccessSession(session.userId, session.role, sessionId);
+      if (allowed) {
+        socket.join(`session-${sessionId}`);
+      }
     });
 
     socket.on('leave-session', (sessionId) => {

@@ -45,20 +45,19 @@ if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'change-me') {
   }
 }
 
-app.use(
-  session({
-    store: new PgSession({ pool, createTableIfMissing: true }),
-    secret: process.env.SESSION_SECRET || 'change-me',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      maxAge: SESSION_MAX_AGE_MS,
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    },
-  }),
-);
+const sessionMiddleware = session({
+  store: new PgSession({ pool, createTableIfMissing: true }),
+  secret: process.env.SESSION_SECRET || 'change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: SESSION_MAX_AGE_MS,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  },
+});
+app.use(sessionMiddleware);
 
 // --- Trust proxy for X-Forwarded-For behind reverse proxy ---
 app.set('trust proxy', 1);
@@ -95,7 +94,7 @@ app.use((err, _req, res, _next) => {
 // --- Start with HTTP server (needed for Socket.IO) ---
 const PORT = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
-initSocketIO(httpServer);
+initSocketIO(httpServer, sessionMiddleware);
 
 const HOST = process.env.HOST || '0.0.0.0';
 httpServer.listen(PORT, HOST, () => {

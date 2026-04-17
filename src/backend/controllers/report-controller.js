@@ -81,14 +81,21 @@ export async function getPerSessionReport(req, res) {
 export async function getPerStudentReport(req, res) {
   const { id, studentId } = req.params;
 
-  // Auth check: instructor of the course OR the student themselves
+  // Auth check: instructor of the course OR the student themselves (must be enrolled)
   if (req.session.role === 'instructor') {
     const [course] = await db.select().from(courses)
       .where(and(eq(courses.courseId, id), eq(courses.instructorId, req.session.userId)))
       .limit(1);
     if (!course) return res.status(403).json({ error: 'Not your course' });
-  } else if (req.session.userId !== studentId) {
-    return res.status(403).json({ error: 'Cannot view another student\'s attendance' });
+  } else {
+    if (req.session.userId !== studentId) {
+      return res.status(403).json({ error: 'Cannot view another student\'s attendance' });
+    }
+    // Verify the student is enrolled in this course
+    const [enrollment] = await db.select().from(enrollments)
+      .where(and(eq(enrollments.courseId, id), eq(enrollments.studentId, studentId), isNull(enrollments.removedAt)))
+      .limit(1);
+    if (!enrollment) return res.status(403).json({ error: 'Not enrolled in this course' });
   }
 
   const closedSessions = await db.select().from(sessions)
