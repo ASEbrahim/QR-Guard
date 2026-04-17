@@ -38,7 +38,7 @@
         <button class="btn btn-primary" id="addSessionBtn" style="white-space:nowrap;">Add Session</button>
       </div>
       <table>
-        <thead><tr><th>Date</th><th>Time</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Date</th><th>Time</th><th>Status</th></tr></thead>
         <tbody id="sessionsBody"></tbody>
       </table>
     </div>
@@ -79,11 +79,11 @@
         if (s.status === 'active') {
           actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary" style="padding:0.25rem 0.5rem;font-size:0.75rem;">View QR</a>`);
         }
+        const actionsHtml = actions.length ? `<div style="display:inline-flex;gap:0.25rem;margin-left:0.5rem;">${actions.join('')}</div>` : '';
         return `<tr>
           <td>${start.toLocaleDateString()}</td>
           <td>${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
-          <td>${statusBadge}</td>
-          <td style="display:flex;gap:0.25rem;flex-wrap:wrap;">${actions.join('')}</td>
+          <td>${statusBadge}${actionsHtml}</td>
         </tr>`;
       }).join('');
 
