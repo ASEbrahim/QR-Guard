@@ -672,14 +672,23 @@ th {
 .skip-link { position: absolute; transform: translateY(-100%); background: var(--primary); color: white; padding: 0.5rem 1rem; z-index: 9999; font-weight: 600; text-decoration: none; }
 .skip-link:focus { transform: translateY(0); }
 
+/* --- Prevent horizontal overflow on all devices --- */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.card {
+  overflow-x: auto;
+}
+
 /* --- Mobile responsive --- */
 @media (max-width: 640px) {
-  .container-wide { padding: 0.75rem; }
+  .container-wide { padding: 0.75rem; width: 100%; }
   .nav { padding: 0.6rem 1rem; }
   .auth-card { padding: 1.5rem; margin: 0 0.5rem; }
-  table { font-size: 0.8rem; }
-  /* Schedule slots: wrap on small screens */
+  table { font-size: 0.75rem; display: block; overflow-x: auto; }
   #scheduleSlots > div { flex-wrap: wrap; }
   #scheduleSlots select { min-width: 0; font-size: 0.85rem; }
-  th, td { padding: 0.4rem 0.5rem; }
+  th, td { padding: 0.35rem 0.4rem; white-space: nowrap; }
 }
