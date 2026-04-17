@@ -690,5 +690,6 @@ html, body {
   table { font-size: 0.75rem; display: block; overflow-x: auto; }
   #scheduleSlots > div { flex-wrap: wrap; }
   #scheduleSlots select { min-width: 0; font-size: 0.85rem; }
-  th, td { padding: 0.35rem 0.4rem; white-space: nowrap; }
+  th, td { padding: 0.35rem 0.4rem; }
+  input[type="datetime-local"] { font-size: 0.85rem; }
 }
