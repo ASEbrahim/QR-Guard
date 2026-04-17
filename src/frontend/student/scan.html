@@ -103,12 +103,27 @@
       if (res.ok) {
         showResult('Attendance recorded', 'success');
       } else {
-        showResult(data.error || 'Scan failed', 'error');
-        setTimeout(() => {
-          scanning = false;
-          document.getElementById('result').style.display = 'none';
-          scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
-        }, 3000);
+        // Show specific guidance per error code
+        const messages = {
+          device_mismatch: 'This is not your registered device. You can only scan from the phone you first logged in with. To switch devices, go to Dashboard > Device > Send Rebind Link.',
+          qr_expired: 'This QR code has expired. Wait for it to refresh (every 25 seconds) and scan the new one.',
+          location_failed: 'Location verification failed. Make sure your VPN is off and you are connected to a Kuwait network.',
+          gps_accuracy_failed: 'GPS signal is too weak or appears spoofed. Move to an area with better GPS reception and try again.',
+          outside_geofence: 'You are outside the classroom area. Move closer to the classroom and try again.',
+          already_recorded: 'Your attendance is already recorded for this session.',
+          course_not_found: 'This session could not be found. Contact your instructor.',
+        };
+        const msg = messages[data.code] || data.error || 'Scan failed. Try again.';
+        showResult(msg, data.code === 'already_recorded' ? 'info' : 'error');
+
+        // Auto-retry for transient errors (not device/already recorded)
+        if (data.code !== 'device_mismatch' && data.code !== 'already_recorded') {
+          setTimeout(() => {
+            scanning = false;
+            document.getElementById('result').style.display = 'none';
+            scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess, () => {}).catch(() => {});
+          }, 3000);
+        }
       }
     }
 

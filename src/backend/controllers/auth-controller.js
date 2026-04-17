@@ -155,22 +155,19 @@ export async function login(req, res) {
       .where(eq(users.userId, user.userId));
   }
 
-  // Device fingerprint check — students only, instructors are exempt
-  if (user.role === 'student') {
+  // Device binding: capture fingerprint on first login, but don't block login
+  // from other devices. Device verification happens in the scan pipeline
+  // (DeviceChecker, Layer 2) — students can log in from any device to view
+  // their dashboard, but can only SCAN from their bound device.
+  if (user.role === 'student' && deviceFingerprint) {
     const [student] = await db
       .select()
       .from(students)
       .where(eq(students.userId, user.userId))
       .limit(1);
 
-    if (student.deviceFingerprint) {
-      if (!deviceFingerprint) {
-        return res.status(403).json({ error: 'Device fingerprint required', code: 'device_mismatch' });
-      }
-      if (student.deviceFingerprint !== deviceFingerprint) {
-        return res.status(403).json({ error: 'Device not recognized', code: 'device_mismatch' });
-      }
-    } else if (deviceFingerprint) {
+    // Bind device on first login (no device stored yet)
+    if (student && !student.deviceFingerprint) {
       await db
         .update(students)
         .set({ deviceFingerprint, deviceBoundAt: new Date() })
