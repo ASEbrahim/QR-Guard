@@ -66,7 +66,7 @@ function renderBottomNav(role, activePage) {
         <span class="bottom-nav-icon">&#9881;</span> Device
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
-        <span class="bottom-nav-icon">&#10140;</span> Exit
+        <span class="bottom-nav-icon">&#10140;</span> Sign Out
       </button>
     `;
   } else {
@@ -75,7 +75,7 @@ function renderBottomNav(role, activePage) {
         <span class="bottom-nav-icon">&#9776;</span> Courses
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
-        <span class="bottom-nav-icon">&#10140;</span> Exit
+        <span class="bottom-nav-icon">&#10140;</span> Sign Out
       </button>
     `;
   }
