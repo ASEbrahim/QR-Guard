@@ -11,7 +11,10 @@ let io = null;
  */
 export function initSocketIO(httpServer) {
   io = new Server(httpServer, {
-    cors: { origin: true, credentials: true },
+    cors: {
+      origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
+      credentials: true,
+    },
   });
 
   io.on('connection', (socket) => {

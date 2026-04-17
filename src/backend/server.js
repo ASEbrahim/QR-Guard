@@ -31,9 +31,19 @@ app.use(helmet({
   frameguard: { action: 'deny' },
   noSniff: true,
 }));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json({ limit: '10kb' }));
 app.use(globalLimiter);
+
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'change-me') {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: SESSION_SECRET is not set or uses default. Refusing to start.');
+    process.exit(1);
+  }
+}
 
 app.use(
   session({
@@ -57,6 +67,9 @@ app.set('trust proxy', 1);
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/register', registerLimiter);
 app.use('/api/scan', scanLimiter);
+app.use('/api/auth/verify-code', loginLimiter);
+app.use('/api/auth/forgot-password', loginLimiter);
+app.use('/api/auth/resend-verification', loginLimiter);
 
 // --- API Routes ---
 app.use('/api/auth', authRoutes);

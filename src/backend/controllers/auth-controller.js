@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
 import { users, students, instructors, emailVerificationTokens } from '../db/schema/index.js';
@@ -156,7 +156,7 @@ export async function login(req, res) {
   }
 
   // Device fingerprint check — students only, instructors are exempt
-  if (user.role === 'student' && deviceFingerprint) {
+  if (user.role === 'student') {
     const [student] = await db
       .select()
       .from(students)
@@ -164,15 +164,13 @@ export async function login(req, res) {
       .limit(1);
 
     if (student.deviceFingerprint) {
-      // Device already bound — check it matches
-      if (student.deviceFingerprint !== deviceFingerprint) {
-        return res.status(403).json({
-          error: 'Device not recognized',
-          code: 'device_mismatch',
-        });
+      if (!deviceFingerprint) {
+        return res.status(403).json({ error: 'Device fingerprint required', code: 'device_mismatch' });
       }
-    } else {
-      // First login after verification — bind this device
+      if (student.deviceFingerprint !== deviceFingerprint) {
+        return res.status(403).json({ error: 'Device not recognized', code: 'device_mismatch' });
+      }
+    } else if (deviceFingerprint) {
       await db
         .update(students)
         .set({ deviceFingerprint, deviceBoundAt: new Date() })
@@ -183,13 +181,16 @@ export async function login(req, res) {
   // Create session
   const redirectUrl =
     user.role === 'student' ? '/student/dashboard.html' : '/instructor/dashboard.html';
+  const userData = { userId: user.userId, email: user.email, name: user.name, role: user.role };
 
-  req.session.userId = user.userId;
-  req.session.email = user.email;
-  req.session.name = user.name;
-  req.session.role = user.role;
-
-  res.json({ user: { userId: user.userId, email: user.email, name: user.name, role: user.role }, redirectUrl });
+  req.session.regenerate((err) => {
+    if (err) return res.status(500).json({ error: 'Login failed' });
+    req.session.userId = userData.userId;
+    req.session.email = userData.email;
+    req.session.name = userData.name;
+    req.session.role = userData.role;
+    res.json({ user: userData, redirectUrl });
+  });
 }
 
 /**
@@ -296,6 +297,9 @@ export async function forgotPassword(req, res) {
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user) {
+    // Invalidate any prior unused password-reset tokens
+    await db.update(emailVerificationTokens).set({ usedAt: new Date() }).where(and(eq(emailVerificationTokens.userId, user.userId), eq(emailVerificationTokens.purpose, 'password_reset'), isNull(emailVerificationTokens.usedAt)));
+
     const token = generateHexToken();
     await db.insert(emailVerificationTokens).values({
       token,
@@ -320,6 +324,9 @@ export async function resendVerification(req, res) {
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user && !user.emailVerifiedAt) {
+    // Invalidate any prior unused email-verify tokens
+    await db.update(emailVerificationTokens).set({ usedAt: new Date() }).where(and(eq(emailVerificationTokens.userId, user.userId), eq(emailVerificationTokens.purpose, 'email_verify'), isNull(emailVerificationTokens.usedAt)));
+
     const code = generateSixDigitCode();
     await db.insert(emailVerificationTokens).values({
       token: code,

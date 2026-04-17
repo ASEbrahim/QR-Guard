@@ -97,9 +97,9 @@
         document.getElementById('noStudents').style.display = 'block';
       } else {
         studBody.innerHTML = students.map(s => `<tr>
-          <td>${s.name}</td>
-          <td>${s.universityId}</td>
-          <td>${s.email}</td>
+          <td>${esc(s.name)}</td>
+          <td>${esc(s.universityId)}</td>
+          <td>${esc(s.email)}</td>
           <td>${new Date(s.enrolledAt).toLocaleDateString()}</td>
           <td><button class="btn btn-danger" onclick="removeStudent('${s.userId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Remove</button></td>
         </tr>`).join('');

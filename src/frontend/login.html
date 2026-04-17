@@ -68,7 +68,8 @@
       const data = await res.json();
 
       if (res.ok) {
-        window.location.href = data.redirectUrl;
+        const safe = data.redirectUrl && data.redirectUrl.startsWith('/') && !data.redirectUrl.startsWith('//') ? data.redirectUrl : '/';
+        window.location.href = safe;
       } else {
         if (data.code === 'not_verified') {
           const errEl = document.getElementById('error');
