@@ -13,14 +13,13 @@
   <script>renderNav(''); renderBottomNav('instructor', 'courses');</script>
 
   <div class="container-wide">
-    <h1>My Courses</h1>
+    <div class="page-header">
+      <h1>My Courses <span class="count-badge" id="courseCount">0</span></h1>
+    </div>
 
     <!-- Create course form (collapsible) -->
-    <div class="card">
-      <h2>
-        <a href="#" id="toggleCreate" style="text-decoration:none; color:inherit;">+ Create New Course</a>
-      </h2>
-      <form id="createForm" style="display:none;">
+    <div class="card" id="createCard" style="display:none;">
+      <form id="createForm">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
           <div class="form-group"><label>Course Name</label><input id="cName" required></div>
           <div class="form-group"><label>Course Code</label><input id="cCode" placeholder="CSIS 330" required></div>
@@ -60,8 +59,10 @@
       <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div></div>
       <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div></div>
     </div>
-    <p id="noCourses" class="text-muted text-center" style="display:none;">No courses yet. Create one above.</p>
+    <p id="noCourses" class="text-muted text-center" style="display:none;">No courses yet. Tap the + to create one.</p>
   </div>
+
+  <button type="button" id="toggleCreate" class="fab" aria-label="Create new course" title="Create new course">+</button>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -69,9 +70,9 @@
 
     document.getElementById('toggleCreate').addEventListener('click', (e) => {
       e.preventDefault();
-      const form = document.getElementById('createForm');
-      form.style.display = form.style.display === 'none' ? '' : 'none';
-      if (form.style.display !== 'none' && !map) {
+      const card = document.getElementById('createCard');
+      card.style.display = card.style.display === 'none' ? '' : 'none';
+      if (card.style.display !== 'none' && !map) {
         initMap();
       }
     });
@@ -203,6 +204,14 @@
     // Start with one slot
     addSlot();
 
+    function accentFor(code) {
+      const prefix = String(code).trim().split(/\s+/)[0].toUpperCase();
+      const palette = ['red', 'gold', 'blue', 'green', 'purple'];
+      let hash = 0;
+      for (let i = 0; i < prefix.length; i++) hash = (hash * 31 + prefix.charCodeAt(i)) >>> 0;
+      return palette[hash % palette.length];
+    }
+
     async function loadCourses() {
       const res = await apiGet('/api/courses');
       if (!res || !res.ok) return;
@@ -215,8 +224,10 @@
       }
       document.getElementById('noCourses').style.display = 'none';
 
+      document.getElementById('courseCount').textContent = courses.length;
+
       container.innerHTML = courses.map(c => `
-        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable course-card">
+        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable course-card course-accent-${accentFor(c.code)}">
           <h2>${esc(c.code)} — ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
@@ -259,7 +270,7 @@
       if (!res) return;
       const data = await res.json();
       if (res.ok) {
-        document.getElementById('createForm').style.display = 'none';
+        document.getElementById('createCard').style.display = 'none';
         loadCourses();
       } else {
         showError('createError', data.error);

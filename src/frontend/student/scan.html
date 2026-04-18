@@ -7,17 +7,77 @@
   <link rel="stylesheet" href="/styles/main.css">
   <style>
     .scan-container { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem; }
-    #reader { width: 100%; border-radius: var(--radius); overflow: hidden; }
-    #result { text-align: center; margin-top: 1rem; padding: 1.25rem; border-radius: var(--radius); font-weight: 600; }
-    .result-success { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
-    .result-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-    .result-info { background: #eff6ff; color: #1a56db; border: 1px solid #bfdbfe; }
-    .gps-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
+    #reader { width: 100%; aspect-ratio: 1 / 1; background: #0f172a; border-radius: 14px; overflow: hidden; position: relative; }
+    #reader:empty::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(15,23,42,0.6), rgba(15,23,42,0.6)),
+        repeating-linear-gradient(45deg, #1e293b 0 12px, #0f172a 12px 24px);
+    }
+    .gps-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
     .gps-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
     .gps-dot.active { background: #16a34a; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .scan-hero { text-align: center; margin-bottom: 1.5rem; }
-    .scan-hero h1 { font-size: 1.35rem; margin-bottom: 0.25rem; }
+    .scan-hero { text-align: center; margin-bottom: 0.75rem; }
+    .scan-hero h2 { font-size: 1.15rem; margin-bottom: 0.25rem; letter-spacing: -0.01em; }
+    .scan-hero p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* Result / status card */
+    .status-card {
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+      margin-top: 1rem;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .status-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .status-body { flex: 1; min-width: 0; }
+    .status-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.15rem;
+      color: var(--text);
+    }
+    .status-message {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+    .status-action {
+      margin-top: 0.75rem;
+    }
+    .status-action .btn { font-size: 0.8rem; padding: 0.4rem 0.9rem; }
+
+    .status-success { border-color: #bbf7d0; background: #f0fdf4; }
+    .status-success .status-icon { background: #dcfce7; color: #15803d; }
+    .status-success .status-title { color: #14532d; }
+
+    .status-error { border-color: #fecaca; background: #fef2f2; }
+    .status-error .status-icon { background: #fee2e2; color: #b91c1c; }
+    .status-error .status-title { color: #7f1d1d; }
+
+    .status-info { border-color: #bfdbfe; background: #eff6ff; }
+    .status-info .status-icon { background: #dbeafe; color: #1d4ed8; }
+    .status-info .status-title { color: #1e3a8a; }
+
+    .status-warning { border-color: #fde68a; background: #fffbeb; }
+    .status-warning .status-icon { background: #fef3c7; color: #b45309; }
+    .status-warning .status-title { color: #78350f; }
   </style>
 </head>
 <body>
@@ -27,8 +87,8 @@
 
   <div class="scan-container">
     <div class="scan-hero">
-      <h1>Scan QR Code</h1>
-      <p class="text-muted">Point your camera at the QR code displayed by your instructor.</p>
+      <h2>Scan QR Code</h2>
+      <p>Point your camera at the instructor's QR code.</p>
     </div>
 
     <div class="gps-bar">
@@ -68,7 +128,16 @@
       onScanSuccess,
       () => {}
     ).catch((err) => {
-      showResult('Camera unavailable — ' + err, 'error');
+      const name = err && err.name ? err.name : String(err);
+      if (name === 'NotAllowedError' || /Permission denied/i.test(name)) {
+        showStatus('error', 'Camera access needed', 'Allow camera access in your browser settings, then reload this page to scan.', 'Reload', () => location.reload());
+      } else if (name === 'NotFoundError') {
+        showStatus('error', 'No camera found', 'This device does not appear to have a camera. Try a different device.');
+      } else if (name === 'NotReadableError') {
+        showStatus('error', 'Camera is in use', 'Another app is using the camera. Close it and try again.', 'Reload', () => location.reload());
+      } else {
+        showStatus('error', 'Camera unavailable', "We couldn't start the camera. Check that your browser supports camera access on this site.", 'Reload', () => location.reload());
+      }
     });
 
     async function onScanSuccess(decodedText) {
@@ -77,12 +146,12 @@
       try { await scanner.stop(); } catch {}
 
       if (!gpsData) {
-        showResult('GPS not available yet. Allow location access and reload.', 'error');
+        showStatus('error', 'GPS unavailable', 'GPS not available yet. Allow location access and reload.', 'Reload', () => location.reload());
         scanning = false;
         return;
       }
 
-      showResult('Verifying attendance...', 'info');
+      showStatus('info', 'Verifying', 'Verifying attendance...');
 
       let fingerprint = 'unknown';
       try { fingerprint = await getFingerprint(); } catch (err) {
@@ -101,20 +170,19 @@
       const data = await res.json();
 
       if (res.ok) {
-        showResult('Attendance recorded', 'success');
+        showStatus('success', 'Attendance recorded', 'Your attendance has been saved for this session.');
       } else {
-        // Show specific guidance per error code
-        const messages = {
-          device_mismatch: 'This is not your registered device. You can only scan from the phone you first logged in with. To switch devices, go to Dashboard > Device > Send Rebind Link.',
-          qr_expired: 'This QR code has expired. Wait for it to refresh (every 25 seconds) and scan the new one.',
-          location_failed: 'Location verification failed. Make sure your VPN is off and you are connected to a Kuwait network.',
-          gps_accuracy_failed: 'GPS signal is too weak or appears spoofed. Move to an area with better GPS reception and try again.',
-          outside_geofence: 'You are outside the classroom area. Move closer to the classroom and try again.',
-          already_recorded: 'Your attendance is already recorded for this session.',
-          course_not_found: 'This session could not be found. Contact your instructor.',
+        const ERRORS = {
+          device_mismatch:     { type: 'error',   title: 'Wrong device',          msg: 'You can only scan from the phone you first logged in with. Open Dashboard \u2192 Device \u2192 Send Rebind Link to switch devices.' },
+          qr_expired:          { type: 'warning', title: 'QR code expired',       msg: 'Wait a few seconds for it to refresh, then scan the new one.' },
+          location_failed:     { type: 'error',   title: 'Location check failed', msg: 'Turn off any VPN and make sure you are connected to a Kuwait network.' },
+          gps_accuracy_failed: { type: 'error',   title: 'GPS signal too weak',   msg: 'Move near a window or step outside briefly, then try again.' },
+          outside_geofence:    { type: 'warning', title: 'Outside the classroom', msg: 'Move closer to the classroom and scan again.' },
+          already_recorded:    { type: 'info',    title: "You're all set",        msg: 'Your attendance for this session is already recorded.' },
+          course_not_found:    { type: 'error',   title: 'Session not found',     msg: 'This session could not be found. Ask your instructor to check.' },
         };
-        const msg = messages[data.code] || data.error || 'Scan failed. Try again.';
-        showResult(msg, data.code === 'already_recorded' ? 'info' : 'error');
+        const e = ERRORS[data.code] || { type: 'error', title: 'Scan failed', msg: data.error || 'Please try again.' };
+        showStatus(e.type, e.title, e.msg);
 
         // Auto-retry for transient errors (not device/already recorded)
         if (data.code !== 'device_mismatch' && data.code !== 'already_recorded') {
@@ -127,11 +195,27 @@
       }
     }
 
-    function showResult(message, type) {
+    const STATUS_ICONS = { success: '\u2713', error: '\u2717', info: 'i', warning: '!' };
+
+    function showStatus(type, title, message, actionLabel, actionFn) {
       const el = document.getElementById('result');
-      el.textContent = (type === 'success' ? '\u2713 ' : type === 'error' ? '\u2717 ' : '') + message;
-      el.className = `result-${type}`;
-      el.style.display = 'block';
+      el.innerHTML = `
+        <div class="status-icon">${STATUS_ICONS[type] || ''}</div>
+        <div class="status-body">
+          <div class="status-title"></div>
+          <div class="status-message"></div>
+          ${actionLabel ? '<div class="status-action"><button type="button" class="btn btn-primary" id="statusAction"></button></div>' : ''}
+        </div>
+      `;
+      el.className = `status-card status-${type}`;
+      el.querySelector('.status-title').textContent = title;
+      el.querySelector('.status-message').textContent = message;
+      if (actionLabel) {
+        const btn = el.querySelector('#statusAction');
+        btn.textContent = actionLabel;
+        btn.addEventListener('click', actionFn);
+      }
+      el.style.display = 'flex';
     }
   </script>
 </body>

@@ -12,31 +12,53 @@
   <script>renderNav(''); renderBottomNav('student', 'courses');</script>
 
   <div class="container-wide">
-    <h1>My Courses</h1>
-
-    <!-- Enroll in a course -->
-    <div class="card">
-      <h2>Enroll in a Course</h2>
-      <div id="enrollError" class="message error" role="alert"></div>
-      <div id="enrollSuccess" class="message success"></div>
-      <form id="enrollForm" style="display:flex; gap:0.5rem; align-items:end;">
-        <div class="form-group" style="flex:1; margin:0;">
-          <label for="codeInput">Enrollment Code</label>
-          <input type="text" id="codeInput" placeholder="e.g. ABCD23" maxlength="6" style="text-transform:uppercase; letter-spacing:0.15em; font-weight:600;" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Enroll</button>
-      </form>
+    <div class="page-header">
+      <h1>My Courses <span class="count-badge" id="courseCount">0</span></h1>
     </div>
 
     <!-- Enrolled courses -->
     <div id="coursesList">
       <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-text"></div></div>
     </div>
-    <p id="noCourses" class="text-muted text-center" style="display:none;">You're not enrolled in any courses yet.</p>
+    <p id="noCourses" class="text-muted text-center" style="display:none;">You're not enrolled in any courses yet. Tap the + to enroll.</p>
+  </div>
+
+  <button type="button" id="toggleEnroll" class="fab" aria-label="Enroll in a course" title="Enroll in a course">+</button>
+
+  <!-- Bottom sheet: Enroll -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="bottom-sheet" id="enrollSheet" role="dialog" aria-labelledby="enrollTitle" aria-modal="true" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="enrollTitle">Enroll in a Course</h3>
+      <button type="button" class="sheet-close" id="sheetClose" aria-label="Close">&times;</button>
+    </div>
+
+    <div id="enrollError" class="message error" role="alert"></div>
+    <div id="enrollSuccess" class="message success"></div>
+
+    <form id="enrollForm">
+      <div class="form-group">
+        <label for="codeInput">Enrollment Code</label>
+        <input type="text" id="codeInput" placeholder="E.G. ABCD23" maxlength="6" style="text-transform:uppercase; letter-spacing:0.15em; font-weight:600;" required>
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-secondary" id="sheetCancel">Cancel</button>
+        <button type="submit" class="btn btn-primary">Enroll</button>
+      </div>
+    </form>
   </div>
 
   <!-- scripts already loaded above -->
   <script>
+    function accentFor(code) {
+      const prefix = String(code).trim().split(/\s+/)[0].toUpperCase();
+      const palette = ['red', 'gold', 'blue', 'green', 'purple'];
+      let hash = 0;
+      for (let i = 0; i < prefix.length; i++) hash = (hash * 31 + prefix.charCodeAt(i)) >>> 0;
+      return palette[hash % palette.length];
+    }
+
     async function loadDashboard() {
       const meRes = await apiGet('/api/auth/me');
       if (!meRes || !meRes.ok) return;
@@ -48,16 +70,19 @@
       const { courses } = await res.json();
 
       const container = document.getElementById('coursesList');
+      document.getElementById('courseCount').textContent = courses.length;
       if (courses.length === 0) {
         document.getElementById('noCourses').style.display = 'block';
+        container.innerHTML = '';
         return;
       }
+      document.getElementById('noCourses').style.display = 'none';
 
       container.innerHTML = courses.map(c => {
         const pct = c.attendancePct !== null && c.attendancePct !== undefined ? c.attendancePct.toFixed(1) : null;
         const pctColor = pct === null ? 'var(--text-muted)' : parseFloat(pct) >= 85 ? 'var(--success)' : parseFloat(pct) >= 70 ? 'var(--warning)' : 'var(--danger)';
         return `
-        <div class="card course-card">
+        <div class="card course-card course-accent-${accentFor(c.code)}">
           <h2>${esc(c.code)} — ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
@@ -70,6 +95,33 @@
         </div>`;
       }).join('');
     }
+
+    // --- Enroll bottom sheet ---
+    function openSheet() {
+      document.getElementById('enrollError').style.display = 'none';
+      document.getElementById('enrollSuccess').style.display = 'none';
+      document.getElementById('codeInput').value = '';
+      document.getElementById('sheetBackdrop').classList.add('open');
+      document.getElementById('enrollSheet').classList.add('open');
+      document.getElementById('enrollSheet').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('codeInput').focus(), 250);
+    }
+
+    function closeSheet() {
+      document.getElementById('sheetBackdrop').classList.remove('open');
+      document.getElementById('enrollSheet').classList.remove('open');
+      document.getElementById('enrollSheet').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('toggleEnroll').addEventListener('click', openSheet);
+    document.getElementById('sheetClose').addEventListener('click', closeSheet);
+    document.getElementById('sheetCancel').addEventListener('click', closeSheet);
+    document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('enrollSheet').classList.contains('open')) closeSheet();
+    });
 
     document.getElementById('enrollForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -88,6 +140,7 @@
       if (res.ok) {
         showSuccess('enrollSuccess', data.message);
         loadDashboard();
+        setTimeout(closeSheet, 800);
       } else {
         showError('enrollError', data.error);
       }

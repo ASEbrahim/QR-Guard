@@ -12,35 +12,82 @@
   <script>renderNavWithBack('/instructor/dashboard.html', 'Back to Courses');</script>
 
   <div class="container-wide">
-    <div id="courseInfo" class="card">
-      <h1 id="courseTitle" style="margin-bottom:0.25rem;">Loading...</h1>
-      <p id="courseMeta" class="text-muted"></p>
-      <p class="mt-1">Enrollment code: <span class="enrollment-code" id="enrollCode"></span></p>
-      <p>Geofence radius: <span id="geoRadius"></span>m · Attendance window: <span id="attWindow"></span>s · QR refresh: <span id="qrRefresh"></span>s</p>
-    </div>
-
-    <!-- Enrolled students -->
-    <div class="card">
-      <h2>Enrolled Students</h2>
-      <table>
-        <thead><tr><th>Name</th><th>University ID</th><th>Email</th><th>Enrolled</th><th></th></tr></thead>
-        <tbody id="studentsBody"></tbody>
-      </table>
-      <p id="noStudents" class="text-muted text-center mt-1" style="display:none;">No students enrolled yet.</p>
-    </div>
-
-    <!-- Sessions -->
-    <div class="card">
-      <h2>Sessions</h2>
-      <div id="addSessionForm" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
-        <input type="datetime-local" id="sessStart" style="flex:1; min-width:140px;">
-        <input type="datetime-local" id="sessEnd" style="flex:1; min-width:140px;">
-        <button class="btn btn-primary" id="addSessionBtn" style="white-space:nowrap;">Add Session</button>
+    <!-- Hero: course + key info -->
+    <div id="courseInfo" class="course-hero">
+      <h3 id="courseTitle">Loading...</h3>
+      <p id="courseMeta" class="course-hero-meta"></p>
+      <div class="course-hero-code">
+        <span class="course-hero-code-label">Enrollment code</span>
+        <span class="enrollment-code" id="enrollCode"></span>
       </div>
-      <table>
-        <thead><tr><th>Date</th><th>Time</th><th>Status</th></tr></thead>
-        <tbody id="sessionsBody"></tbody>
-      </table>
+      <div class="stat-tiles">
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="geoRadius">&ndash;</span><small>m</small></div>
+          <div class="stat-tile-label">Geofence</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="attWindow">&ndash;</span><small>s</small></div>
+          <div class="stat-tile-label">Window</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="qrRefresh">&ndash;</span><small>s</small></div>
+          <div class="stat-tile-label">QR refresh</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs: Sessions / Students -->
+    <div class="tab-bar" role="tablist">
+      <button type="button" class="tab-btn active" role="tab" data-tab="sessions" aria-selected="true">
+        Sessions <span class="count-badge" id="sessionCount">0</span>
+      </button>
+      <button type="button" class="tab-btn" role="tab" data-tab="students" aria-selected="false">
+        Students <span class="count-badge" id="studentCount">0</span>
+      </button>
+    </div>
+
+    <div class="tab-panel active" id="sessionsPanel" role="tabpanel">
+      <div id="sessionsList" class="list-stack"></div>
+    </div>
+
+    <div class="tab-panel" id="studentsPanel" role="tabpanel" hidden>
+      <div id="studentsList" class="list-stack"></div>
+      <p id="noStudents" class="text-muted text-center" style="display:none;">No students enrolled yet.</p>
+    </div>
+
+  </div>
+
+  <button type="button" id="toggleAddSession" class="fab" aria-label="Add session" title="Add session">+</button>
+
+  <!-- Bottom sheet: Add session -->
+  <div class="sheet-backdrop" id="sheetBackdrop"></div>
+  <div class="bottom-sheet" id="addSessionSheet" role="dialog" aria-labelledby="addSessionTitle" aria-modal="true" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="addSessionTitle">Add Session</h3>
+      <button type="button" class="sheet-close" id="sheetClose" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label for="sessDate">Date</label>
+      <input type="date" id="sessDate">
+    </div>
+    <div class="sheet-time-row">
+      <div class="form-group">
+        <label for="sessStart">Start</label>
+        <input type="time" id="sessStart">
+      </div>
+      <div class="form-group">
+        <label for="sessEnd">End</label>
+        <input type="time" id="sessEnd">
+      </div>
+    </div>
+
+    <div id="sheetError" class="message error" role="alert" style="display:none;"></div>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-secondary" id="sheetCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="addSessionBtn">Add Session</button>
     </div>
   </div>
 
@@ -48,10 +95,13 @@
     const courseId = new URLSearchParams(window.location.search).get('id');
     if (!courseId) window.location.href = '/instructor/dashboard.html';
 
+    let currentCourse = null;
+
     async function loadCourse() {
       const res = await apiGet(`/api/courses/${courseId}`);
       if (!res || !res.ok) { window.location.href = '/instructor/dashboard.html'; return; }
       const { course, sessions } = await res.json();
+      currentCourse = course;
 
       document.getElementById('courseTitle').textContent = `${course.code} — ${course.name}`;
       document.getElementById('courseMeta').textContent = `Section ${course.section} · ${course.semester}`;
@@ -61,30 +111,32 @@
       document.getElementById('qrRefresh').textContent = course.qrRefreshIntervalSeconds;
 
       // Sessions
-      const sessBody = document.getElementById('sessionsBody');
-      sessBody.innerHTML = sessions.map(s => {
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const sessList = document.getElementById('sessionsList');
+      document.getElementById('sessionCount').textContent = sessions.length;
+      sessList.innerHTML = sessions.map(s => {
         const start = new Date(s.scheduledStart);
         const end = new Date(s.scheduledEnd);
-        const statusBadge = {
-          scheduled: '<span class="badge badge-muted">Scheduled</span>',
-          active: '<span class="badge badge-success">Active</span>',
-          closed: '<span class="badge badge-warning">Closed</span>',
-          cancelled: '<span class="badge badge-danger">Cancelled</span>',
-        }[s.status];
+        const statusLabel = { scheduled: 'Scheduled', active: 'Active', closed: 'Closed', cancelled: 'Cancelled' }[s.status] || s.status;
         const actions = [];
         if (s.status === 'scheduled') {
-          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Start</a>`);
-          actions.push(`<button class="btn btn-danger" onclick="cancelSession('${s.sessionId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Cancel</button>`);
+          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary btn-sm">Start</a>`);
+          actions.push(`<button class="btn btn-danger btn-sm" onclick="cancelSession('${s.sessionId}')">Cancel</button>`);
         }
         if (s.status === 'active') {
-          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary" style="padding:0.25rem 0.5rem;font-size:0.75rem;">View QR</a>`);
+          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary btn-sm">View QR</a>`);
         }
-        const actionsHtml = actions.length ? `<div style="display:inline-flex;gap:0.25rem;margin-left:0.5rem;">${actions.join('')}</div>` : '';
-        return `<tr>
-          <td>${start.toLocaleDateString()}</td>
-          <td>${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
-          <td>${statusBadge}${actionsHtml}</td>
-        </tr>`;
+        return `<div class="session-row session-status-${s.status}">
+          <div class="date-badge">
+            <div class="date-badge-day">${start.getDate()}</div>
+            <div class="date-badge-month">${MONTHS[start.getMonth()]}</div>
+          </div>
+          <div class="session-row-main">
+            <div class="session-row-time">${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+            <div class="session-row-status">${statusLabel}</div>
+          </div>
+          ${actions.length ? `<div class="session-row-actions">${actions.join('')}</div>` : ''}
+        </div>`;
       }).join('');
 
       // Students
@@ -92,17 +144,24 @@
       if (!studRes || !studRes.ok) return;
       const { students } = await studRes.json();
 
-      const studBody = document.getElementById('studentsBody');
+      const studList = document.getElementById('studentsList');
+      document.getElementById('studentCount').textContent = students.length;
       if (students.length === 0) {
         document.getElementById('noStudents').style.display = 'block';
+        studList.innerHTML = '';
       } else {
-        studBody.innerHTML = students.map(s => `<tr>
-          <td>${esc(s.name)}</td>
-          <td>${esc(s.universityId)}</td>
-          <td>${esc(s.email)}</td>
-          <td>${new Date(s.enrolledAt).toLocaleDateString()}</td>
-          <td><button class="btn btn-danger" onclick="removeStudent('${s.userId}')" style="padding:0.25rem 0.5rem;font-size:0.75rem;">Remove</button></td>
-        </tr>`).join('');
+        document.getElementById('noStudents').style.display = 'none';
+        studList.innerHTML = students.map(s => {
+          const initial = (s.name || '?').trim().charAt(0).toUpperCase();
+          return `<div class="student-row">
+            <div class="avatar">${esc(initial)}</div>
+            <div class="student-row-main">
+              <div class="student-row-name">${esc(s.name)}</div>
+              <div class="student-row-sub">${esc(s.universityId)} &middot; ${esc(s.email)}</div>
+            </div>
+            <button class="icon-remove" aria-label="Remove student" onclick="removeStudent('${s.userId}')">&times;</button>
+          </div>`;
+        }).join('');
       }
     }
 
@@ -118,16 +177,96 @@
       if (res && res.ok) loadCourse();
     }
 
-    document.getElementById('addSessionBtn').addEventListener('click', async () => {
-      const start = document.getElementById('sessStart').value;
-      const end = document.getElementById('sessEnd').value;
-      if (!start || !end) return;
-
-      const res = await apiPost(`/api/courses/${courseId}/sessions`, {
-        scheduledStart: new Date(start).toISOString(),
-        scheduledEnd: new Date(end).toISOString(),
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          const active = b.dataset.tab === tab;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active);
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => {
+          const active = p.id === `${tab}Panel`;
+          p.classList.toggle('active', active);
+          p.hidden = !active;
+        });
+        document.getElementById('toggleAddSession').style.display = tab === 'sessions' ? '' : 'none';
       });
-      if (res && res.ok) loadCourse();
+    });
+
+    // --- Add Session bottom sheet ---
+    function fmtTimeInput(d) {
+      return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+    function fmtDateInput(d) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function setDefaultDateTime() {
+      const now = new Date();
+      const start = new Date(now); start.setMinutes(0, 0, 0); start.setHours(now.getHours() + 1);
+      const end = new Date(start); end.setMinutes(end.getMinutes() + 75);
+      document.getElementById('sessDate').value = fmtDateInput(start);
+      document.getElementById('sessStart').value = fmtTimeInput(start);
+      document.getElementById('sessEnd').value = fmtTimeInput(end);
+    }
+
+    function openSheet() {
+      setDefaultDateTime();
+      document.getElementById('sheetError').style.display = 'none';
+      document.getElementById('sheetBackdrop').classList.add('open');
+      document.getElementById('addSessionSheet').classList.add('open');
+      document.getElementById('addSessionSheet').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSheet() {
+      document.getElementById('sheetBackdrop').classList.remove('open');
+      document.getElementById('addSessionSheet').classList.remove('open');
+      document.getElementById('addSessionSheet').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    async function submitSession(startDate, endDate) {
+      const err = document.getElementById('sheetError');
+      err.style.display = 'none';
+      if (!(startDate instanceof Date) || !(endDate instanceof Date) || isNaN(startDate) || isNaN(endDate)) {
+        err.textContent = 'Please select a valid date and time range.';
+        err.style.display = 'block';
+        return;
+      }
+      if (endDate <= startDate) {
+        err.textContent = 'End time must be after start time.';
+        err.style.display = 'block';
+        return;
+      }
+      const res = await apiPost(`/api/courses/${courseId}/sessions`, {
+        scheduledStart: startDate.toISOString(),
+        scheduledEnd: endDate.toISOString(),
+      });
+      if (res && res.ok) { closeSheet(); loadCourse(); }
+    }
+
+    document.getElementById('toggleAddSession').addEventListener('click', openSheet);
+    document.getElementById('sheetClose').addEventListener('click', closeSheet);
+    document.getElementById('sheetCancel').addEventListener('click', closeSheet);
+    document.getElementById('sheetBackdrop').addEventListener('click', closeSheet);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('addSessionSheet').classList.contains('open')) closeSheet();
+    });
+
+    document.getElementById('addSessionBtn').addEventListener('click', () => {
+      const dateVal = document.getElementById('sessDate').value;
+      const startVal = document.getElementById('sessStart').value;
+      const endVal = document.getElementById('sessEnd').value;
+      if (!dateVal || !startVal || !endVal) {
+        const err = document.getElementById('sheetError');
+        err.textContent = 'Fill in date, start time, and end time.';
+        err.style.display = 'block';
+        return;
+      }
+      submitSession(new Date(`${dateVal}T${startVal}`), new Date(`${dateVal}T${endVal}`));
     });
 
     loadCourse();
