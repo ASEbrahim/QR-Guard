@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -37,7 +37,11 @@ export const scanLimiter = rateLimit({
   message: { error: 'Too many scan attempts. Slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => (req.session && req.session.userId) || req.ip,
+  // Prefer the authenticated userId so a classroom behind a single NAT
+  // doesn't share one counter. Fall back to IP — via ipKeyGenerator which
+  // normalises IPv6 to the /64 prefix, preventing an attacker from rotating
+  // through addresses in the same subnet to bypass the limit.
+  keyGenerator: (req, res) => (req.session && req.session.userId) || ipKeyGenerator(req, res),
   ...skipInDev,
 });
 
