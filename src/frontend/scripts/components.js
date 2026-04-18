@@ -94,28 +94,33 @@ function renderBottomNav(role, activePage) {
   const nav = document.createElement('nav');
   nav.className = 'bottom-nav';
 
+  // Helper: aria-current on the link that matches activePage (WCAG 4.1.2);
+  // decorative glyph spans marked aria-hidden so screen readers speak the
+  // label text ("Courses", "Scan") rather than the private-use codepoints.
+  const cur = (page) => (activePage === page ? 'aria-current="page"' : '');
+
   if (role === 'student') {
     nav.innerHTML = `
-      <a href="/student/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}">
-        <span class="bottom-nav-icon">&#9776;</span> Courses
+      <a href="/student/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
+        <span class="bottom-nav-icon" aria-hidden="true">&#9776;</span> Courses
       </a>
-      <a href="/student/scan.html" class="bottom-nav-item ${activePage === 'scan' ? 'active' : ''}">
-        <span class="bottom-nav-icon">&#9634;</span> Scan
+      <a href="/student/scan.html" class="bottom-nav-item ${activePage === 'scan' ? 'active' : ''}" ${cur('scan')}>
+        <span class="bottom-nav-icon" aria-hidden="true">&#9634;</span> Scan
       </a>
-      <a href="/request-rebind.html" class="bottom-nav-item ${activePage === 'device' ? 'active' : ''}">
-        <span class="bottom-nav-icon">&#9881;</span> Device
+      <a href="/request-rebind.html" class="bottom-nav-item ${activePage === 'device' ? 'active' : ''}" ${cur('device')}>
+        <span class="bottom-nav-icon" aria-hidden="true">&#9881;</span> Device
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
-        <span class="bottom-nav-icon">&#10140;</span> Sign Out
+        <span class="bottom-nav-icon" aria-hidden="true">&#10140;</span> Sign Out
       </button>
     `;
   } else {
     nav.innerHTML = `
-      <a href="/instructor/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}">
-        <span class="bottom-nav-icon">&#9776;</span> Courses
+      <a href="/instructor/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
+        <span class="bottom-nav-icon" aria-hidden="true">&#9776;</span> Courses
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
-        <span class="bottom-nav-icon">&#10140;</span> Sign Out
+        <span class="bottom-nav-icon" aria-hidden="true">&#10140;</span> Sign Out
       </button>
     `;
   }
@@ -147,10 +152,15 @@ function renderFooter() {
 }
 
 /**
- * Shared logout handler.
+ * Shared logout handler. Navigates to login regardless of whether the
+ * POST succeeded (local state should reset either way), but surfaces a
+ * warning to the console when it fails so an admin can investigate.
  */
 async function doLogout() {
-  await apiPost('/api/auth/logout');
+  const res = await apiPost('/api/auth/logout');
+  if (!res || !res.ok) {
+    console.warn('[components] Logout POST failed; navigating anyway.');
+  }
   window.location.href = '/login.html';
 }
 

@@ -172,7 +172,10 @@
     (async () => {
       const res = await apiPost(`/api/sessions/${sessionId}/start`);
       if (!res) return;
-      const data = await res.json();
+      // A 502 during deploy may return HTML; parse defensively so we
+      // show the error view instead of a blank screen.
+      let data = {};
+      try { data = await res.json(); } catch {}
 
       if (!res.ok) {
         document.getElementById('activeView').style.display = 'none';
@@ -183,7 +186,7 @@
       }
 
       document.getElementById('statusText').textContent = 'Live';
-      renderQr(data.qrPayload);
+      if (data.qrPayload) renderQr(data.qrPayload);
       socket.emit('join-session', sessionId);
     })();
 
@@ -211,6 +214,12 @@
     socket.on('connect', () => {
       if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
       socket.emit('join-session', sessionId);
+    });
+
+    // Surface connection errors in the console (not the UI — the polling
+    // fallback kicks in on disconnect, so the user experience continues).
+    socket.on('connect_error', (err) => {
+      console.warn('[session] Socket.IO connect_error:', err.message || err);
     });
 
     // qrcodejs instance — reused across refreshes so we don't allocate a new

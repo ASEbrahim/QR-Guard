@@ -209,8 +209,11 @@
       }
 
       searchInput.addEventListener('input', () => {
+        // Nominatim usage policy: ≤ 1 req/sec per source. 300ms debounce
+        // previously allowed up to 3 req/sec. 1000ms keeps us compliant
+        // while still feeling responsive for normal typing speed.
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 300);
+        debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 1000);
       });
 
       searchInput.addEventListener('focus', () => {
