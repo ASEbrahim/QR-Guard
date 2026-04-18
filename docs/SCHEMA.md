@@ -95,6 +95,7 @@ Many-to-many between students and courses.
 | `removed_at` | `timestamptz` | NULL | Soft-delete; historical records retained |
 
 **Primary key:** `(course_id, student_id)`
+**Index:** `CREATE INDEX enrollments_student_idx ON enrollments(student_id);` (migration 0005 — the composite PK can't serve student_id-only queries used by Socket.IO `canAccessSession`, `getMyAttendance`, and the student branch of `listCourses`.)
 
 ### `sessions`
 
@@ -162,11 +163,12 @@ Append-only log of every scan attempt + every override.
 | `actor_id` | `uuid` | NULL, REFERENCES `users(user_id)` | NULL if unauthenticated |
 | `target_id` | `uuid` | NULL | Session ID for scan, student ID for override |
 | `result` | `text` | NOT NULL, CHECK in (`'success'`, `'rejected'`) | |
-| `reason` | `text` | NULL | `'qr_expired'`, `'device_mismatch'`, `'location_failed'`, `'outside_geofence'`, `'already_recorded'`, `'override_present'`, `'override_absent'`, `'override_excused'` |
+| `reason` | `text` | NULL | `'qr_expired'`, `'device_mismatch'`, `'location_failed'`, `'gps_accuracy_failed'`, `'outside_geofence'`, `'course_not_found'`, `'already_recorded'`, `'ip_check_skipped'`, `'attendance_insert_failed'`, `'override_present'`, `'override_absent'`, `'override_excused'` |
 | `details` | `jsonb` | NULL | Full context: GPS, IP, accuracy, device hash, old/new status |
 
 **Index:** `CREATE INDEX audit_log_timestamp_idx ON audit_log(timestamp DESC);`
 **Index:** `CREATE INDEX audit_log_actor_idx ON audit_log(actor_id);`
+**Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);` (added by migration 0005 — used by `getAuditLog` filter)
 **Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);`
 
 **Trigger:** Reject UPDATE and DELETE on this table at the DB level (append-only):
@@ -206,6 +208,9 @@ Tracks which warning emails have been sent to prevent duplicate sends per crossi
 | `recovered_above_at` | `timestamptz` | NULL | |
 
 **Primary key:** `(course_id, student_id, crossed_below_at)`
+
+**Partial unique index** (migration 0004): `CREATE UNIQUE INDEX warning_email_log_open_unique_idx ON warning_email_log (course_id, student_id) WHERE recovered_above_at IS NULL;`
+Enforces "at most one open crossing per (course, student)" at the DB level. The application claims a crossing via `INSERT ... ON CONFLICT DO NOTHING` against this index; race losers skip the email.
 
 A new warning fires only when there is no row with `recovered_above_at IS NULL` for this (course, student).
 

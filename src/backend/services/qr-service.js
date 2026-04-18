@@ -122,11 +122,34 @@ export async function getCurrentToken(sessionId) {
   return token;
 }
 
-/** Cleans up expired QR tokens. Runs periodically to prevent table growth. */
+/**
+ * Cleans up expired tokens across both short-lived QR tokens and email
+ * verification tokens (email_verify, password_reset, device_rebind).
+ *
+ * Runs periodically (every 10 min from server.js) to prevent table growth.
+ *
+ * Retention choices:
+ *   - qr_tokens:  expires_at + 1h grace (covers the 25s refresh cadence
+ *     and leaves headroom for in-flight polling requests)
+ *   - email_verification_tokens: 7 days past expiry. We keep a short
+ *     window so audit queries ("did user X ever request a rebind?")
+ *     stay available, but trim far-expired rows so the table doesn't
+ *     grow without bound. Used tokens (usedAt IS NOT NULL) older than
+ *     30 days are also purged — they're no-ops from auth's perspective.
+ */
 export async function cleanupExpiredTokens() {
   try {
     await db.execute(sql`DELETE FROM qr_tokens WHERE expires_at < now() - INTERVAL '1 hour'`);
   } catch (err) {
-    console.error('[qr-service] Token cleanup failed:', err.message);
+    console.error('[qr-service] QR token cleanup failed:', err.message);
+  }
+  try {
+    await db.execute(sql`
+      DELETE FROM email_verification_tokens
+      WHERE expires_at < now() - INTERVAL '7 days'
+         OR (used_at IS NOT NULL AND used_at < now() - INTERVAL '30 days')
+    `);
+  } catch (err) {
+    console.error('[qr-service] Email-verification token cleanup failed:', err.message);
   }
 }
