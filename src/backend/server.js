@@ -114,6 +114,16 @@ app.use((err, _req, res, _next) => {
 // --- Start with HTTP server (needed for Socket.IO) ---
 const PORT = process.env.PORT || 3000;
 const httpServer = http.createServer(app);
+
+// Request-level timeouts. Node 20 defaults are generous for long-poll
+// workloads, but a /api/scan route that takes more than 30s is either
+// hitting the ip-api 3s timeout cascade + a stuck pool connection, or
+// a truly dead upstream. Either way, bail so the client sees a 5xx and
+// the next scan can proceed rather than piling up connections.
+httpServer.requestTimeout = 30_000;
+httpServer.headersTimeout = 15_000;
+httpServer.keepAliveTimeout = 65_000; // > Render LB idle (60s) to avoid races
+
 initSocketIO(httpServer, sessionMiddleware);
 
 const HOST = process.env.HOST || '0.0.0.0';

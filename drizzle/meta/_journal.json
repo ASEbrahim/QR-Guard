@@ -43,6 +43,13 @@
       "when": 1776527300000,
       "tag": "0005_missing_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776527400000,
+      "tag": "0006_postgres_extensions",
+      "breakpoints": true
     }
   ]
 }

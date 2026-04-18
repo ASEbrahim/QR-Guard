@@ -152,7 +152,12 @@
     integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
     crossorigin="anonymous"
     referrerpolicy="no-referrer"></script>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- Socket.IO client pinned to match server version (package.json: 4.8.3). -->
+  <script
+    src="https://cdn.socket.io/4.8.3/socket.io.min.js"
+    integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
   <script>
     const sessionId = new URLSearchParams(window.location.search).get('id');
     if (!sessionId) window.location.href = '/instructor/dashboard.html';

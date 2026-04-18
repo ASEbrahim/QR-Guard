@@ -1,0 +1,18 @@
+-- Migration 0006: ensure required PostgreSQL extensions exist.
+--
+-- The codebase uses:
+--   * gen_random_uuid()  — built into PostgreSQL 13+, no extension needed.
+--     Listed here only to document the dependency.
+--   * PostGIS functions  — ST_GeogFromText, ST_DWithin. Require the
+--     'postgis' extension. Neon pre-enables it, which is why the app has
+--     been working on prod. A fresh local Postgres (per README.md) would
+--     silently fail at the first geofence scan.
+--
+-- IF NOT EXISTS makes this idempotent. Running the extension CREATE
+-- requires superuser or membership in the pg_database_owner role on
+-- recent PostgreSQL. On Neon this is pre-provisioned; on a local dev DB
+-- the qrguard role may not have rights, in which case run manually as
+-- the postgres superuser:
+--
+--   psql -U postgres -d qrguard -c "CREATE EXTENSION IF NOT EXISTS postgis"
+CREATE EXTENSION IF NOT EXISTS postgis;

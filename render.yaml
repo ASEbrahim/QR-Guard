@@ -15,3 +15,7 @@ services:
         value: console
       - key: BASE_URL
         sync: false  # Set to your Render URL, e.g. https://qr-guard.onrender.com
+      - key: ALLOWED_ORIGIN
+        sync: false  # Set to the same value as BASE_URL (CORS + Socket.IO)
+      - key: RESEND_API_KEY
+        sync: false  # Required when EMAIL_PROVIDER=resend
