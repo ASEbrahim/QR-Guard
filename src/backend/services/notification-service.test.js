@@ -8,13 +8,22 @@ vi.mock('./email-service.js', () => ({
   sendEmail: vi.fn(),
 }));
 vi.mock('../config/database.js', () => {
+  // Chain mock: db.insert(x).values(y).onConflictDoNothing(z).returning()
+  // resolves to a promise-like (thenable) array of inserted rows.
+  const insertChain = {
+    values: vi.fn(() => insertChain),
+    onConflictDoNothing: vi.fn(() => insertChain),
+    returning: vi.fn(() => Promise.resolve([{ courseId: 'c1', studentId: 'student1', crossedBelowAt: new Date() }])),
+    then: undefined, // not a promise; callers must await .returning()
+  };
   const mockDb = {
     select: vi.fn(() => mockDb),
     from: vi.fn(() => mockDb),
     where: vi.fn(() => mockDb),
     limit: vi.fn(() => []),
-    insert: vi.fn(() => ({ values: vi.fn(() => mockDb) })),
+    insert: vi.fn(() => insertChain),
     update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => mockDb) })) })),
+    delete: vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) })),
     execute: vi.fn(() => ({ rows: [{ cnt: '10' }] })),
   };
   return { db: mockDb };

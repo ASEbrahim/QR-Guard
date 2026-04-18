@@ -45,6 +45,24 @@ const addSessionSchema = z.object({
   scheduledEnd: z.string().datetime(),
 });
 
+// updateCourse is a partial update — every field is optional, but values
+// that ARE provided must still be valid (previously only
+// geofenceRadius was range-checked; lat/lng/window/threshold were not).
+const updateCourseSchema = z
+  .object({
+    geofenceLat: z.number().min(-90).max(90).optional(),
+    geofenceLng: z.number().min(-180).max(180).optional(),
+    geofenceRadius: z.number().int().min(GEOFENCE_MIN_RADIUS_M).max(GEOFENCE_MAX_RADIUS_M).optional(),
+    attendanceWindow: z.number().int().positive().optional(),
+    warningThreshold: z.number().min(0).max(100).optional(),
+    qrRefreshInterval: z.number().int().min(5).max(300).optional(),
+    regenerateCode: z.boolean().optional(),
+  })
+  .refine(
+    (d) => (d.geofenceLat === undefined) === (d.geofenceLng === undefined),
+    { message: 'geofenceLat and geofenceLng must be provided together' },
+  );
+
 // --- Helpers ---
 
 /**
@@ -110,39 +128,45 @@ export async function createCourse(req, res) {
   // Store geofence as WKT string — we'll use raw SQL for PostGIS operations
   const geofenceCenter = `SRID=4326;POINT(${data.geofenceLng} ${data.geofenceLat})`;
 
-  const [course] = await db
-    .insert(courses)
-    .values({
-      instructorId: req.session.userId,
-      name: data.name,
-      code: data.code,
-      section: data.section,
-      semester: data.semester,
-      enrollmentCode,
-      geofenceCenter,
-      geofenceRadiusM: data.geofenceRadius,
-      attendanceWindowSeconds: data.attendanceWindow || DEFAULT_ATTENDANCE_WINDOW_SECONDS,
-      warningThresholdPct: String(data.warningThreshold ?? DEFAULT_WARNING_THRESHOLD_PCT),
-      qrRefreshIntervalSeconds: data.qrRefreshInterval || DEFAULT_QR_REFRESH_INTERVAL_SECONDS,
-      weeklySchedule: data.weeklySchedule,
-      semesterStart: data.semesterStart,
-      semesterEnd: data.semesterEnd,
-    })
-    .returning();
+  // Course + auto-generated sessions are written in one transaction. Without
+  // this, a failed session insert would leave a course with no scheduled
+  // sessions (and no clean rollback path for the caller).
+  const { course, sessionsGenerated } = await db.transaction(async (tx) => {
+    const [newCourse] = await tx
+      .insert(courses)
+      .values({
+        instructorId: req.session.userId,
+        name: data.name,
+        code: data.code,
+        section: data.section,
+        semester: data.semester,
+        enrollmentCode,
+        geofenceCenter,
+        geofenceRadiusM: data.geofenceRadius,
+        attendanceWindowSeconds: data.attendanceWindow || DEFAULT_ATTENDANCE_WINDOW_SECONDS,
+        warningThresholdPct: String(data.warningThreshold ?? DEFAULT_WARNING_THRESHOLD_PCT),
+        qrRefreshIntervalSeconds: data.qrRefreshInterval || DEFAULT_QR_REFRESH_INTERVAL_SECONDS,
+        weeklySchedule: data.weeklySchedule,
+        semesterStart: data.semesterStart,
+        semesterEnd: data.semesterEnd,
+      })
+      .returning();
 
-  // Auto-generate sessions from weekly schedule
-  const sessionRows = generateSessions(
-    data.weeklySchedule,
-    data.semesterStart,
-    data.semesterEnd,
-    course.courseId,
-  );
+    const sessionRows = generateSessions(
+      data.weeklySchedule,
+      data.semesterStart,
+      data.semesterEnd,
+      newCourse.courseId,
+    );
 
-  if (sessionRows.length > 0) {
-    await db.insert(sessions).values(sessionRows);
-  }
+    if (sessionRows.length > 0) {
+      await tx.insert(sessions).values(sessionRows);
+    }
 
-  res.status(201).json({ course, sessionsGenerated: sessionRows.length });
+    return { course: newCourse, sessionsGenerated: sessionRows.length };
+  });
+
+  res.status(201).json({ course, sessionsGenerated });
 }
 
 /**
@@ -229,22 +253,22 @@ export async function updateCourse(req, res) {
   const course = await getCourseForInstructor(id, req.session.userId);
   if (!course) return res.status(404).json({ error: 'Course not found or not authorized' });
 
+  const parsed = updateCourseSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const data = parsed.data;
   const updates = {};
 
-  if (req.body.geofenceLat !== undefined && req.body.geofenceLng !== undefined) {
-    updates.geofenceCenter = `SRID=4326;POINT(${req.body.geofenceLng} ${req.body.geofenceLat})`;
+  if (data.geofenceLat !== undefined) {
+    // Both lat and lng validated + required-together by the schema.
+    updates.geofenceCenter = `SRID=4326;POINT(${data.geofenceLng} ${data.geofenceLat})`;
   }
-  if (req.body.geofenceRadius !== undefined) {
-    const r = Number(req.body.geofenceRadius);
-    if (r < GEOFENCE_MIN_RADIUS_M || r > GEOFENCE_MAX_RADIUS_M) {
-      return res.status(400).json({ error: `Radius must be ${GEOFENCE_MIN_RADIUS_M}-${GEOFENCE_MAX_RADIUS_M}m` });
-    }
-    updates.geofenceRadiusM = r;
-  }
-  if (req.body.attendanceWindow !== undefined) updates.attendanceWindowSeconds = req.body.attendanceWindow;
-  if (req.body.warningThreshold !== undefined) updates.warningThresholdPct = String(req.body.warningThreshold);
-  if (req.body.qrRefreshInterval !== undefined) updates.qrRefreshIntervalSeconds = req.body.qrRefreshInterval;
-  if (req.body.regenerateCode) {
+  if (data.geofenceRadius !== undefined) updates.geofenceRadiusM = data.geofenceRadius;
+  if (data.attendanceWindow !== undefined) updates.attendanceWindowSeconds = data.attendanceWindow;
+  if (data.warningThreshold !== undefined) updates.warningThresholdPct = String(data.warningThreshold);
+  if (data.qrRefreshInterval !== undefined) updates.qrRefreshIntervalSeconds = data.qrRefreshInterval;
+  if (data.regenerateCode) {
     updates.enrollmentCode = await generateEnrollmentCode();
   }
 

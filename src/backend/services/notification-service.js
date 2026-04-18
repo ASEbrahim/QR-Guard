@@ -42,12 +42,25 @@ export async function checkThresholdAndNotify(courseId, studentId) {
   if (pct < threshold) {
     // Below threshold
     if (!openCrossing) {
-      // New crossing — send warning email
-      await db.insert(warningEmailLog).values({
-        courseId,
-        studentId,
-        crossedBelowAt: new Date(),
-      });
+      // New crossing — atomically claim it via ON CONFLICT DO NOTHING against
+      // the partial unique index on (course_id, student_id) WHERE
+      // recovered_above_at IS NULL (migration 0004). If our INSERT returned
+      // zero rows, a concurrent call already claimed it and will email;
+      // we skip to avoid duplicate emails.
+      const crossedBelowAt = new Date();
+      const claim = await db
+        .insert(warningEmailLog)
+        .values({ courseId, studentId, crossedBelowAt })
+        .onConflictDoNothing({
+          target: [warningEmailLog.courseId, warningEmailLog.studentId],
+          where: sql`recovered_above_at IS NULL`,
+        })
+        .returning();
+
+      if (claim.length === 0) {
+        // Lost the race — peer will handle it.
+        return;
+      }
 
       const [student] = await db
         .select({ name: users.name, email: users.email })
@@ -55,30 +68,54 @@ export async function checkThresholdAndNotify(courseId, studentId) {
         .where(eq(users.userId, studentId))
         .limit(1);
 
+      let emailSent = false;
       if (student) {
-        // Count absences
-        const absenceCount = Math.round((100 - pct) / 100 * await getClosedSessionCount(courseId));
-
-        await sendEmail({
-          to: student.email,
-          subject: `QR-Guard: Attendance warning for ${course.code}`,
-          text: [
-            `Dear ${student.name},`,
-            '',
-            `Your attendance in ${course.code} — ${course.name} has dropped below the warning threshold.`,
-            '',
-            `  Current attendance: ${pct.toFixed(1)}%`,
-            `  Warning threshold: ${threshold}%`,
-            `  Absences: ~${absenceCount}`,
-            '',
-            'Please contact your instructor if you need assistance.',
-          ].join('\n'),
-        });
+        try {
+          const absenceCount = Math.round((100 - pct) / 100 * await getClosedSessionCount(courseId));
+          await sendEmail({
+            to: student.email,
+            subject: `QR-Guard: Attendance warning for ${course.code}`,
+            text: [
+              `Dear ${student.name},`,
+              '',
+              `Your attendance in ${course.code} — ${course.name} has dropped below the warning threshold.`,
+              '',
+              `  Current attendance: ${pct.toFixed(1)}%`,
+              `  Warning threshold: ${threshold}%`,
+              `  Absences: ~${absenceCount}`,
+              '',
+              'Please contact your instructor if you need assistance.',
+            ].join('\n'),
+          });
+          emailSent = true;
+        } catch (err) {
+          console.error('[notification] Student warning email failed:', err.message);
+        }
       }
 
-      // Check AUK 15% absence limit (100 - pct > 15 means absences exceed 15%)
+      // If the email failed, release the crossing claim so the next call can
+      // retry. Historical (recovered) rows are not affected because this row
+      // still has recovered_above_at IS NULL.
+      if (!emailSent) {
+        await db
+          .delete(warningEmailLog)
+          .where(and(
+            eq(warningEmailLog.courseId, courseId),
+            eq(warningEmailLog.studentId, studentId),
+            eq(warningEmailLog.crossedBelowAt, crossedBelowAt),
+          ));
+        return;
+      }
+
+      // Check AUK 15% absence limit
       if (student && 100 - pct >= AUK_ABSENCE_LIMIT_PCT) {
-        await notifyInstructorAukLimit(course, student, pct);
+        try {
+          await notifyInstructorAukLimit(course, student, pct);
+        } catch (err) {
+          // Instructor notification failure must not unwind the student-warning
+          // claim (the student was already emailed). Log and continue.
+          console.error('[notification] Instructor AUK-limit email failed:', err.message);
+        }
       }
     }
     // If openCrossing already exists, don't send another email

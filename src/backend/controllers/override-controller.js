@@ -45,48 +45,53 @@ export async function overrideAttendance(req, res) {
     .limit(1);
   if (!enrollment) return res.status(404).json({ error: 'Student not enrolled in this course' });
 
-  // Check for existing attendance row
-  const [existing] = await db.select().from(attendance)
-    .where(and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId)))
-    .limit(1);
+  // The attendance upsert + audit_log insert run together in a transaction
+  // so we never end up with one without the other (previous behavior left
+  // orphan writes on partial failure).
+  const { attendanceRow, auditEntry, oldStatus } = await db.transaction(async (tx) => {
+    const [existing] = await tx.select().from(attendance)
+      .where(and(eq(attendance.sessionId, sessionId), eq(attendance.studentId, studentId)))
+      .limit(1);
 
-  const oldStatus = existing?.status || 'absent';
-  let attendanceRow;
+    const prevStatus = existing?.status || 'absent';
+    let row;
 
-  if (existing) {
-    // Update existing row
-    [attendanceRow] = await db.update(attendance)
-      .set({
+    if (existing) {
+      [row] = await tx.update(attendance)
+        .set({
+          status,
+          excuseReason: status === 'excused' ? reason : existing.excuseReason,
+        })
+        .where(eq(attendance.attendanceId, existing.attendanceId))
+        .returning();
+    } else {
+      [row] = await tx.insert(attendance).values({
+        sessionId,
+        studentId,
         status,
-        excuseReason: status === 'excused' ? reason : existing.excuseReason,
-      })
-      .where(eq(attendance.attendanceId, existing.attendanceId))
-      .returning();
-  } else {
-    // Insert new row (student was absent — no scan row existed)
-    [attendanceRow] = await db.insert(attendance).values({
-      sessionId,
-      studentId,
-      status,
-      excuseReason: status === 'excused' ? reason : null,
-    }).returning();
-  }
+        excuseReason: status === 'excused' ? reason : null,
+      }).returning();
+    }
 
-  // Audit log entry
-  const [auditEntry] = await db.insert(auditLog).values({
-    eventType: 'override',
-    actorId: req.session.userId,
-    targetId: sessionId,
-    result: 'success',
-    reason: `override_${status}`,
-    details: {
-      studentId,
-      oldStatus,
-      newStatus: status,
-      reason,
-      instructorId: req.session.userId,
-    },
-  }).returning();
+    const [audit] = await tx.insert(auditLog).values({
+      eventType: 'override',
+      actorId: req.session.userId,
+      targetId: sessionId,
+      result: 'success',
+      reason: `override_${status}`,
+      details: {
+        studentId,
+        oldStatus: prevStatus,
+        newStatus: status,
+        reason,
+        instructorId: req.session.userId,
+      },
+    }).returning();
+
+    return { attendanceRow: row, auditEntry: audit, oldStatus: prevStatus };
+  });
+  // oldStatus is returned for potential future use; not consumed by response.
+  void oldStatus;
 
   // Check threshold after override (may trigger notification)
   try {
