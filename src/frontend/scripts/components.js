@@ -34,6 +34,12 @@ function ensureSkipLink() {
       if (child.classList.contains('site-footer')) continue;
       child.id = 'main-content';
       child.setAttribute('tabindex', '-1');
+      // Mark as the main landmark so assistive tech has a region to
+      // skip into (WCAG 2.4.1 / 1.3.1). role="main" is equivalent to
+      // <main> and avoids wrapping existing markup.
+      if (child.tagName !== 'MAIN' && !child.hasAttribute('role')) {
+        child.setAttribute('role', 'main');
+      }
       break;
     }
   });

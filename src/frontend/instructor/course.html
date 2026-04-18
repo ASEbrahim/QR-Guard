@@ -14,7 +14,7 @@
   <div class="container-wide">
     <!-- Hero: course + key info -->
     <div id="courseInfo" class="course-hero">
-      <h3 id="courseTitle">Loading...</h3>
+      <h1 id="courseTitle" class="course-hero-title">Loading...</h1>
       <p id="courseMeta" class="course-hero-meta"></p>
       <div class="course-hero-code">
         <span class="course-hero-code-label">Enrollment code</span>
@@ -36,21 +36,28 @@
       </div>
     </div>
 
-    <!-- Tabs: Sessions / Students -->
-    <div class="tab-bar" role="tablist">
-      <button type="button" class="tab-btn active" role="tab" data-tab="sessions" aria-selected="true">
+    <!-- Tabs: Sessions / Students. aria-controls wires each tab to its
+         panel; the panels label back via aria-labelledby. tabindex=0 on
+         the active tab so arrow-key nav starts there (other tabs = -1
+         until focused, classic roving-tabindex). -->
+    <div class="tab-bar" role="tablist" aria-label="Course tabs">
+      <button type="button" class="tab-btn active" role="tab" id="tab-sessions" data-tab="sessions"
+              aria-selected="true" aria-controls="sessionsPanel" tabindex="0">
         Sessions <span class="count-badge" id="sessionCount">0</span>
       </button>
-      <button type="button" class="tab-btn" role="tab" data-tab="students" aria-selected="false">
+      <button type="button" class="tab-btn" role="tab" id="tab-students" data-tab="students"
+              aria-selected="false" aria-controls="studentsPanel" tabindex="-1">
         Students <span class="count-badge" id="studentCount">0</span>
       </button>
     </div>
 
-    <div class="tab-panel active" id="sessionsPanel" role="tabpanel">
+    <div class="tab-panel active" id="sessionsPanel" role="tabpanel"
+         aria-labelledby="tab-sessions" tabindex="0">
       <div id="sessionsList" class="list-stack"></div>
     </div>
 
-    <div class="tab-panel" id="studentsPanel" role="tabpanel" hidden>
+    <div class="tab-panel" id="studentsPanel" role="tabpanel"
+         aria-labelledby="tab-students" tabindex="0" hidden>
       <div id="studentsList" class="list-stack"></div>
       <p id="noStudents" class="text-muted text-center" style="display:none;">No students enrolled yet.</p>
     </div>
@@ -177,21 +184,38 @@
       if (res && res.ok) loadCourse();
     }
 
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('.tab-btn').forEach(b => {
-          const active = b.dataset.tab === tab;
-          b.classList.toggle('active', active);
-          b.setAttribute('aria-selected', active);
-        });
-        document.querySelectorAll('.tab-panel').forEach(p => {
-          const active = p.id === `${tab}Panel`;
-          p.classList.toggle('active', active);
-          p.hidden = !active;
-        });
-        document.getElementById('toggleAddSession').style.display = tab === 'sessions' ? '' : 'none';
+    // Tab switching — click + keyboard (roving tabindex, ArrowLeft/Right
+     // cycle). WAI-ARIA Authoring Practices "tabs" pattern.
+    const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+
+    function activateTab(tabId, focus = true) {
+      tabButtons.forEach((b) => {
+        const active = b.dataset.tab === tabId;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+        b.setAttribute('tabindex', active ? '0' : '-1');
+        if (active && focus) b.focus();
+      });
+      document.querySelectorAll('.tab-panel').forEach((p) => {
+        const active = p.id === `${tabId}Panel`;
+        p.classList.toggle('active', active);
+        p.hidden = !active;
+      });
+      document.getElementById('toggleAddSession').style.display = tabId === 'sessions' ? '' : 'none';
+    }
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => activateTab(btn.dataset.tab, false));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+        e.preventDefault();
+        const idx = tabButtons.indexOf(btn);
+        let target;
+        if (e.key === 'Home') target = tabButtons[0];
+        else if (e.key === 'End') target = tabButtons[tabButtons.length - 1];
+        else if (e.key === 'ArrowLeft') target = tabButtons[(idx - 1 + tabButtons.length) % tabButtons.length];
+        else target = tabButtons[(idx + 1) % tabButtons.length];
+        activateTab(target.dataset.tab, true);
       });
     });
 

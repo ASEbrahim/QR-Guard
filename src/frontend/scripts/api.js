@@ -86,22 +86,42 @@ function showPageLoader() {
   return () => { bar.style.display = 'none'; };
 }
 
-/** Sets a button to loading state. Returns a restore function. */
+/** Sets a button to loading state. Returns a restore function.
+ *  Also flips aria-busy + disables the button so assistive tech announces
+ *  the pending state and users can't double-submit. */
 function setButtonLoading(btn) {
   const original = btn.textContent;
   btn.classList.add('loading');
+  btn.setAttribute('aria-busy', 'true');
+  btn.disabled = true;
   btn.textContent = original;
-  return () => { btn.classList.remove('loading'); btn.textContent = original; };
+  return () => {
+    btn.classList.remove('loading');
+    btn.removeAttribute('aria-busy');
+    btn.disabled = false;
+    btn.textContent = original;
+  };
 }
 
 /** Escape HTML to prevent XSS when inserting user data into innerHTML */
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-/** Toggle password visibility (shared across auth pages) */
+/** Toggle password visibility (shared across auth pages).
+ * Keeps aria-pressed + aria-label in sync so screen readers announce
+ * the state change ("Show password, pressed" / "Hide password"). */
 function togglePassword(id, btn) {
   const input = document.getElementById(id);
-  if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
-  else { input.type = 'password'; btn.textContent = 'Show'; }
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = 'Hide';
+    btn.setAttribute('aria-pressed', 'true');
+    btn.setAttribute('aria-label', 'Hide password');
+  } else {
+    input.type = 'password';
+    btn.textContent = 'Show';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label', 'Show password');
+  }
 }
 
 /** Shows skeleton cards in a container */
