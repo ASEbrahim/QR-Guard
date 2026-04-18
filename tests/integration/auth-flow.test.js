@@ -2,9 +2,11 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import express from 'express';
 import session from 'express-session';
 import request from 'supertest';
+import bcrypt from 'bcrypt';
 import { pool, db } from '../../src/backend/config/database.js';
-import { users, emailVerificationTokens } from '../../src/backend/db/schema/index.js';
+import { users, instructors, emailVerificationTokens } from '../../src/backend/db/schema/index.js';
 import authRoutes from '../../src/backend/routes/auth-routes.js';
+import { BCRYPT_ROUNDS } from '../../src/backend/config/constants.js';
 import { sql } from 'drizzle-orm';
 
 // Build a test app
@@ -129,17 +131,19 @@ describe('Auth Flow', () => {
   });
 
   // AC 5: Instructor redirect
+  // Instructors are provisioned via scripts/seed.js — not via the public
+  // register endpoint (student-only). This test seeds an instructor directly
+  // to verify login redirect behavior.
   it('should redirect instructor to instructor dashboard', async () => {
-    await request(app).post('/api/auth/register').send({
+    const passwordHash = await bcrypt.hash('password123', BCRYPT_ROUNDS);
+    const [user] = await db.insert(users).values({
       email: 'prof@auk.edu.kw',
-      password: 'password123',
+      passwordHash,
       name: 'Professor',
       role: 'instructor',
-      employeeId: 'E001',
-    });
-
-    const [token] = await db.select().from(emailVerificationTokens).limit(1);
-    await request(app).get(`/api/auth/verify-email?token=${token.token}`);
+      emailVerifiedAt: new Date(),
+    }).returning();
+    await db.insert(instructors).values({ userId: user.userId, employeeId: 'E001' });
 
     const loginRes = await request(app).post('/api/auth/login').send({
       email: 'prof@auk.edu.kw',

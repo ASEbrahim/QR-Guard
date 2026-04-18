@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { eq, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
-import { users, students, instructors, emailVerificationTokens } from '../db/schema/index.js';
+import { users, students, emailVerificationTokens } from '../db/schema/index.js';
 import { sendTokenEmail, sendVerificationCode } from '../services/email-service.js';
 import {
   BCRYPT_ROUNDS,
@@ -18,25 +18,25 @@ import {
 
 // --- Zod validation schemas ---
 
-const registerSchema = z
-  .object({
-    email: z.string({ required_error: 'Email is required' }).email('Enter a valid email').refine((e) => AUK_EMAIL_REGEX.test(e), {
-      message: 'Must be an @auk.edu.kw email address',
-    }),
-    password: z.string({ required_error: 'Password is required' }).min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`),
-    name: z.string({ required_error: 'Name is required' }).min(1, 'Name is required').max(200),
-    role: z.enum(['student', 'instructor']),
-    universityId: z.string().min(1, 'University ID is required').nullish(),
-    employeeId: z.string().min(1, 'Employee ID is required').nullish(),
-  })
-  .refine(
-    (data) => {
-      if (data.role === 'student') return !!data.universityId;
-      if (data.role === 'instructor') return !!data.employeeId;
-      return false;
-    },
-    { message: 'University ID is required' },
-  );
+// Public registration is STUDENT-ONLY. Instructor accounts are provisioned
+// via scripts/seed.js by an administrator. Accepting `role` from the body
+// would allow anyone with an @auk.edu.kw email to self-promote to instructor.
+const registerSchema = z.object({
+  email: z
+    .string({ required_error: 'Email is required' })
+    .email('Enter a valid email')
+    .refine((e) => AUK_EMAIL_REGEX.test(e), { message: 'Must be an @auk.edu.kw email address' }),
+  password: z
+    .string({ required_error: 'Password is required' })
+    .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`),
+  name: z
+    .string({ required_error: 'Name is required' })
+    .min(1, 'Name is required')
+    .max(200),
+  universityId: z
+    .string({ required_error: 'University ID is required' })
+    .min(1, 'University ID is required'),
+});
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -72,7 +72,7 @@ export async function register(req, res) {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-  const { email, password, name, role, universityId, employeeId } = parsed.data;
+  const { email, password, name, universityId } = parsed.data;
 
   // Check if email already taken
   const existing = await db.select({ userId: users.userId }).from(users).where(eq(users.email, email)).limit(1);
@@ -82,16 +82,10 @@ export async function register(req, res) {
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-  // Insert user + role-specific row in a transaction
+  // Public registration is student-only; role is fixed server-side.
   const [newUser] = await db.transaction(async (tx) => {
-    const [user] = await tx.insert(users).values({ email, passwordHash, name, role }).returning();
-
-    if (role === 'student') {
-      await tx.insert(students).values({ userId: user.userId, universityId });
-    } else {
-      await tx.insert(instructors).values({ userId: user.userId, employeeId });
-    }
-
+    const [user] = await tx.insert(users).values({ email, passwordHash, name, role: 'student' }).returning();
+    await tx.insert(students).values({ userId: user.userId, universityId });
     return [user];
   });
 
