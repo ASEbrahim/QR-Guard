@@ -18,7 +18,14 @@ import courseRoutes from './routes/course-routes.js';
 import sessionRoutes from './routes/session-routes.js';
 import scanRoutes from './routes/scan-routes.js';
 import reportRoutes from './routes/report-routes.js';
-import { globalLimiter, loginLimiter, registerLimiter, scanLimiter } from './middleware/rate-limiter.js';
+import {
+  globalLimiter,
+  loginLimiter,
+  registerLimiter,
+  scanLimiter,
+  sensitiveAuthLimiter,
+  enrollLimiter,
+} from './middleware/rate-limiter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -73,6 +80,15 @@ app.use('/api/scan', scanLimiter);
 app.use('/api/auth/verify-code', loginLimiter);
 app.use('/api/auth/forgot-password', loginLimiter);
 app.use('/api/auth/resend-verification', loginLimiter);
+
+// Token-handling / sensitive-auth flows — tighter than the global limiter.
+app.use('/api/auth/reset-password', sensitiveAuthLimiter);
+app.use('/api/auth/verify-email', sensitiveAuthLimiter);
+app.use('/api/auth/verify-rebind', sensitiveAuthLimiter);
+app.use('/api/auth/request-rebind', sensitiveAuthLimiter);
+
+// Enrollment: protects against enrollment-code brute-force enumeration.
+app.use('/api/courses/enroll', enrollLimiter);
 
 // --- API Routes ---
 app.use('/api/auth', authRoutes);

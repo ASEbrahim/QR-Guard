@@ -81,7 +81,10 @@ export async function getPerSessionReport(req, res) {
 export async function getPerStudentReport(req, res) {
   const { id, studentId } = req.params;
 
-  // Auth check: instructor of the course OR the student themselves (must be enrolled)
+  // Auth check: instructor of the course OR the student themselves.
+  // In BOTH branches the student must be enrolled in the course — otherwise
+  // the endpoint becomes an IDOR oracle for any user UUID (leaks name +
+  // universityId).
   if (req.session.role === 'instructor') {
     const [course] = await db.select().from(courses)
       .where(and(eq(courses.courseId, id), eq(courses.instructorId, req.session.userId)))
@@ -91,12 +94,14 @@ export async function getPerStudentReport(req, res) {
     if (req.session.userId !== studentId) {
       return res.status(403).json({ error: 'Cannot view another student\'s attendance' });
     }
-    // Verify the student is enrolled in this course
-    const [enrollment] = await db.select().from(enrollments)
-      .where(and(eq(enrollments.courseId, id), eq(enrollments.studentId, studentId), isNull(enrollments.removedAt)))
-      .limit(1);
-    if (!enrollment) return res.status(403).json({ error: 'Not enrolled in this course' });
   }
+
+  // Common check for both branches: the :studentId must actually be enrolled
+  // in :id. Use 404 (not 403) to avoid leaking whether the UUID exists.
+  const [enrollment] = await db.select().from(enrollments)
+    .where(and(eq(enrollments.courseId, id), eq(enrollments.studentId, studentId), isNull(enrollments.removedAt)))
+    .limit(1);
+  if (!enrollment) return res.status(404).json({ error: 'Student not enrolled in this course' });
 
   const closedSessions = await db.select().from(sessions)
     .where(and(eq(sessions.courseId, id), eq(sessions.status, 'closed')))

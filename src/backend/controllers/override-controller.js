@@ -1,7 +1,7 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
-import { attendance, sessions, courses, auditLog } from '../db/schema/index.js';
+import { attendance, sessions, courses, auditLog, enrollments } from '../db/schema/index.js';
 import { checkThresholdAndNotify } from '../services/notification-service.js';
 
 const overrideSchema = z.object({
@@ -32,6 +32,18 @@ export async function overrideAttendance(req, res) {
     .where(and(eq(courses.courseId, session.courseId), eq(courses.instructorId, req.session.userId)))
     .limit(1);
   if (!course) return res.status(403).json({ error: 'Not your course' });
+
+  // Verify the target student is actually enrolled in this course. Without
+  // this check, body.studentId could be any UUID and we'd insert spurious
+  // attendance rows (or leak FK errors as existence oracles).
+  const [enrollment] = await db.select().from(enrollments)
+    .where(and(
+      eq(enrollments.courseId, session.courseId),
+      eq(enrollments.studentId, studentId),
+      isNull(enrollments.removedAt),
+    ))
+    .limit(1);
+  if (!enrollment) return res.status(404).json({ error: 'Student not enrolled in this course' });
 
   // Check for existing attendance row
   const [existing] = await db.select().from(attendance)

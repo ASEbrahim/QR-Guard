@@ -267,6 +267,17 @@ export async function verifyEmail(req, res) {
     }
   });
 
+  // On device rebind, also destroy any existing sessions for the user. The
+  // rebind flow implies the student's original device may be lost/stolen;
+  // any session cookie issued on it must stop working.
+  if (purpose === 'device_rebind') {
+    try {
+      await db.execute(sql`DELETE FROM "session" WHERE sess->>'userId' = ${record.userId}`);
+    } catch (err) {
+      console.error('[auth] Failed to destroy sessions on device rebind:', err.message);
+    }
+  }
+
   if (purpose === 'email_verify') {
     return res.json({ message: 'Email verified successfully. You can now log in.' });
   }

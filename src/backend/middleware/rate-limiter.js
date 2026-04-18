@@ -44,3 +44,32 @@ export const globalLimiter = rateLimit({
   legacyHeaders: false,
   ...skipInDev,
 });
+
+/**
+ * Sensitive-auth flows: password-reset, email verify link, rebind verify,
+ * rebind request. Each carries a token or triggers a token-issuing email —
+ * more aggressive than login limit to throttle brute-force + email spam.
+ * 10 requests per 10 minutes per IP.
+ */
+export const sensitiveAuthLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...skipInDev,
+});
+
+/**
+ * Enrollment: 20 requests per 10 minutes per IP. Prevents enumeration of
+ * 6-char enrollment codes (brute-force vector). Student UX: unlikely to
+ * trigger during legitimate use.
+ */
+export const enrollLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many enrollment attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...skipInDev,
+});
