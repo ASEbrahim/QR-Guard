@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '../config/database.js';
 import { attendance } from '../db/schema/index.js';
 import { verifyScan } from '../validators/scan-verifier.js';
+import { logAudit } from '../validators/audit-logger.js';
 import { emitAttendanceUpdate } from '../services/socket-service.js';
 import { checkThresholdAndNotify } from '../services/notification-service.js';
 
@@ -39,8 +40,19 @@ export async function handleScan(req, res) {
   });
 
   if (!result.success) {
+    // verifier already logged the rejection
     return res.status(403).json({ error: result.message, code: result.reason });
   }
+
+  // Shared details object for audit entries written below.
+  const auditDetails = {
+    gpsLat,
+    gpsLng,
+    gpsAccuracy,
+    ipAddress: clientIp,
+    deviceHash: deviceFingerprint,
+    ipCheckSkipped: result.ipCheckSkipped || false,
+  };
 
   // Pipeline passed — record attendance
   try {
@@ -55,12 +67,41 @@ export async function handleScan(req, res) {
       deviceHash: deviceFingerprint,
     });
   } catch (err) {
-    // UNIQUE constraint violation = already recorded
+    // UNIQUE constraint violation = already recorded. Audit as rejection
+    // with a distinct reason so the attempt is still captured.
     if (err.code === '23505') {
+      await logAudit({
+        eventType: 'scan_attempt',
+        actorId: req.session.userId,
+        targetId: result.sessionId,
+        result: 'rejected',
+        reason: 'already_recorded',
+        details: auditDetails,
+      });
       return res.status(409).json({ error: 'Already recorded', code: 'already_recorded' });
     }
+    // Any other attendance-insert error: audit the failure BEFORE re-throwing
+    // so we don't end up with an unaudited scan success.
+    await logAudit({
+      eventType: 'scan_attempt',
+      actorId: req.session.userId,
+      targetId: result.sessionId,
+      result: 'rejected',
+      reason: 'attendance_insert_failed',
+      details: { ...auditDetails, errorCode: err.code },
+    });
     throw err;
   }
+
+  // Attendance persisted — now log the success audit row.
+  await logAudit({
+    eventType: 'scan_attempt',
+    actorId: req.session.userId,
+    targetId: result.sessionId,
+    result: 'success',
+    reason: result.ipCheckSkipped ? 'ip_check_skipped' : null,
+    details: auditDetails,
+  });
 
   // Broadcast live counter update
   try {

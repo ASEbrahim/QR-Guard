@@ -50,7 +50,7 @@ describe('ScanVerifier — pipeline order', () => {
     logAudit.mockResolvedValue();
   });
 
-  it('should call all 5 validators + audit on success', async () => {
+  it('should call all 5 validators on success and defer audit to the caller', async () => {
     const result = await verifyScan(baseScanData);
 
     expect(result.success).toBe(true);
@@ -59,7 +59,9 @@ describe('ScanVerifier — pipeline order', () => {
     expect(checkIp).toHaveBeenCalledOnce();
     expect(checkGpsAccuracy).toHaveBeenCalledOnce();
     expect(checkGeofence).toHaveBeenCalledOnce();
-    expect(logAudit).toHaveBeenCalledOnce();
+    // Audit on success is the controller's responsibility — see
+    // scan-controller.js after the attendance row is persisted.
+    expect(logAudit).not.toHaveBeenCalled();
   });
 
   it('should short-circuit at layer 1 — layers 2-5 not called', async () => {
@@ -109,10 +111,10 @@ describe('ScanVerifier — pipeline order', () => {
     checkIp.mockImplementation(async () => { callOrder.push(3); return { skipped: false }; });
     checkGpsAccuracy.mockImplementation(() => { callOrder.push(4); });
     checkGeofence.mockImplementation(async () => { callOrder.push(5); });
-    logAudit.mockImplementation(async () => { callOrder.push(6); });
 
     await verifyScan(baseScanData);
 
-    expect(callOrder).toEqual([1, 2, 3, 4, 5, 6]);
+    // On success, validators 1-5 run and logAudit is deferred to the caller.
+    expect(callOrder).toEqual([1, 2, 3, 4, 5]);
   });
 });
