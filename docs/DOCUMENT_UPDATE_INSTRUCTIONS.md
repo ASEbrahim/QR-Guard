@@ -229,3 +229,61 @@ Dependencies removed: `qrcode` (unused), `date-fns-tz` (unused), `nodemon` (unus
 | --surface | #ffffff | Cards, forms |
 | --danger | #dc2626 | Error states, destructive actions |
 | --success | #16a34a | Success states, GPS locked indicator |
+
+---
+
+## Addendum: Changes After This Document Was First Written (April 17-18)
+
+The following changes were made AFTER the initial version of this document. They must also be reflected in FRS/PR2/PPTX updates.
+
+### Security Fixes (9 critical + high)
+- **Session fixation** fixed — `req.session.regenerate()` after login
+- **Session secret** — server crashes in production if unset or default
+- **CORS** — restricted from `origin: true` to explicit `ALLOWED_ORIGIN` env var
+- **Open redirect** — login redirectUrl validated to start with `/`
+- **Device fingerprint redesigned** — login from any device allowed; device binding enforced in scan pipeline only (DeviceChecker, Layer 2). Students can view dashboard from any device but can only scan from their bound device.
+- **XSS** — `esc()` applied to all user data in innerHTML across all pages
+- **SSL** — `rejectUnauthorized: true` for Neon DB connection
+- **Socket.IO authentication** — connections require valid express session. `join-session` verifies caller is course instructor or enrolled student. Unauthenticated sockets are disconnected.
+- **IDOR** — `getPerStudentReport` now checks student enrollment in the course
+- **Rate limiting** added to verify-code, forgot-password, resend-verification endpoints
+- **Token invalidation** — prior tokens marked used when new ones are issued
+
+### UI Redesign Port (from auk-qr-guard prototype)
+- **Auth pages**: crimson card-header banner with campus photo background (same image as nav bar)
+- **Dashboards**: page headers with red count-badge pills, FAB (floating action button) for primary actions
+- **Bottom-sheet modals**: create course + enroll flows use slide-up bottom sheets (replaces inline collapsible cards)
+- **Course detail**: red gradient hero card with compact stat pills, tab bar (Sessions | Students), session rows with date badges + status-colored left stripes, student rows with avatar initials + icon-remove buttons
+- **Scan page**: status-card pattern for errors (icon + title + message + optional action), branched camera error handling
+- **Accent-striped course cards**: deterministic color per course code prefix (CSIS=red, CPEG=blue, etc.)
+- **Location search**: live Nominatim autocomplete with 6 AUK campus quick picks on focus
+
+### Custom Domain
+- **URL changed**: `https://qr-guard.onrender.com` → `https://qrguard.strat-os.net`
+- CNAME via Cloudflare (DNS only, no proxy)
+- SSL certificate issued by Render
+- `BASE_URL` and `ALLOWED_ORIGIN` env vars updated on Render
+
+### Updated Stats
+- Total commits: **59** (was 56 when this doc was first written)
+- Total files: 70
+- Lines of code: ~6,700
+- Dependencies: 15 prod, 7 dev (3 removed: qrcode, date-fns-tz, nodemon)
+
+### Additional FRS Updates Needed
+- **FR1.7 (Device binding)**: login no longer blocks unrecognized devices. Device check moved to scan pipeline. Students can log in from any device to view dashboard but can only scan from bound device.
+- **Security section**: add Socket.IO authentication requirement, session regeneration, CORS restriction, token invalidation on new issuance
+- **Deployment**: custom domain qrguard.strat-os.net (not qr-guard.onrender.com)
+- **UI/UX section**: FABs, bottom sheets, hero cards, tabs, status cards, accent-striped cards, location autocomplete
+
+### Additional PR2 Updates Needed
+- **Section 3.4 (Implementation)**: 59 commits, not 56. Add UI redesign port details.
+- **Section 3.5 (V&V)**: security audit found 29 vulnerabilities, all critical/high fixed
+- **Section 5 (Challenges)**: add Socket.IO auth, device binding redesign, CORS restriction, custom domain setup
+- **Section 6 (Plan Forward)**: custom domain configured, all security issues resolved
+
+### Additional PPTX Updates
+- Demo URL: **https://qrguard.strat-os.net** (not onrender.com)
+- Add screenshot of new UI (FABs, hero cards, bottom sheets)
+- Security slide: 29 vulns found, all critical/high fixed
+- Architecture: Socket.IO now authenticated
