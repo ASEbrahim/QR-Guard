@@ -1,5 +1,5 @@
 <!--
-last_updated: 2026-04-17
+last_updated: 2026-04-18
 audience: Claude Code (locate files), maintainer (review structure), professor (code walkthrough)
 role: a one-line description of every code file in the project
 -->
@@ -12,7 +12,7 @@ role: a one-line description of every code file in the project
 
 ## Status
 
-All 5 increments complete. 6 audit passes completed. System is feature-complete and deployed.
+All complete. 8 audits passed. Security hardened. Deployed to qrguard.strat-os.net
 
 ---
 

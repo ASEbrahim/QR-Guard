@@ -1,5 +1,5 @@
 <!--
-last_updated: 2026-04-16
+last_updated: 2026-04-18
 verified_against: class diagram (docs/uml/04-class-diagram.svg) and FRS v1.1
 audience: Claude Code (DB implementation), maintainer (review)
 role: canonical PostgreSQL schema for QR-Guard
@@ -127,6 +127,8 @@ A single QR token in a session's lifecycle.
 
 **Index:** `CREATE INDEX qr_tokens_session_idx ON qr_tokens(session_id, generated_at DESC);`
 
+**Maintenance:** Periodic cleanup runs every 10 minutes, deleting expired tokens older than 1 hour (`DELETE FROM qr_tokens WHERE expires_at < NOW() - INTERVAL '1 hour'`). This prevents infinite table growth from QR refresh cycles.
+
 ### `attendance`
 
 The persistent record of a student's attendance for a session.
@@ -165,6 +167,7 @@ Append-only log of every scan attempt + every override.
 
 **Index:** `CREATE INDEX audit_log_timestamp_idx ON audit_log(timestamp DESC);`
 **Index:** `CREATE INDEX audit_log_actor_idx ON audit_log(actor_id);`
+**Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);`
 
 **Trigger:** Reject UPDATE and DELETE on this table at the DB level (append-only):
 
@@ -229,13 +232,15 @@ WHERE s.course_id = $2
 
 ```sql
 SELECT ST_DWithin(
-  c.geofence_center,
+  ST_GeogFromText(c.geofence_center),
   ST_SetSRID(ST_MakePoint($lng, $lat), 4326)::geography,
   c.geofence_radius_m + 15  -- +15m indoor margin per FR4.3
 ) AS within
 FROM courses c
 WHERE c.course_id = $courseId;
 ```
+
+> **Note:** `geofence_center` is stored as WKT text (not geography) because Drizzle ORM does not support native PostGIS geography types. The `ST_GeogFromText()` cast converts the WKT string to geography at query time.
 
 ---
 

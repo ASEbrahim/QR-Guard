@@ -1,5 +1,5 @@
 <!--
-last_updated: 2026-04-16
+last_updated: 2026-04-18
 verified_against: FRS v1.1
 audience: Claude Code (the spec for implementation), maintainer (progress tracking)
 role: the canonical 5-increment plan with binary acceptance criteria
@@ -243,3 +243,54 @@ Before marking an increment complete in `docs/STATE.md`:
 - [ ] `docs/CODEBASE_MAP.md` is updated
 - [ ] `docs/STATE.md` increment row is updated to ✅ with date
 - [ ] Commit pushed: `feat(inc-<n>): <one-line description>`
+
+---
+
+## Post-Increment Work (April 17-18, 2026)
+
+After all 5 increments were completed, the following additional work was performed:
+
+### Code Quality Audits (8 passes, 77 findings, 65 fixed)
+
+| Audit Pass | Findings | Fixed |
+|---|---|---|
+| Code quality (3 agents) | 6 | 4 |
+| Schema consistency | 6 | 6 |
+| Pipeline order | 2 | 0 (acceptable) |
+| Readability + clarity | 12 | 10 |
+| Structure + Big O | 12 | 10 |
+| Frontend clarity | 15 | 13 |
+| Memory + resources | 9 | 7 |
+| Dependencies + accessibility | 15 | 6 |
+
+Key fixes: N+1 queries eliminated, duplicate logic extracted, XSS esc() helper applied, QR token periodic cleanup added, orphaned sessions auto-closed on restart, 3 unused dependencies removed, audit_log target_id index added, accessibility improvements (focus rings, role="alert", skip-to-content link).
+
+### Security Audit (29 vulnerabilities found, all critical/high fixed)
+
+| Severity | Found | Fixed |
+|---|---|---|
+| Critical | 7 | 7 |
+| High | 5 | 5 |
+| Medium | 6 | 4 |
+| Low | 3 | 0 (documented) |
+
+Critical fixes: session fixation (req.session.regenerate), session secret crash on default, CORS restricted to ALLOWED_ORIGIN, open redirect validation, device fingerprint bypass redesign, XSS in course.html, SSL rejectUnauthorized for Neon DB.
+
+### UI Redesign
+
+Major UI overhaul ported from auk-qr-guard prototype:
+- AUK branding: crimson #9a182b + gold #D4A037 + warm cream #f4ecdb
+- Bottom navigation replacing hamburger menu
+- FAB buttons for primary actions
+- Bottom-sheet modals for forms
+- Status-card error pattern on scan page
+- Campus photo nav/footer backgrounds
+- Loading states: button spinners, page loader, skeleton cards
+
+### Deployment
+
+- **Hosting:** Render (web service, free tier) + Neon (PostgreSQL + PostGIS, free tier)
+- **Custom domain:** qrguard.strat-os.net via Cloudflare CNAME to qr-guard.onrender.com
+- **Email:** Resend with custom domain mail.strat-os.net (noreply@mail.strat-os.net)
+- **Repository:** https://github.com/ASEbrahim/QR-Guard
+- **Total commits:** 56 across April 16-18, 2026

@@ -1,5 +1,5 @@
 <!--
-last_updated: 2026-04-16
+last_updated: 2026-04-18
 audience: Claude Code (terminology lookup), maintainer (reference)
 role: canonical definitions of every term used in QR-Guard
 -->
@@ -35,6 +35,9 @@ role: canonical definitions of every term used in QR-Guard
 | WBS | Work Breakdown Structure | Project decomposition (Ch04) |
 | NFR | Non-Functional Requirement | Performance, security, etc. (FRS §5) |
 | FR | Functional Requirement | What the system does (FRS §3) |
+| FAB | Floating Action Button | A circular button anchored to the bottom-right of the viewport for primary actions (e.g., "Scan QR", "Create Course") |
+| WKT | Well-Known Text | OGC text format for representing geometry. Used to store `geofence_center` as text in PostgreSQL, cast via `ST_GeogFromText()` for PostGIS queries |
+| CORS | Cross-Origin Resource Sharing | HTTP mechanism controlling which origins can access the API. Restricted to `ALLOWED_ORIGIN` env var after security audit |
 
 ---
 
@@ -54,6 +57,13 @@ role: canonical definitions of every term used in QR-Guard
 | **Excused** | An attendance status (alongside present/absent) for sessions excluded from the percentage denominator. |
 | **Enrollment code** | 6-character alphanumeric code used by students to self-enroll in a course. |
 | **Scan pipeline** | The 6-layer verification sequence run on every scan attempt. See `docs/uml/02-sequence-scan.svg`. |
+| **Bottom sheet** | A modal UI pattern that slides up from the bottom of the viewport. Used for course creation forms, enrollment input, and session actions on mobile. |
+| **Status card** | An error/info display pattern on the scan page: colored card with icon + title + message + actionable instruction. Each scan error code maps to a specific status card. |
+| **FAIL-OPEN** | Policy for ip-api.com: if the IP intelligence API times out or returns an error, the scan proceeds and the skip is logged to the audit log. Ensures availability over strictness. |
+| **ScanError** | Custom error class (`scan-error.js`) with a `code` property (e.g., `qr_expired`, `device_mismatch`, `outside_geofence`). Thrown by pipeline validators, caught by ScanVerifier for structured API responses. |
+| **Session regeneration** | Security measure: `req.session.regenerate()` called after successful login to prevent session fixation attacks. The old session ID is invalidated and a new one is issued. |
+| **ALLOWED_ORIGIN** | Environment variable restricting CORS to a single origin (e.g., `https://qrguard.strat-os.net`). Replaces the insecure `origin: true` default. Set in Render env vars. |
+| **Custom domain** | `qrguard.strat-os.net` — the production URL. Configured via Cloudflare CNAME pointing to `qr-guard.onrender.com`. Used as `BASE_URL` and `ALLOWED_ORIGIN` in production. |
 
 ---
 

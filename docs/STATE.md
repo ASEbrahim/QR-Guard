@@ -1,5 +1,5 @@
 <!--
-last_updated: 2026-04-16
+last_updated: 2026-04-18
 audience: Claude Code (read at the start of every session), maintainer (track progress)
 role: the live state of the QR-Guard build — what's done, what's in progress, what's next
 -->
@@ -12,9 +12,13 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Current sprint
 
-**Active increment:** All complete — feature-complete
-**Active sprint focus:** none — ready for PR2
-**Last commit:** feat(sprint-c): reports + notifications + override + hardening
+**Active increment:** All 5 complete — feature-complete, audited, security-hardened, deployed
+**Active sprint focus:** none — all implementation, auditing, and deployment work finished
+**Last commit:** 56 commits across April 16-18, 2026
+**Audit status:** 8 audit passes complete (77 findings, 65 fixed)
+**Security audit:** 29 vulnerabilities found; all critical/high fixed
+**UI redesign:** Complete — crimson + gold AUK branding, bottom nav, FAB, bottom sheets
+**Deployment:** Live at https://qrguard.strat-os.net (Render + Neon, custom domain via Cloudflare CNAME)
 
 ---
 
@@ -61,10 +65,11 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Next steps
 
-1. Write Progress Report 2 document
-2. Build presentation slides
-3. Push all commits to GitHub
-4. Deploy or set up local demo
+1. Update FRS v1.1 to v2.0 (see `docs/DOCUMENT_UPDATE_INSTRUCTIONS.md` for exact changes)
+2. Update PR2 document with final implementation metrics, audit results, and challenges
+3. Update PPTX presentation slides (architecture, demo URL, audit results, color scheme)
+4. Campus GPS test — verify geofence accuracy with real AUK coordinates
+5. Demo rehearsal — cold start timing, test accounts, walkthrough flow
 
 ---
 
@@ -75,3 +80,5 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 - 2026-04-16: Sprint A complete (Auth + Course Management). 14 tests pass, lint clean. Next: Sprint B.
 - 2026-04-16: Sprint B complete (Dynamic QR + Scan Pipeline). 36 tests pass, lint clean. Next: Sprint C.
 - 2026-04-16: Sprint C complete (Reports + Notifications + Hardening). 43 tests pass, lint clean. Feature-complete.
+- 2026-04-17: 8 audit passes complete (code quality, schema, pipeline, readability, structure/BigO, frontend, memory/resources, deps/accessibility). 77 findings, 65 fixed. Security audit: 29 vulnerabilities found, all critical/high fixed (session fixation, CORS, open redirect, XSS, Socket.IO auth, IDOR, rate limiting). UI redesign ported from auk-qr-guard prototype. Deployed to Render + Neon.
+- 2026-04-18: Custom domain configured: qrguard.strat-os.net via Cloudflare CNAME to qr-guard.onrender.com. Resend email domain: noreply@mail.strat-os.net. Final session report and document update instructions written. 56 total commits. Next: update FRS/PR2/PPTX, campus GPS test, demo rehearsal.
