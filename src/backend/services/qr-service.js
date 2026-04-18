@@ -85,6 +85,16 @@ export function stopRefreshLoop(sessionId) {
 }
 
 /**
+ * Stops all active QR refresh loops. Used by the graceful-shutdown path.
+ */
+export function stopAllRefreshLoops() {
+  for (const interval of activeLoops.values()) {
+    clearInterval(interval);
+  }
+  activeLoops.clear();
+}
+
+/**
  * Gets the current (latest, non-expired) QR token for a session.
  * Used by the HTTP polling fallback.
  *

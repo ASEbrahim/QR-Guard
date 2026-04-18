@@ -9,8 +9,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool, db } from './config/database.js';
 import { SESSION_MAX_AGE_MS } from './config/constants.js';
-import { initSocketIO } from './services/socket-service.js';
-import { cleanupExpiredTokens } from './services/qr-service.js';
+import { initSocketIO, closeSocketIO } from './services/socket-service.js';
+import { cleanupExpiredTokens, stopAllRefreshLoops } from './services/qr-service.js';
 import { sessions } from './db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import authRoutes from './routes/auth-routes.js';
@@ -101,15 +101,71 @@ const httpServer = http.createServer(app);
 initSocketIO(httpServer, sessionMiddleware);
 
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Track resources that need teardown on shutdown.
+let tokenCleanupInterval = null;
+let isShuttingDown = false;
+
 httpServer.listen(PORT, HOST, () => {
   console.log(`QR-Guard server running on http://${HOST}:${PORT}`);
 
-  // Clean up expired QR tokens every 10 minutes
-  setInterval(cleanupExpiredTokens, 10 * 60 * 1000);
+  // Clean up expired QR tokens every 10 minutes (handle retained for shutdown)
+  tokenCleanupInterval = setInterval(cleanupExpiredTokens, 10 * 60 * 1000);
   cleanupExpiredTokens(); // run once on startup
 
   // Close any sessions left in 'active' state from a previous server instance
   db.update(sessions).set({ status: 'closed', actualEnd: new Date() }).where(eq(sessions.status, 'active')).then(() => {}).catch(err => console.error('[startup] Failed to close orphaned sessions:', err.message));
+});
+
+/**
+ * Graceful shutdown: stop accepting new connections, close in-flight
+ * resources (intervals, QR refresh loops, Socket.IO, HTTP server, PG pool),
+ * then exit. Idempotent — subsequent signals during shutdown are ignored.
+ *
+ * On Render, SIGTERM is sent on deploy and on scale-down. Honoring it means
+ * in-flight scans can complete (within the platform's grace window) rather
+ * than being cut off mid-request.
+ */
+async function shutdown(signal, exitCode = 0) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`[server] Received ${signal}. Shutting down gracefully...`);
+
+  // Hard-exit timer: if graceful shutdown hangs, bail after 15s.
+  const forceExitTimer = setTimeout(() => {
+    console.error('[server] Graceful shutdown timed out after 15s. Forcing exit.');
+    process.exit(1);
+  }, 15000);
+  forceExitTimer.unref();
+
+  try {
+    if (tokenCleanupInterval) clearInterval(tokenCleanupInterval);
+    stopAllRefreshLoops();
+    await closeSocketIO();
+    await new Promise((resolve) => httpServer.close(() => resolve()));
+    await pool.end();
+    console.log('[server] Shutdown complete.');
+    process.exit(exitCode);
+  } catch (err) {
+    console.error('[server] Error during shutdown:', err);
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// Node 20 terminates the process on unhandled rejection by default. Log the
+// reason with context before shutting down so we can diagnose later.
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[server] UNHANDLED REJECTION', { reason, promise });
+  shutdown('unhandledRejection', 1);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[server] UNCAUGHT EXCEPTION', err);
+  // uncaughtException means state is unreliable — shutdown with failure code.
+  shutdown('uncaughtException', 1);
 });
 
 export default app;

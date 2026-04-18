@@ -112,3 +112,17 @@ export function emitSessionClosed(sessionId) {
   if (!io) return;
   io.to(`session-${sessionId}`).emit('session:closed');
 }
+
+/**
+ * Closes the Socket.IO server. Used by the graceful-shutdown path.
+ * @returns {Promise<void>}
+ */
+export function closeSocketIO() {
+  return new Promise((resolve) => {
+    if (!io) return resolve();
+    io.close(() => {
+      io = null;
+      resolve();
+    });
+  });
+}
