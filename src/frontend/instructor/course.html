@@ -216,16 +216,20 @@
       setDefaultDateTime();
       document.getElementById('sheetError').style.display = 'none';
       document.getElementById('sheetBackdrop').classList.add('open');
-      document.getElementById('addSessionSheet').classList.add('open');
-      document.getElementById('addSessionSheet').setAttribute('aria-hidden', 'false');
+      const sheet = document.getElementById('addSessionSheet');
+      sheet.classList.add('open');
+      sheet.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      openModal(sheet);
     }
 
     function closeSheet() {
       document.getElementById('sheetBackdrop').classList.remove('open');
-      document.getElementById('addSessionSheet').classList.remove('open');
-      document.getElementById('addSessionSheet').setAttribute('aria-hidden', 'true');
+      const sheet = document.getElementById('addSessionSheet');
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      closeModal(sheet);
     }
 
     async function submitSession(startDate, endDate) {

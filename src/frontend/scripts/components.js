@@ -5,15 +5,46 @@
  */
 
 /**
- * Renders the top nav bar.
- * @param {string} userName — display name (empty string if unknown yet)
+ * Injects a skip-to-content link at the top of the body and guarantees
+ * that `#main-content` exists as a focusable target.
+ *
+ * Previously the link targeted `#main-content` but no page had that id —
+ * the anchor was dead (a prior audit marked it as a fix that wasn't).
+ * Now the helper walks the body and marks the first content element
+ * (i.e. the first child that is not nav / header / footer / script /
+ * bottom-nav) with id="main-content" and tabindex="-1" so pressing the
+ * link delivers focus into the main region for screen-reader users.
  */
-function renderNav(userName) {
+function ensureSkipLink() {
+  if (document.querySelector('.skip-link')) return; // idempotent
   const skip = document.createElement('a');
   skip.className = 'skip-link';
   skip.href = '#main-content';
   skip.textContent = 'Skip to main content';
   document.body.prepend(skip);
+
+  // Defer the main-content marker until after the nav has been injected.
+  queueMicrotask(() => {
+    if (document.getElementById('main-content')) return;
+    const SKIP_TAGS = new Set(['NAV', 'HEADER', 'FOOTER', 'SCRIPT', 'STYLE', 'LINK']);
+    for (const child of document.body.children) {
+      if (SKIP_TAGS.has(child.tagName)) continue;
+      if (child.classList.contains('skip-link')) continue;
+      if (child.classList.contains('bottom-nav')) continue;
+      if (child.classList.contains('site-footer')) continue;
+      child.id = 'main-content';
+      child.setAttribute('tabindex', '-1');
+      break;
+    }
+  });
+}
+
+/**
+ * Renders the top nav bar.
+ * @param {string} userName — display name (empty string if unknown yet)
+ */
+function renderNav(userName) {
+  ensureSkipLink();
 
   const nav = document.createElement('nav');
   nav.className = 'nav';
@@ -33,6 +64,8 @@ function renderNav(userName) {
  * @param {string} backLabel — button text
  */
 function renderNavWithBack(backUrl, backLabel) {
+  ensureSkipLink();
+
   const nav = document.createElement('nav');
   nav.className = 'nav';
   nav.innerHTML = `
@@ -126,4 +159,71 @@ async function loadUserName() {
   const el = document.getElementById('userName');
   if (el) el.textContent = user.name;
   return user;
+}
+
+/**
+ * Focus-management helpers for bottom-sheet / modal dialogs.
+ *
+ * openModal(sheetEl) — remembers the currently focused element, focuses
+ * the first focusable element inside the sheet, and installs a keydown
+ * handler that traps Tab / Shift+Tab within the sheet.
+ *
+ * closeModal(sheetEl) — removes the handler and restores focus to the
+ * element that was focused when openModal was called.
+ *
+ * Caller is still responsible for the visual open/close transitions and
+ * for setting aria-hidden on the sheet.
+ */
+const FOCUSABLE_SELECTOR =
+  'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
+const _modalState = new WeakMap();
+
+function _firstFocusable(el) {
+  const list = el.querySelectorAll(FOCUSABLE_SELECTOR);
+  for (const node of list) {
+    if (node.offsetParent !== null) return node;
+  }
+  return null;
+}
+
+function openModal(sheetEl) {
+  if (!sheetEl) return;
+  const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const handler = (e) => {
+    if (e.key !== 'Tab') return;
+    const focusables = Array.from(sheetEl.querySelectorAll(FOCUSABLE_SELECTOR))
+      .filter((n) => n.offsetParent !== null);
+    if (focusables.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  document.addEventListener('keydown', handler);
+  _modalState.set(sheetEl, { previouslyFocused, handler });
+  // Defer focus to let the browser finish any pending open animation/reflow.
+  requestAnimationFrame(() => {
+    const target = _firstFocusable(sheetEl);
+    if (target) target.focus();
+  });
+}
+
+function closeModal(sheetEl) {
+  if (!sheetEl) return;
+  const state = _modalState.get(sheetEl);
+  if (!state) return;
+  document.removeEventListener('keydown', state.handler);
+  _modalState.delete(sheetEl);
+  if (state.previouslyFocused && typeof state.previouslyFocused.focus === 'function') {
+    state.previouslyFocused.focus();
+  }
 }

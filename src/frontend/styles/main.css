@@ -680,6 +680,35 @@ th {
 .skip-link { position: absolute; transform: translateY(-100%); background: var(--primary); color: white; padding: 0.5rem 1rem; z-index: 9999; font-weight: 600; text-decoration: none; }
 .skip-link:focus { transform: translateY(0); }
 
+/* Screen-reader-only text: keeps the label in the accessibility tree
+   without taking visible space. Used for inputs that have visible
+   context but no visible <label>. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Make JS-marked focus targets non-outlined but still focusable
+   programmatically (for the skip-link main-content target). */
+#main-content:focus { outline: none; }
+
+/* Respect user motion preferences. Without this the slideUp / pulse /
+   staggered card animations run even for users who request reduced
+   motion (WCAG 2.3.3). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* --- Prevent horizontal overflow on all devices --- */
 html, body {
   overflow-x: hidden;

@@ -91,13 +91,14 @@
       <p>Point your camera at the instructor's QR code.</p>
     </div>
 
+    <!-- GPS + scan result regions announce updates to screen readers. -->
     <div class="gps-bar">
-      <span class="gps-dot" id="gpsDot"></span>
-      <span id="gpsStatus">Requesting GPS...</span>
+      <span class="gps-dot" id="gpsDot" aria-hidden="true"></span>
+      <span id="gpsStatus" aria-live="polite">Requesting GPS...</span>
     </div>
 
     <div id="reader"></div>
-    <div id="result" style="display:none;"></div>
+    <div id="result" role="status" aria-live="polite" aria-atomic="true" style="display:none;"></div>
   </div>
 
   <script

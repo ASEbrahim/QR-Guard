@@ -25,34 +25,35 @@
     <div class="card" id="createCard" style="display:none;">
       <form id="createForm">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
-          <div class="form-group"><label>Course Name</label><input id="cName" required></div>
-          <div class="form-group"><label>Course Code</label><input id="cCode" placeholder="CSIS 330" required></div>
-          <div class="form-group"><label>Section</label><input id="cSection" placeholder="01" required></div>
-          <div class="form-group"><label>Semester</label><input id="cSemester" placeholder="Spring 2026" required></div>
-          <div class="form-group"><label>Semester Start</label><input type="date" id="cStart" required></div>
-          <div class="form-group"><label>Semester End</label><input type="date" id="cEnd" required></div>
+          <div class="form-group"><label for="cName">Course Name</label><input id="cName" required></div>
+          <div class="form-group"><label for="cCode">Course Code</label><input id="cCode" placeholder="CSIS 330" required></div>
+          <div class="form-group"><label for="cSection">Section</label><input id="cSection" placeholder="01" required></div>
+          <div class="form-group"><label for="cSemester">Semester</label><input id="cSemester" placeholder="Spring 2026" required></div>
+          <div class="form-group"><label for="cStart">Semester Start</label><input type="date" id="cStart" required></div>
+          <div class="form-group"><label for="cEnd">Semester End</label><input type="date" id="cEnd" required></div>
         </div>
 
         <div class="mt-2">
-          <label style="margin-bottom:0.5rem;">Weekly Schedule</label>
-          <div id="scheduleSlots"></div>
+          <label id="scheduleSlotsLabel" style="margin-bottom:0.5rem; display:block;">Weekly Schedule</label>
+          <div id="scheduleSlots" role="group" aria-labelledby="scheduleSlotsLabel"></div>
           <button type="button" class="btn btn-secondary mt-1" id="addSlotBtn" style="font-size:0.875rem;">+ Add time slot</button>
         </div>
 
-        <h2 class="mt-2">Geofence</h2>
-        <p class="text-muted">Click the map to set the center point, or search for a location.</p>
+        <h2 class="mt-2" id="geofenceHeading">Geofence</h2>
+        <p class="text-muted" id="geofenceHelp">Click the map to set the center point, or search for a location. Keyboard: Tab to the map, use arrow keys to pan, Enter to place a marker.</p>
         <div style="position:relative; margin-bottom:0.5rem;">
           <div style="display:flex; gap:0.5rem;">
-            <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;" autocomplete="off">
+            <label for="mapSearch" class="visually-hidden">Search location</label>
+            <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;" autocomplete="off" aria-describedby="geofenceHelp">
             <button type="button" class="btn btn-secondary" id="mapSearchBtn">Search</button>
           </div>
-          <div id="mapSuggestions" style="display:none; position:absolute; left:0; right:0; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:0 0 10px 10px; box-shadow:var(--shadow-md); z-index:50; max-height:200px; overflow-y:auto;"></div>
+          <div id="mapSuggestions" role="listbox" aria-label="Location suggestions" style="display:none; position:absolute; left:0; right:0; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:0 0 10px 10px; box-shadow:var(--shadow-md); z-index:50; max-height:200px; overflow-y:auto;"></div>
         </div>
-        <div id="map"></div>
+        <div id="map" role="application" aria-labelledby="geofenceHeading" aria-describedby="geofenceHelp" tabindex="0"></div>
         <input type="hidden" id="cLat">
         <input type="hidden" id="cLng">
         <div class="form-group mt-1">
-          <label>Radius (meters, 10-500)</label>
+          <label for="cRadius">Radius (meters, 10-500)</label>
           <input type="number" id="cRadius" min="10" max="500" value="100" required>
         </div>
 
@@ -106,17 +107,29 @@
 
       L.control.layers({ 'Satellite': satellite, 'Street': street }, { 'Labels': labels }, { position: 'topright' }).addTo(map);
 
-      map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
+      // Shared routine so both mouse click and keyboard actions can place
+      // a marker + radius circle at the given lat/lng.
+      const placeMarker = (lat, lng) => {
         document.getElementById('cLat').value = lat;
         document.getElementById('cLng').value = lng;
-
         if (marker) map.removeLayer(marker);
         if (circle) map.removeLayer(circle);
-
         marker = L.marker([lat, lng]).addTo(map);
         const radius = parseInt(document.getElementById('cRadius').value) || 100;
         circle = L.circle([lat, lng], { radius, color: '#1a56db', fillOpacity: 0.15 }).addTo(map);
+      };
+
+      map.on('click', (e) => placeMarker(e.latlng.lat, e.latlng.lng));
+
+      // Keyboard equivalent: when the map container has focus, pressing
+      // Enter or Space places a marker at the current map center. Arrow-
+      // keys are already handled by Leaflet's built-in keyboard pan.
+      const mapEl = document.getElementById('map');
+      mapEl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        const c = map.getCenter();
+        placeMarker(c.lat, c.lng);
       });
 
       document.getElementById('cRadius').addEventListener('input', () => {

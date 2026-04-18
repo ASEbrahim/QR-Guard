@@ -102,17 +102,23 @@
       document.getElementById('enrollSuccess').style.display = 'none';
       document.getElementById('codeInput').value = '';
       document.getElementById('sheetBackdrop').classList.add('open');
-      document.getElementById('enrollSheet').classList.add('open');
-      document.getElementById('enrollSheet').setAttribute('aria-hidden', 'false');
+      const sheet = document.getElementById('enrollSheet');
+      sheet.classList.add('open');
+      sheet.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      openModal(sheet);
+      // openModal focuses the first focusable; explicit focus on the code
+      // input is the more useful target here, so override.
       setTimeout(() => document.getElementById('codeInput').focus(), 250);
     }
 
     function closeSheet() {
       document.getElementById('sheetBackdrop').classList.remove('open');
-      document.getElementById('enrollSheet').classList.remove('open');
-      document.getElementById('enrollSheet').setAttribute('aria-hidden', 'true');
+      const sheet = document.getElementById('enrollSheet');
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      closeModal(sheet);
     }
 
     document.getElementById('toggleEnroll').addEventListener('click', openSheet);

@@ -124,7 +124,8 @@
     </div>
 
     <div class="counter-section">
-      <div class="counter-value" id="counter">0 / 0</div>
+      <!-- aria-live so screen readers announce attendance updates as students check in. -->
+      <div class="counter-value" id="counter" aria-live="polite" aria-atomic="true">0 / 0</div>
       <div class="counter-label">students checked in</div>
     </div>
 
