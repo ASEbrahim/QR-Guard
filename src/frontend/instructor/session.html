@@ -43,11 +43,16 @@
       display: inline-block;
       margin-bottom: 1.5rem;
     }
-    #qrImage {
+    #qrCanvas {
       width: clamp(200px, 60vw, 320px);
       height: clamp(200px, 60vw, 320px);
       border-radius: 8px;
+    }
+    #qrCanvas img, #qrCanvas canvas {
+      width: 100%;
+      height: 100%;
       display: block;
+      border-radius: 8px;
     }
     .counter-section {
       margin-bottom: 2rem;
@@ -110,7 +115,9 @@
     </div>
 
     <div class="qr-frame" id="qrFrame">
-      <img id="qrImage" alt="QR Code" style="display:none;">
+      <!-- QR renders client-side into #qrCanvas. The signed token payload
+           is NEVER transmitted to any third party. -->
+      <div id="qrCanvas" role="img" aria-label="Session QR code" style="display:none;"></div>
       <div id="qrLoading" class="text-muted" style="width:clamp(200px,60vw,320px);height:clamp(200px,60vw,320px);display:flex;align-items:center;justify-content:center;">
         Generating QR code...
       </div>
@@ -135,6 +142,16 @@
     </div>
   </div>
 
+  <!--
+    Client-side QR rendering (qrcodejs v1.0.0 from cdnjs, pinned + SRI).
+    The QR payload is a signed scan-authorization token — rendering it
+    client-side prevents transmission to any third party.
+  -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     const sessionId = new URLSearchParams(window.location.search).get('id');
@@ -187,11 +204,29 @@
       socket.emit('join-session', sessionId);
     });
 
+    // qrcodejs instance — reused across refreshes so we don't allocate a new
+    // renderer every 25s. Lazily created on first render.
+    let qrInstance = null;
     function renderQr(payload) {
-      const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(payload)}`;
-      const img = document.getElementById('qrImage');
-      img.src = url;
-      img.style.display = 'block';
+      const container = document.getElementById('qrCanvas');
+      if (typeof QRCode === 'undefined') {
+        console.error('QR library failed to load (possibly SRI mismatch).');
+        return;
+      }
+      if (qrInstance) {
+        qrInstance.makeCode(payload);
+      } else {
+        container.innerHTML = '';
+        qrInstance = new QRCode(container, {
+          text: payload,
+          width: 320,
+          height: 320,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      }
+      container.style.display = 'block';
       document.getElementById('qrLoading').style.display = 'none';
     }
 
