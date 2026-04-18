@@ -19,9 +19,10 @@ function renderNav(userName) {
   nav.className = 'nav';
   nav.innerHTML = `
     <div class="nav-left">
-      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
+      <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">
+        <div>QR-Guard<div class="nav-user" id="userName">${userName || ''}</div></div>
+      </a>
     </div>
-    <div class="nav-user" id="userName">${userName || ''}</div>
   `;
   document.body.prepend(nav);
 }
