@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import bcrypt from 'bcrypt';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
 import { users, students, emailVerificationTokens } from '../db/schema/index.js';
@@ -366,6 +366,17 @@ export async function resetPassword(req, res) {
     await tx.update(users).set({ passwordHash }).where(eq(users.userId, record.userId));
     await tx.update(emailVerificationTokens).set({ usedAt: new Date() }).where(eq(emailVerificationTokens.token, token));
   });
+
+  // Destroy any existing server-side sessions for this user so stolen cookies
+  // don't outlive the password change. connect-pg-simple stores sessions in
+  // the "session" table with a json `sess` column; match on sess->>'userId'.
+  // Done outside the transaction: a missing session table (fresh DB, tests
+  // that use an in-memory store) must not block the password reset itself.
+  try {
+    await db.execute(sql`DELETE FROM "session" WHERE sess->>'userId' = ${record.userId}`);
+  } catch (err) {
+    console.error('[auth] Failed to destroy sessions on password reset:', err.message);
+  }
 
   res.json({ message: 'Password reset successfully. You can now log in.' });
 }
