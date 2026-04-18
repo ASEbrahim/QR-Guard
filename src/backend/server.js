@@ -38,9 +38,13 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(globalLimiter);
 
-if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'change-me') {
+const DEFAULT_SESSION_SECRETS = new Set([
+  'change-me',
+  'change-me-in-production',
+]);
+if (!process.env.SESSION_SECRET || DEFAULT_SESSION_SECRETS.has(process.env.SESSION_SECRET)) {
   if (process.env.NODE_ENV === 'production') {
-    console.error('FATAL: SESSION_SECRET is not set or uses default. Refusing to start.');
+    console.error('FATAL: SESSION_SECRET is not set or uses a default template value. Refusing to start.');
     process.exit(1);
   }
 }
