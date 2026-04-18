@@ -48,6 +48,10 @@ export function initSocketIO(httpServer, sessionMiddleware) {
       origin: process.env.ALLOWED_ORIGIN || 'http://localhost:3000',
       credentials: true,
     },
+    // Clients only emit tiny control messages (join-session, leave-session)
+    // carrying a UUID. 4kb is well above that; defaults to 1 MB which is a
+    // DoS vector for anyone who connects and starts sending junk.
+    maxHttpBufferSize: 4 * 1024,
   });
 
   // Authenticate Socket.IO connections using the express session cookie

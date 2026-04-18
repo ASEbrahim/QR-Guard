@@ -27,7 +27,8 @@ const createCourseSchema = z.object({
       start: z.string().regex(/^\d{2}:\d{2}$/),
       end: z.string().regex(/^\d{2}:\d{2}$/),
     }),
-  ).min(1),
+  ).min(1).max(14), // cap at 14 slots; real courses rarely exceed 5
+
   geofenceLat: z.number().min(-90).max(90),
   geofenceLng: z.number().min(-180).max(180),
   geofenceRadius: z.number().int().min(GEOFENCE_MIN_RADIUS_M).max(GEOFENCE_MAX_RADIUS_M),

@@ -25,13 +25,19 @@ export const registerLimiter = rateLimit({
   ...skipInDev,
 });
 
-/** Scan: 60 requests per minute per IP */
+/**
+ * Scan: 30 per minute per student (falling back to IP if unauthenticated,
+ * though the /api/scan route also requires auth). Previously the key was
+ * always `req.ip`, which meant a classroom behind a single NAT shared the
+ * counter and a few legitimate users could trip the limit for the rest.
+ */
 export const scanLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 60,
+  max: 30,
   message: { error: 'Too many scan attempts. Slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => (req.session && req.session.userId) || req.ip,
   ...skipInDev,
 });
 

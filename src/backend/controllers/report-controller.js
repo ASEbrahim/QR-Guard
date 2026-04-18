@@ -107,9 +107,21 @@ export async function getPerStudentReport(req, res) {
     .limit(1);
   if (!enrollment) return res.status(404).json({ error: 'Student not enrolled in this course' });
 
-  const closedSessions = await db.select().from(sessions)
-    .where(and(eq(sessions.courseId, id), eq(sessions.status, 'closed')))
-    .orderBy(sessions.scheduledStart);
+  // Independent queries run in parallel. closedSessions feeds the
+  // attendanceRows query, so those two remain serial; student lookup
+  // and pct calc are independent and join via Promise.all.
+  const [closedSessions, studentRow, pct] = await Promise.all([
+    db.select().from(sessions)
+      .where(and(eq(sessions.courseId, id), eq(sessions.status, 'closed')))
+      .orderBy(sessions.scheduledStart),
+    db.select({ name: users.name, universityId: students.universityId })
+      .from(users)
+      .innerJoin(students, eq(users.userId, students.userId))
+      .where(eq(users.userId, studentId))
+      .limit(1)
+      .then((rows) => rows[0]),
+    calculateAttendancePct(id, studentId),
+  ]);
 
   const sessionIds = closedSessions.map(s => s.sessionId);
   const attendanceRows = sessionIds.length > 0
@@ -127,15 +139,7 @@ export async function getPerStudentReport(req, res) {
     };
   });
 
-  const [student] = await db.select({ name: users.name, universityId: students.universityId })
-    .from(users)
-    .innerJoin(students, eq(users.userId, students.userId))
-    .where(eq(users.userId, studentId))
-    .limit(1);
-
-  const pct = await calculateAttendancePct(id, studentId);
-
-  res.json({ student, sessions: sessionStatuses, attendancePct: pct });
+  res.json({ student: studentRow, sessions: sessionStatuses, attendancePct: pct });
 }
 
 /**
@@ -161,6 +165,18 @@ export async function exportCsv(req, res) {
     .innerJoin(users, eq(enrollments.studentId, users.userId))
     .innerJoin(students, eq(enrollments.studentId, students.userId))
     .where(and(eq(enrollments.courseId, id), isNull(enrollments.removedAt)));
+
+  // Hard cap on result size. At ~300 students × 30 sessions = 9k rows, which
+  // is well within limits. A misconfigured course (years of stale sessions
+  // + 500 students) could otherwise build a multi-MB string synchronously
+  // with csv-stringify and thrash the event loop.
+  const MAX_CSV_ROWS = 100_000;
+  const estimatedRows = closedSessions.length * enrolled.length;
+  if (estimatedRows > MAX_CSV_ROWS) {
+    return res.status(413).json({
+      error: `Too many rows for a single export (${estimatedRows}). Narrow the date range with from=YYYY-MM-DD and to=YYYY-MM-DD.`,
+    });
+  }
 
   // Fetch ALL attendance rows for closed sessions in one query (avoids N+1)
   const closedSessionIds = closedSessions.map((sess) => sess.sessionId);
@@ -256,17 +272,19 @@ export async function getAuditLog(req, res) {
 
   if (sessionIds.length === 0) return res.json({ entries: [], total: 0, page });
 
-  const result = await db.execute(sql`
-    SELECT * FROM audit_log
-    WHERE target_id = ANY(${sessionIds})
-    ORDER BY timestamp DESC
-    LIMIT ${limit} OFFSET ${offset}
-  `);
-
-  const countResult = await db.execute(sql`
-    SELECT COUNT(*) AS total FROM audit_log
-    WHERE target_id = ANY(${sessionIds})
-  `);
+  // Entries + count are independent — run in parallel.
+  const [result, countResult] = await Promise.all([
+    db.execute(sql`
+      SELECT * FROM audit_log
+      WHERE target_id = ANY(${sessionIds})
+      ORDER BY timestamp DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `),
+    db.execute(sql`
+      SELECT COUNT(*) AS total FROM audit_log
+      WHERE target_id = ANY(${sessionIds})
+    `),
+  ]);
 
   res.json({
     entries: result.rows,

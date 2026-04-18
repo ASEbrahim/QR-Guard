@@ -85,28 +85,53 @@ export async function calculateAttendancePctsForStudent(courseIds, studentId) {
  * @returns {Promise<Map<string, number|null>>} studentId → percentage
  */
 export async function calculateAllAttendancePcts(courseId) {
+  // Prior implementation used `enrollments CROSS JOIN sessions LEFT JOIN
+  // attendance`, which materialized n_students × m_sessions rows. For a
+  // 300-student course with a full-semester 30 closed sessions that's 9k
+  // rows materialized to compute percentages. The rewrite below avoids
+  // the CROSS JOIN by counting present / excused attendance rows per
+  // student, then dividing by (closed_session_count - excused_count).
+  //
+  // Math equivalence: in the old query,
+  //   pct = present / (present + absent)
+  // with absent = closed_count - present - excused, so
+  //   pct = present / (closed_count - excused)
+  // which is what this query computes directly.
   const result = await db.execute(sql`
-    WITH student_session_statuses AS (
+    WITH closed_count AS (
+      SELECT COUNT(*)::int AS n
+      FROM sessions
+      WHERE course_id = ${courseId}
+        AND status = 'closed'
+    ),
+    closed_session_ids AS (
+      SELECT session_id
+      FROM sessions
+      WHERE course_id = ${courseId}
+        AND status = 'closed'
+    ),
+    per_student AS (
       SELECT
         e.student_id,
-        COALESCE(a.status, 'absent') AS effective_status
+        COUNT(*) FILTER (WHERE a.status = 'present') AS present_count,
+        COUNT(*) FILTER (WHERE a.status = 'excused') AS excused_count
       FROM enrollments e
-      CROSS JOIN sessions s
       LEFT JOIN attendance a
-        ON a.session_id = s.session_id
-        AND a.student_id = e.student_id
+        ON a.student_id = e.student_id
+        AND a.session_id IN (SELECT session_id FROM closed_session_ids)
       WHERE e.course_id = ${courseId}
         AND e.removed_at IS NULL
-        AND s.course_id = ${courseId}
-        AND s.status = 'closed'
+      GROUP BY e.student_id
     )
     SELECT
-      student_id,
-      COUNT(*) FILTER (WHERE effective_status = 'present') * 100.0
-      / NULLIF(COUNT(*) FILTER (WHERE effective_status IN ('present', 'absent')), 0)
-      AS attendance_pct
-    FROM student_session_statuses
-    GROUP BY student_id
+      ps.student_id,
+      CASE
+        WHEN (cc.n - ps.excused_count) > 0
+          THEN ps.present_count * 100.0 / (cc.n - ps.excused_count)
+        ELSE NULL
+      END AS attendance_pct
+    FROM per_student ps
+    CROSS JOIN closed_count cc
   `);
 
   const map = new Map();
