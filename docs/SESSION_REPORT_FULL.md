@@ -1,12 +1,23 @@
 # QR-Guard — Complete Build Session Report
 
-**Dates:** April 16–18, 2026
+**Dates:** April 16–18, 2026 (morning of the 18th)
 **Duration:** Single continuous Claude Code session
 **Result:** From empty repo to deployed, audited, security-hardened production app
 
+> **Scope note (added April 18, evening):** this document is frozen at the
+> state BEFORE the comprehensive 13-category audit and its 4 remediation
+> passes. Its stats (58 commits, 8 audit passes, 77 findings / 65 fixed) do
+> not reflect current `main`. For the post-audit picture — 86 commits, the
+> 13-category audit with ~236 new findings, 4 staged remediation passes,
+> 4 new migrations, 10 explicit deferrals — see
+> `docs/SESSION_REPORT_AUDIT.md` (the self-contained single-paste context
+> artifact) or `docs/audit/REMEDIATION_FINAL.md` (full commit map + deploy
+> checklist). This file remains the authoritative record of the original
+> build phase.
+
 ---
 
-## Final Stats
+## Final Stats (original build phase, pre-audit)
 
 | Metric | Value |
 |---|---|
