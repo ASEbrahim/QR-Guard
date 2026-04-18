@@ -37,8 +37,8 @@ function renderNavWithBack(backUrl, backLabel) {
   nav.className = 'nav';
   nav.innerHTML = `
     <div class="nav-left">
-      <div class="nav-links"><a href="${backUrl}">${backLabel}</a></div>
       <a href="/" class="nav-brand"><img src="/assets/auk-logo-white.svg" alt="AUK">QR-Guard</a>
+      <div class="nav-links"><a href="${backUrl}">${backLabel}</a></div>
     </div>
   `;
   document.body.prepend(nav);
