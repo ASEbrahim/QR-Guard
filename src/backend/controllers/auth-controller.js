@@ -358,8 +358,12 @@ export async function resetPassword(req, res) {
 
   const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
+  // Do NOT clear failedLoginCount or lockedUntil here. Doing so would let an
+  // attacker use the reset flow as a lockout bypass. Lockout auto-expires
+  // after LOCKOUT_DURATION_MS; a legitimately locked-out user can reset the
+  // password AND wait out the lockout.
   await db.transaction(async (tx) => {
-    await tx.update(users).set({ passwordHash, failedLoginCount: 0, lockedUntil: null }).where(eq(users.userId, record.userId));
+    await tx.update(users).set({ passwordHash }).where(eq(users.userId, record.userId));
     await tx.update(emailVerificationTokens).set({ usedAt: new Date() }).where(eq(emailVerificationTokens.token, token));
   });
 
