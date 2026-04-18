@@ -500,32 +500,7 @@ th {
   letter-spacing: 0.04em;
 }
 
-/* --- Badges --- */
-.badge {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.badge-success { background: #dcfce7; color: var(--success); }
-.badge-warning { background: #fef3c7; color: var(--warning); }
-.badge-danger { background: #fef2f2; color: var(--danger); }
-.badge-muted { background: var(--bg); color: var(--text-muted); }
-.badge-primary { background: var(--primary-light); color: var(--primary); }
-
-/* --- Stat / Enrollment code display --- */
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: 0.08em;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
+/* --- Enrollment code display --- */
 .enrollment-code {
   display: inline-block;
   background: var(--accent-light);
@@ -1245,75 +1220,6 @@ body:not(.has-bottom-nav) .fab {
 .sheet-close:hover {
   background: var(--bg);
   color: var(--text);
-}
-
-.sheet-section-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.quick-picks {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.quick-pick {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  padding: 0.7rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.quick-pick:hover {
-  border-color: var(--primary);
-  background: var(--primary-light);
-}
-
-.quick-pick-date {
-  font-weight: 600;
-}
-
-.quick-pick-time {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.sheet-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0;
-}
-
-.sheet-divider::before,
-.sheet-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.sheet-divider span {
-  color: var(--text-muted);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
 }
 
 .sheet-time-row {

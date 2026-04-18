@@ -26,10 +26,6 @@ async function apiPost(path, body) {
   return apiFetch(path, { method: 'POST', body: JSON.stringify(body) });
 }
 
-async function apiPut(path, body) {
-  return apiFetch(path, { method: 'PUT', body: JSON.stringify(body) });
-}
-
 async function apiPatch(path, body) {
   return apiFetch(path, { method: 'PATCH', body: JSON.stringify(body) });
 }
@@ -122,16 +118,4 @@ function togglePassword(id, btn) {
     btn.setAttribute('aria-pressed', 'false');
     btn.setAttribute('aria-label', 'Show password');
   }
-}
-
-/** Shows skeleton cards in a container */
-function showSkeletons(containerId, count = 3) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = Array.from({ length: count }, () => `
-    <div class="skeleton-card">
-      <div class="skeleton skeleton-title"></div>
-      <div class="skeleton skeleton-text"></div>
-    </div>
-  `).join('');
 }

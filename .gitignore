@@ -6,3 +6,5 @@ dist/
 .DS_Store
 coverage/
 .vitest/
+test-results/
+playwright-report/

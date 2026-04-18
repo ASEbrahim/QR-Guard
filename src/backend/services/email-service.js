@@ -1,10 +1,13 @@
 import { Resend } from 'resend';
 
 /**
- * Email service abstraction. Three modes:
- * - 'console' (dev): prints the full URL to server console for one-click testing
- * - 'resend': uses Resend API with HTML templates
- * - 'smtp': placeholder for Nodemailer fallback
+ * Email service abstraction. Two modes:
+ * - 'console' (default / dev): prints the full URL + body to server console
+ *   for one-click testing. Any unrecognized EMAIL_PROVIDER falls through
+ *   to this mode (used to be documented as a third 'smtp' placeholder but
+ *   no SMTP branch was ever implemented).
+ * - 'resend' (production): uses Resend API with AUK-branded HTML templates.
+ *   Requires RESEND_API_KEY.
  */
 
 const provider = process.env.EMAIL_PROVIDER || 'console';
