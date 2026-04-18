@@ -103,21 +103,23 @@ export async function handleScan(req, res) {
     details: auditDetails,
   });
 
-  // Broadcast live counter update
+  // Broadcast live counter update. Two independent subselects are cheaper
+  // than the prior 3-way JOIN — each hits a PK/index directly:
+  //  - attendance: PK (attendance_id) + UNIQUE (session_id, student_id) +
+  //    index on session_id via the UNIQUE
+  //  - enrollments: PK (course_id, student_id) — course_id-prefix seek
   try {
     const countResult = await db.execute(sql`
       SELECT
-        COUNT(*) FILTER (WHERE a.status = 'present') AS present,
-        COUNT(DISTINCT e.student_id) AS total
-      FROM enrollments e
-      LEFT JOIN attendance a ON a.session_id = ${result.sessionId} AND a.student_id = e.student_id
-      INNER JOIN sessions s ON s.course_id = e.course_id AND s.session_id = ${result.sessionId}
-      WHERE e.removed_at IS NULL
+        (SELECT COUNT(*)::int FROM attendance
+           WHERE session_id = ${result.sessionId} AND status = 'present') AS present,
+        (SELECT COUNT(*)::int FROM enrollments
+           WHERE course_id = ${result.courseId} AND removed_at IS NULL) AS total
     `);
     const counts = countResult.rows[0];
     emitAttendanceUpdate(result.sessionId, {
-      present: parseInt(counts.present) || 0,
-      total: parseInt(counts.total) || 0,
+      present: counts.present || 0,
+      total: counts.total || 0,
     });
   } catch (err) {
     console.error('[scan-controller] Failed to broadcast attendance update:', err.message);

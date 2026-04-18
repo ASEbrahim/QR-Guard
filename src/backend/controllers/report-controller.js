@@ -4,7 +4,11 @@ import { db } from '../config/database.js';
 import {
   courses, sessions, attendance, enrollments, students, users,
 } from '../db/schema/index.js';
-import { calculateAttendancePct, calculateAllAttendancePcts } from '../services/attendance-calculator.js';
+import {
+  calculateAttendancePct,
+  calculateAllAttendancePcts,
+  calculateAttendancePctsForStudent,
+} from '../services/attendance-calculator.js';
 
 /**
  * GET /api/courses/:id/attendance
@@ -216,11 +220,16 @@ export async function getMyAttendance(req, res) {
     .innerJoin(courses, eq(enrollments.courseId, courses.courseId))
     .where(and(eq(enrollments.studentId, studentId), isNull(enrollments.removedAt)));
 
-  const result = [];
-  for (const c of enrolled) {
-    const pct = await calculateAttendancePct(c.courseId, studentId);
-    result.push({ ...c, attendancePct: pct });
-  }
+  // One bulk query instead of N calls to calculateAttendancePct.
+  const pctMap = await calculateAttendancePctsForStudent(
+    enrolled.map((c) => c.courseId),
+    studentId,
+  );
+
+  const result = enrolled.map((c) => ({
+    ...c,
+    attendancePct: pctMap.get(c.courseId) ?? null,
+  }));
 
   res.json({ courses: result });
 }
