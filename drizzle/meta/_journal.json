@@ -22,6 +22,13 @@
       "when": 1776352493980,
       "tag": "0002_known_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1776527100000,
+      "tag": "0003_enum_checks",
+      "breakpoints": true
     }
   ]
 }
