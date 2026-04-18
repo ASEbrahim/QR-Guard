@@ -183,7 +183,7 @@ export async function login(req, res) {
 
   // Create session
   const redirectUrl =
-    user.role === 'student' ? '/student/dashboard.html' : '/instructor/dashboard.html';
+    user.role === 'student' ? '/student/dashboard' : '/instructor/dashboard';
   const userData = { userId: user.userId, email: user.email, name: user.name, role: user.role };
 
   req.session.regenerate((err) => {

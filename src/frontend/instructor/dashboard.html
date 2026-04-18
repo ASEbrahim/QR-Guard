@@ -336,7 +336,7 @@
       document.getElementById('courseCount').textContent = courses.length;
 
       container.innerHTML = courses.map(c => `
-        <a href="/instructor/course.html?id=${c.courseId}" class="card card-clickable course-card course-accent-${accentFor(c.code)}">
+        <a href="/instructor/course?id=${c.courseId}" class="card card-clickable course-card course-accent-${accentFor(c.code)}">
           <h2>${esc(c.code)} — ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">

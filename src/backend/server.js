@@ -97,8 +97,20 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api', reportRoutes);
 
+// --- Clean URLs: redirect any /*.html request to its extension-less
+//     equivalent (301 permanent) and serve /foo by looking for foo.html
+//     via express.static's `extensions` option. Keeps bookmarks working
+//     (they redirect once) and hides the .html from the URL bar. ---
+app.get(/\.html$/, (req, res) => {
+  const cleaned = req.path.replace(/\.html$/, '');
+  const query = req.url.slice(req.path.length); // preserve ?query
+  res.redirect(301, cleaned + query);
+});
+
 // --- Static frontend ---
-app.use(express.static(path.join(__dirname, '../frontend')));
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  extensions: ['html'],
+}));
 
 // --- Catch-all: unknown API routes return 404 ---
 app.all('/api/{*path}', (_req, res) => {

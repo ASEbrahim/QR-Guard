@@ -80,9 +80,9 @@ function buildHtmlEmail(heading, bodyHtml) {
 export async function sendTokenEmail(email, token, purpose) {
   const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
   const paths = {
-    email_verify: '/verify-email.html',
-    password_reset: '/reset-password.html',
-    device_rebind: '/verify-email.html',
+    email_verify: '/verify-email',
+    password_reset: '/reset-password',
+    device_rebind: '/verify-email',
   };
   const url = `${baseUrl}${paths[purpose]}?token=${token}&purpose=${purpose}`;
   const expiry = purpose === 'email_verify' ? '24 hours' : '1 hour';

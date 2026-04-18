@@ -101,13 +101,13 @@ function renderBottomNav(role, activePage) {
 
   if (role === 'student') {
     nav.innerHTML = `
-      <a href="/student/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
+      <a href="/student/dashboard" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
         <span class="bottom-nav-icon" aria-hidden="true">&#9776;</span> Courses
       </a>
-      <a href="/student/scan.html" class="bottom-nav-item ${activePage === 'scan' ? 'active' : ''}" ${cur('scan')}>
+      <a href="/student/scan" class="bottom-nav-item ${activePage === 'scan' ? 'active' : ''}" ${cur('scan')}>
         <span class="bottom-nav-icon" aria-hidden="true">&#9634;</span> Scan
       </a>
-      <a href="/request-rebind.html" class="bottom-nav-item ${activePage === 'device' ? 'active' : ''}" ${cur('device')}>
+      <a href="/request-rebind" class="bottom-nav-item ${activePage === 'device' ? 'active' : ''}" ${cur('device')}>
         <span class="bottom-nav-icon" aria-hidden="true">&#9881;</span> Device
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
@@ -116,7 +116,7 @@ function renderBottomNav(role, activePage) {
     `;
   } else {
     nav.innerHTML = `
-      <a href="/instructor/dashboard.html" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
+      <a href="/instructor/dashboard" class="bottom-nav-item ${activePage === 'courses' ? 'active' : ''}" ${cur('courses')}>
         <span class="bottom-nav-icon" aria-hidden="true">&#9776;</span> Courses
       </a>
       <button class="bottom-nav-item" onclick="doLogout()">
@@ -161,7 +161,7 @@ async function doLogout() {
   if (!res || !res.ok) {
     console.warn('[components] Logout POST failed; navigating anyway.');
   }
-  window.location.href = '/login.html';
+  window.location.href = '/login';
 }
 
 /**

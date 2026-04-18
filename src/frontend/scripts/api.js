@@ -11,7 +11,7 @@ async function apiFetch(path, options = {}) {
   });
 
   if (res.status === 401 && !path.includes('/api/auth/login') && !path.includes('/api/auth/register')) {
-    window.location.href = '/login.html';
+    window.location.href = '/login';
     return null;
   }
 
@@ -41,14 +41,14 @@ async function apiDelete(path) {
 async function checkAuthAndRedirect() {
   const res = await apiGet('/api/auth/me');
   if (!res || !res.ok) {
-    window.location.href = '/login.html';
+    window.location.href = '/login';
     return;
   }
   const data = await res.json();
   if (data.user.role === 'student') {
-    window.location.href = '/student/dashboard.html';
+    window.location.href = '/student/dashboard';
   } else {
-    window.location.href = '/instructor/dashboard.html';
+    window.location.href = '/instructor/dashboard';
   }
 }
 

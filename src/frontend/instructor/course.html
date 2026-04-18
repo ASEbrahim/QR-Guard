@@ -9,7 +9,7 @@
 <body>
   <script src="/scripts/api.js"></script>
   <script src="/scripts/components.js"></script>
-  <script>renderNavWithBack('/instructor/dashboard.html', 'Back to Courses');</script>
+  <script>renderNavWithBack('/instructor/dashboard', 'Back to Courses');</script>
 
   <div class="container-wide">
     <!-- Hero: course + key info -->
@@ -100,13 +100,13 @@
 
   <script>
     const courseId = new URLSearchParams(window.location.search).get('id');
-    if (!courseId) window.location.href = '/instructor/dashboard.html';
+    if (!courseId) window.location.href = '/instructor/dashboard';
 
     let currentCourse = null;
 
     async function loadCourse() {
       const res = await apiGet(`/api/courses/${courseId}`);
-      if (!res || !res.ok) { window.location.href = '/instructor/dashboard.html'; return; }
+      if (!res || !res.ok) { window.location.href = '/instructor/dashboard'; return; }
       const { course, sessions } = await res.json();
       currentCourse = course;
 
@@ -127,11 +127,11 @@
         const statusLabel = { scheduled: 'Scheduled', active: 'Active', closed: 'Closed', cancelled: 'Cancelled' }[s.status] || s.status;
         const actions = [];
         if (s.status === 'scheduled') {
-          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary btn-sm">Start</a>`);
+          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm">Start</a>`);
           actions.push(`<button class="btn btn-danger btn-sm" onclick="cancelSession('${s.sessionId}')">Cancel</button>`);
         }
         if (s.status === 'active') {
-          actions.push(`<a href="/instructor/session.html?id=${s.sessionId}" class="btn btn-primary btn-sm">View QR</a>`);
+          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm">View QR</a>`);
         }
         return `<div class="session-row session-status-${s.status}">
           <div class="date-badge">

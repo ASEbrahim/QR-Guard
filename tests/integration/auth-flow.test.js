@@ -127,7 +127,7 @@ describe('Auth Flow', () => {
     });
 
     expect(loginRes.status).toBe(200);
-    expect(loginRes.body.redirectUrl).toBe('/student/dashboard.html');
+    expect(loginRes.body.redirectUrl).toBe('/student/dashboard');
   });
 
   // AC 5: Instructor redirect
@@ -151,7 +151,7 @@ describe('Auth Flow', () => {
     });
 
     expect(loginRes.status).toBe(200);
-    expect(loginRes.body.redirectUrl).toBe('/instructor/dashboard.html');
+    expect(loginRes.body.redirectUrl).toBe('/instructor/dashboard');
   });
 
   // AC 9: 5 failed logins lock account

@@ -164,7 +164,7 @@
     referrerpolicy="no-referrer"></script>
   <script>
     const sessionId = new URLSearchParams(window.location.search).get('id');
-    if (!sessionId) window.location.href = '/instructor/dashboard.html';
+    if (!sessionId) window.location.href = '/instructor/dashboard';
 
     const socket = io({ withCredentials: true });
     let currentCount = '0 / 0';
