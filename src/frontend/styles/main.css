@@ -461,20 +461,21 @@ body.has-bottom-nav .container-wide {
 }
 
 /* Legacy nav-links for simple pages */
-.nav-links { display: flex; gap: 1.25rem; align-items: center; }
+.nav-links { display: flex; gap: 1.25rem; align-items: center; margin-left: 1rem; }
 .nav-links a {
-  color: rgba(255,255,255,0.9);
+  color: var(--text);
   text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0.35rem 0.85rem;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   transition: background 0.15s, border-color 0.15s;
 }
 .nav-links a:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.5);
+  background: var(--surface);
+  border-color: var(--text-muted);
 }
 
 /* --- Tables --- */
