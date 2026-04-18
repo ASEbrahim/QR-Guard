@@ -36,10 +36,13 @@
         </div>
 
         <h2 class="mt-2">Geofence</h2>
-        <p class="text-muted">Click the map to set the center point.</p>
-        <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
-          <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;">
-          <button type="button" class="btn btn-secondary" id="mapSearchBtn">Search</button>
+        <p class="text-muted">Click the map to set the center point, or search for a location.</p>
+        <div style="position:relative; margin-bottom:0.5rem;">
+          <div style="display:flex; gap:0.5rem;">
+            <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;" autocomplete="off">
+            <button type="button" class="btn btn-secondary" id="mapSearchBtn">Search</button>
+          </div>
+          <div id="mapSuggestions" style="display:none; position:absolute; left:0; right:0; top:100%; background:var(--surface); border:1px solid var(--border); border-radius:0 0 10px 10px; box-shadow:var(--shadow-md); z-index:50; max-height:200px; overflow-y:auto;"></div>
         </div>
         <div id="map"></div>
         <input type="hidden" id="cLat">
@@ -114,16 +117,88 @@
         }
       });
 
-      // Location search via Nominatim (free, no API key)
+      // Location search with live autocomplete via Nominatim
       const searchInput = document.getElementById('mapSearch');
       const searchBtn = document.getElementById('mapSearchBtn');
+      const suggestionsEl = document.getElementById('mapSuggestions');
+      let debounceTimer = null;
+
+      // AUK-area quick picks shown when input is focused and empty
+      const QUICK_PICKS = [
+        { name: 'American University of Kuwait (AUK)', lat: 29.3117, lon: 47.9835 },
+        { name: 'AUK — Science Building', lat: 29.3121, lon: 47.9839 },
+        { name: 'AUK — Liberal Arts Building', lat: 29.3113, lon: 47.9831 },
+        { name: 'AUK — Auditorium', lat: 29.3119, lon: 47.9828 },
+        { name: 'Kuwait University — Khaldiya', lat: 29.3266, lon: 47.9718 },
+        { name: 'Kuwait University — Shuwaikh', lat: 29.3445, lon: 47.9602 },
+      ];
+
+      function showSuggestions(items) {
+        if (items.length === 0) { suggestionsEl.style.display = 'none'; return; }
+        suggestionsEl.innerHTML = items.map(item => `
+          <div style="padding:0.6rem 0.85rem; cursor:pointer; font-size:0.85rem; border-bottom:1px solid var(--border); transition:background 0.1s;"
+               onmouseenter="this.style.background='var(--primary-light)'"
+               onmouseleave="this.style.background=''"
+               data-lat="${item.lat}" data-lon="${item.lon}" data-name="${esc(item.display_name || item.name)}">
+            ${esc(item.display_name || item.name)}
+          </div>
+        `).join('');
+        suggestionsEl.style.display = 'block';
+
+        suggestionsEl.querySelectorAll('[data-lat]').forEach(el => {
+          el.addEventListener('click', () => {
+            const lat = parseFloat(el.dataset.lat);
+            const lon = parseFloat(el.dataset.lon);
+            map.setView([lat, lon], 17);
+            searchInput.value = el.dataset.name;
+            suggestionsEl.style.display = 'none';
+          });
+        });
+      }
+
+      async function fetchSuggestions(q) {
+        if (!q || q.length < 2) {
+          showSuggestions(QUICK_PICKS);
+          return;
+        }
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=kw`, {
+            headers: { 'Accept-Language': 'en' }
+          });
+          const results = await res.json();
+          if (results.length === 0) {
+            suggestionsEl.innerHTML = '<div style="padding:0.6rem 0.85rem;color:var(--text-muted);font-size:0.85rem;">No results found</div>';
+            suggestionsEl.style.display = 'block';
+          } else {
+            showSuggestions(results);
+          }
+        } catch {
+          suggestionsEl.style.display = 'none';
+        }
+      }
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => fetchSuggestions(searchInput.value.trim()), 300);
+      });
+
+      searchInput.addEventListener('focus', () => {
+        if (!searchInput.value.trim()) showSuggestions(QUICK_PICKS);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#mapSearch') && !e.target.closest('#mapSuggestions')) {
+          suggestionsEl.style.display = 'none';
+        }
+      });
 
       async function searchLocation() {
         const q = searchInput.value.trim();
         if (!q) return;
+        suggestionsEl.style.display = 'none';
         searchBtn.textContent = '...';
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=kw`, {
             headers: { 'Accept-Language': 'en' }
           });
           const results = await res.json();
@@ -135,7 +210,7 @@
       }
 
       searchBtn.addEventListener('click', searchLocation);
-      searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchLocation(); } });
+      searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchLocation(); suggestionsEl.style.display = 'none'; } });
     }
 
     // --- Schedule slot builder ---
