@@ -702,11 +702,26 @@ html, body {
 /* --- Auth card header banner --- */
 .auth-card-header {
   text-align: center;
-  background: var(--primary);
+  background: url('/assets/campus-bg.jpg') center/cover no-repeat;
   color: #fff;
   margin: -2rem -2rem 1.5rem;
   padding: 1.5rem 2rem;
   border-radius: 12px 12px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(90,12,22,0.92);
+  z-index: 0;
+}
+
+.auth-card-header > * {
+  position: relative;
+  z-index: 1;
 }
 
 .auth-card-header h1 {
