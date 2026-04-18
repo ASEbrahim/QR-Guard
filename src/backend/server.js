@@ -106,8 +106,18 @@ app.all('/api/{*path}', (_req, res) => {
 });
 
 // --- Error handler ---
-app.use((err, _req, res, _next) => {
-  console.error('[server] Unhandled error:', err);
+// Includes request context so production logs can correlate a 500 with
+// the route, method, and authenticated user. Response body stays generic
+// to avoid leaking stack traces / internal details to callers.
+app.use((err, req, res, _next) => {
+  const ctx = {
+    method: req.method,
+    url: req.originalUrl || req.url,
+    userId: req.session?.userId || null,
+    role: req.session?.role || null,
+    ip: req.ip,
+  };
+  console.error('[server] Unhandled error:', ctx, err);
   res.status(500).json({ error: 'Internal server error' });
 });
 

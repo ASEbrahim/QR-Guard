@@ -64,14 +64,19 @@ export function initSocketIO(httpServer, sessionMiddleware) {
     }
 
     socket.on('join-session', async (sessionId) => {
-      // Validate UUID format
-      if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) return;
-      // Limit rooms per socket
-      if (socket.rooms.size > 5) return;
-      // Verify authorization
-      const allowed = await canAccessSession(session.userId, session.role, sessionId);
-      if (allowed) {
-        socket.join(`session-${sessionId}`);
+      // The handler is async and awaits a DB query; a thrown exception
+      // becomes an unhandled rejection that (with the process-level
+      // handlers we installed in P0-5) would trigger a full shutdown.
+      // Catch locally and log.
+      try {
+        if (typeof sessionId !== 'string' || !UUID_RE.test(sessionId)) return;
+        if (socket.rooms.size > 5) return;
+        const allowed = await canAccessSession(session.userId, session.role, sessionId);
+        if (allowed) {
+          socket.join(`session-${sessionId}`);
+        }
+      } catch (err) {
+        console.error(`[socket-service] join-session failed for ${sessionId}:`, err.message);
       }
     });
 

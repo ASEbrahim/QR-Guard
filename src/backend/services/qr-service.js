@@ -14,10 +14,19 @@ const activeLoops = new Map();
  * @returns {Promise<{payload: string, expiresAt: Date}>}
  */
 export async function generateQrToken(sessionId, course) {
-  // Parse geofence from WKT: "SRID=4326;POINT(lng lat)"
+  // Parse geofence from WKT: "SRID=4326;POINT(lng lat)".
+  // A course with a malformed WKT shouldn't silently emit QR tokens pointing
+  // at (0,0) — every scan would fail the geofence check and the instructor
+  // would have no idea why. Surface the error; callers (session start) can
+  // decide whether to fail the request or continue without embedded coords.
   const match = course.geofenceCenter.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-  const lng = match ? parseFloat(match[1]) : 0;
-  const lat = match ? parseFloat(match[2]) : 0;
+  if (!match) {
+    throw new Error(
+      `Malformed geofence WKT for course ${course.courseId}: "${course.geofenceCenter}"`,
+    );
+  }
+  const lng = parseFloat(match[1]);
+  const lat = parseFloat(match[2]);
 
   const payload = Buffer.from(
     JSON.stringify({

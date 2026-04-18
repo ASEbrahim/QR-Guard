@@ -13,14 +13,13 @@ import { ScanError } from './scan-error.js';
 export async function checkIp(clientIp) {
   // In dev, req.ip is localhost — ip-api.com rejects private IPs.
   // FAIL-OPEN handles this: API returns an error, we skip the check.
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), IP_API_TIMEOUT_MS);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), IP_API_TIMEOUT_MS);
 
+  try {
     const res = await fetch(`http://ip-api.com/json/${clientIp}?fields=status,country,proxy`, {
       signal: controller.signal,
     });
-    clearTimeout(timeout);
 
     const data = await res.json();
 
@@ -46,5 +45,9 @@ export async function checkIp(clientIp) {
     // Any other error (timeout, network, parse) — FAIL-OPEN
     console.warn(`[ip-validator] ip-api.com request failed: ${err.message}, proceeding (FAIL-OPEN)`);
     return { country: 'unknown', proxy: false, skipped: true };
+  } finally {
+    // Always clear the timer so a thrown fetch doesn't leak an
+    // abort() call that would later fire against a nulled controller.
+    clearTimeout(timeout);
   }
 }

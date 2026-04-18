@@ -244,8 +244,24 @@
 
     document.getElementById('stopBtn').addEventListener('click', async () => {
       if (!confirm('End this session? Students will no longer be able to scan.')) return;
-      await apiPost(`/api/sessions/${sessionId}/stop`);
-      showClosed();
+      const stopRes = await apiPost(`/api/sessions/${sessionId}/stop`);
+      // Only mark closed if the server actually stopped the session. A
+      // failed stop (network error, 500) previously still flipped the UI,
+      // giving the instructor the false impression that the session had
+      // ended — while students could still scan.
+      if (stopRes && stopRes.ok) {
+        showClosed();
+      } else {
+        alert('Could not end the session. Please try again.');
+      }
+    });
+
+    // Tear down the socket + polling interval when the page hides (tab
+    // switch, navigation, BFCache). Without this the connection lingers
+    // and, for iOS BFCache, a zombie socket can still receive events.
+    window.addEventListener('pagehide', () => {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+      try { socket.disconnect(); } catch {}
     });
   </script>
 </body>

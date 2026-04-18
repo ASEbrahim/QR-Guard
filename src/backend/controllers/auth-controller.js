@@ -49,6 +49,18 @@ const resetPasswordSchema = z.object({
   newPassword: z.string().min(PASSWORD_MIN_LENGTH),
 });
 
+// Schemas for the three ad-hoc-validated endpoints (previously used
+// inline `if (!email || !code)` checks which produced differently-
+// shaped error bodies from the Zod-validated paths).
+const verifyCodeSchema = z.object({
+  email: z.string().email('Enter a valid email'),
+  code: z.string().regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+
+const emailOnlySchema = z.object({
+  email: z.string().email('Enter a valid email'),
+});
+
 // --- Helpers ---
 
 /** Generates a 64-char hex token for password reset and device rebind links. */
@@ -200,8 +212,11 @@ export async function logout(req, res) {
  * Verifies email using the 6-digit code sent during registration.
  */
 export async function verifyCode(req, res) {
-  const { email, code } = req.body;
-  if (!email || !code) return res.status(400).json({ error: 'Email and code required' });
+  const parsed = verifyCodeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const { email, code } = parsed.data;
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (!user) return res.status(400).json({ error: 'Invalid code' });
@@ -294,8 +309,11 @@ export async function verifyEmail(req, res) {
  * Always returns 200 (no email leak).
  */
 export async function forgotPassword(req, res) {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email required' });
+  const parsed = emailOnlySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const { email } = parsed.data;
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user) {
@@ -321,8 +339,11 @@ export async function forgotPassword(req, res) {
  * Resends the verification email. Always returns 200 (no email leak).
  */
 export async function resendVerification(req, res) {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email required' });
+  const parsed = emailOnlySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const { email } = parsed.data;
 
   const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
   if (user && !user.emailVerifiedAt) {

@@ -125,8 +125,25 @@
       { enableHighAccuracy: true, timeout: 10000 }
     );
 
-    // Start camera scanner
+    // Start camera scanner. The scanner holds a live MediaStream that
+    // must be stopped before navigation/BFCache — otherwise the camera
+    // LED stays on (iOS/Android) and the stream leaks indefinitely.
     const scanner = new Html5Qrcode('reader');
+
+    // Stop the scanner when the page is hidden (tab switch, navigation,
+    // back-forward cache). `pagehide` fires before the page is frozen;
+    // `visibilitychange` covers tab-backgrounding.
+    const stopScanner = () => {
+      try {
+        if (scanner.getState && scanner.getState() === 2 /* SCANNING */) {
+          scanner.stop().catch(() => {});
+        }
+      } catch {}
+    };
+    window.addEventListener('pagehide', stopScanner);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') stopScanner();
+    });
     scanner.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 250, height: 250 } },
@@ -172,7 +189,15 @@
       });
 
       if (!res) { scanning = false; return; }
-      const data = await res.json();
+      // Parse the body defensively: a 502 from Render during deploy can
+      // arrive as HTML, in which case res.json() throws and scanning
+      // stays true forever (UI freeze).
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
       if (res.ok) {
         showStatus('success', 'Attendance recorded', 'Your attendance has been saved for this session.');

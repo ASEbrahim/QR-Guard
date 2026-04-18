@@ -89,6 +89,16 @@
       }
     });
 
+    // Leaflet maps hold event listeners on window + document; if the page
+    // goes into BFCache without .remove(), those listeners persist and
+    // can fire into a frozen document. Tear down on pagehide.
+    window.addEventListener('pagehide', () => {
+      if (map) {
+        try { map.remove(); } catch {}
+        map = null; marker = null; circle = null;
+      }
+    });
+
     function initMap() {
       // Default: AUK campus approximate location
       map = L.map('map').setView([29.3117, 47.9835], 16);
