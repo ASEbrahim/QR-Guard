@@ -14,7 +14,7 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 **Active increment:** All 5 complete — feature-complete, audited, security-hardened, deployed
 **Active sprint focus:** none — all implementation, auditing, and deployment work finished
-**Last commit:** 56 commits across April 16-18, 2026
+**Last commit:** 58 commits across April 16-18, 2026
 **Audit status:** 8 audit passes complete (77 findings, 65 fixed)
 **Security audit:** 29 vulnerabilities found; all critical/high fixed
 **UI redesign:** Complete — crimson + gold AUK branding, bottom nav, FAB, bottom sheets
