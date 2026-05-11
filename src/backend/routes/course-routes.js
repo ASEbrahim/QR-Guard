@@ -4,6 +4,7 @@ import {
   listCourses,
   getCourse,
   updateCourse,
+  deleteCourse,
   enrollInCourse,
   enrollByCode,
   removeStudent,
@@ -23,6 +24,7 @@ router.get('/', listCourses);
 router.post('/enroll', requireRole('student'), enrollByCode);
 router.get('/:id', getCourse);
 router.put('/:id', requireRole('instructor'), updateCourse);
+router.delete('/:id', requireRole('instructor'), deleteCourse);
 router.post('/:id/enroll', requireRole('student'), enrollInCourse);
 router.delete('/:id/students/:studentId', requireRole('instructor'), removeStudent);
 // Uses the Sprint C version with real attendance % and at-risk flags
