@@ -198,3 +198,52 @@ function closeModal(sheetEl) {
     state.previouslyFocused.focus();
   }
 }
+
+/**
+ * Wires drag-to-dismiss on a bottom sheet's .sheet-handle.
+ * pointerdown on the handle starts tracking; pointermove translates the
+ * sheet downward only (we don't allow lifting it above its open position);
+ * pointerup either snaps back (< 100 px drag) or fires closeFn() (>= 100 px).
+ *
+ * Idempotent per sheet element  if the same sheet is opened twice we don't
+ * re-attach listeners.
+ *
+ * @param {HTMLElement} sheetEl  the .bottom-sheet element
+ * @param {Function}    closeFn  page-level close handler (e.g. closeSheet)
+ */
+function enableSheetDrag(sheetEl, closeFn) {
+  if (!sheetEl || sheetEl.dataset.dragWired === '1') return;
+  const handle = sheetEl.querySelector('.sheet-handle');
+  if (!handle) return;
+  sheetEl.dataset.dragWired = '1';
+
+  let startY = 0;
+  let currentY = 0;
+  let dragging = false;
+
+  handle.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    currentY = 0;
+    sheetEl.style.transition = 'none';
+    handle.setPointerCapture(e.pointerId);
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    currentY = Math.max(0, e.clientY - startY); // downward only
+    sheetEl.style.transform = `translateY(${currentY}px)`;
+  });
+
+  const release = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    sheetEl.style.transition = '';
+    try { handle.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+    sheetEl.style.transform = '';
+    if (currentY > 100) closeFn();
+  };
+
+  handle.addEventListener('pointerup', release);
+  handle.addEventListener('pointercancel', release);
+}

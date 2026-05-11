@@ -1175,7 +1175,14 @@ body:not(.has-bottom-nav) .fab {
   background: var(--border);
   border-radius: 2px;
   margin: 0 auto 0.75rem;
+  cursor: grab;
+  touch-action: none;
+  /* Larger tap target around the visual indicator */
+  padding: 8px 20px;
+  background-clip: content-box;
+  box-sizing: content-box;
 }
+.sheet-handle:active { cursor: grabbing; }
 
 .sheet-header {
   display: flex;

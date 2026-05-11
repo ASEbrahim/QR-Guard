@@ -99,6 +99,7 @@
       sheet.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
       openModal(sheet);
+      enableSheetDrag(sheet, closeSheet);
       // openModal focuses the first focusable; explicit focus on the code
       // input is the more useful target here, so override.
       setTimeout(() => document.getElementById('codeInput').focus(), 250);
