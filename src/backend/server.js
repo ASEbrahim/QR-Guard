@@ -119,7 +119,15 @@ app.use(express.static(path.join(__dirname, '../frontend'), {
   extensions: ['html'],
   setHeaders: (res, filePath) => {
     if (/\.(?:js|css|html)$/i.test(filePath)) {
+      // no-cache for the browser: store but always revalidate via ETag.
       res.setHeader('Cache-Control', 'no-cache');
+      // CF-specific override. Cloudflare normally honors origin Cache-Control,
+      // but its free-tier "Browser Cache TTL" setting (default 4 hours)
+      // rewrites our header to max-age=14400 on the way back to the user.
+      // Cloudflare-CDN-Cache-Control takes priority for the edge layer and
+      // is stripped before the response reaches the browser, so it bypasses
+      // the rewrite without affecting the client-facing Cache-Control.
+      res.setHeader('Cloudflare-CDN-Cache-Control', 'no-store');
     }
   },
 }));
