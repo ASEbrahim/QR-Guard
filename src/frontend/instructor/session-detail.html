@@ -51,8 +51,11 @@
       </div>
     </div>
 
-    <!-- Roster, override controls, rejected scans land in subsequent commits. -->
     <div id="rosterError" class="message error" role="alert" style="display:none;"></div>
+
+    <h2 class="section-heading">Roster</h2>
+    <div id="rosterList" class="roster-list"></div>
+    <p id="rosterEmpty" class="text-muted text-center" style="display:none;">No students enrolled in this course.</p>
 
   </div>
 
@@ -91,6 +94,38 @@
       document.getElementById('statAbsent').textContent = data.stats.absent;
       document.getElementById('statExcused').textContent = data.stats.excused;
       document.getElementById('statTotal').textContent = data.stats.total;
+
+      renderRoster(data.roster);
+    }
+
+    function renderRoster(roster) {
+      const list = document.getElementById('rosterList');
+      const empty = document.getElementById('rosterEmpty');
+      if (!roster || roster.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      list.innerHTML = roster.map((r) => {
+        const time = r.recordedAt
+          ? new Date(r.recordedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : '';
+        // Sort order is by name (server-side); status pill is the visual
+        // anchor on the right so the eye scans down a column of pills.
+        return `
+          <div class="roster-row">
+            <div class="roster-name">
+              ${esc(r.name)}
+              ${r.universityId ? `<div class="roster-meta">${esc(r.universityId)}</div>` : ''}
+              ${r.excuseReason ? `<div class="roster-meta">Reason: ${esc(r.excuseReason)}</div>` : ''}
+            </div>
+            <span class="roster-time">${time}</span>
+            <span class="roster-status-pill status-${r.status}">${r.status}</span>
+          </div>
+        `;
+      }).join('');
     }
 
     loadSession();

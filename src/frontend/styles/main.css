@@ -881,6 +881,82 @@ body:not(.has-bottom-nav) .fab {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Status pill inside the crimson session-detail hero. Same semantic palette
+   as elsewhere, lifted by white text so it stays legible. */
+.session-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 0.4rem;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.session-status-badge.status-scheduled { background: rgba(212, 160, 55, 0.55); }
+.session-status-badge.status-active    { background: rgba(22, 163, 74, 0.7); }
+.session-status-badge.status-closed    { background: rgba(255, 255, 255, 0.18); }
+.session-status-badge.status-cancelled { background: rgba(220, 38, 38, 0.7); }
+
+/* Session-detail roster: stacked rows, each row breaks into label/value
+   pairs that wrap fluidly on narrow viewports. */
+.roster-list { margin-top: 0.5rem; }
+
+.roster-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 0.5rem;
+  min-width: 0;
+}
+
+.roster-row .roster-name {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.roster-row .roster-meta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.roster-row .roster-time {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.roster-status-pill {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.roster-status-pill.status-present { background: var(--success-light); color: var(--success); }
+.roster-status-pill.status-absent  { background: var(--danger-light);  color: var(--danger); }
+.roster-status-pill.status-excused { background: var(--warning-light); color: var(--warning); }
+
+.section-heading {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .course-hero h3 {
   margin: 0 0 0.25rem;
   color: #fff;
