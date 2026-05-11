@@ -129,7 +129,7 @@
       const { course, sessions } = await res.json();
       currentCourse = course;
 
-      document.getElementById('courseTitle').textContent = `${course.code} · ${course.name}`;
+      document.getElementById('courseTitle').textContent = `${course.code} | ${course.name}`;
       document.getElementById('courseMeta').textContent = `Section ${course.section} · ${course.semester}`;
       document.getElementById('enrollCode').textContent = course.enrollmentCode;
       document.getElementById('geoRadius').textContent = course.geofenceRadiusM;
