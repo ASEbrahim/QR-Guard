@@ -69,6 +69,20 @@
 
   <button type="button" id="toggleAddSession" class="fab" aria-label="Add session" title="Add session">+</button>
 
+  <!-- Per-student trend sheet -->
+  <div class="sheet-backdrop" id="trendBackdrop"></div>
+  <div class="bottom-sheet" id="trendSheet" role="dialog" aria-labelledby="trendTitle" aria-modal="true" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="trendTitle"><span id="trendStudent"></span></h3>
+      <button type="button" class="sheet-close" id="trendClose" aria-label="Close">&times;</button>
+    </div>
+    <div id="trendBody"></div>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-secondary" id="trendCloseBottom">Close</button>
+    </div>
+  </div>
+
   <!-- Delete course confirmation modal -->
   <div class="sheet-backdrop" id="deleteBackdrop"></div>
   <div class="bottom-sheet" id="deleteSheet" role="dialog" aria-labelledby="deleteTitle" aria-modal="true" aria-hidden="true">
@@ -225,16 +239,96 @@
         document.getElementById('noStudents').style.display = 'none';
         studList.innerHTML = students.map(s => {
           const initial = (s.name || '?').trim().charAt(0).toUpperCase();
-          return `<div class="student-row">
+          return `<div class="student-row student-row-clickable" data-student-id="${esc(s.userId)}" data-student-name="${esc(s.name)}" tabindex="0" role="button" aria-label="View attendance trend for ${esc(s.name)}">
             <div class="avatar">${esc(initial)}</div>
             <div class="student-row-main">
               <div class="student-row-name">${esc(s.name)}</div>
               <div class="student-row-sub">${esc(s.universityId)} &middot; ${esc(s.email)}</div>
             </div>
-            <button class="icon-remove" aria-label="Remove student" onclick="removeStudent('${s.userId}')">&times;</button>
+            <button class="icon-remove" aria-label="Remove student" onclick="removeStudent('${s.userId}')" data-stop>&times;</button>
           </div>`;
         }).join('');
+
+        // Click anywhere on the row (except the remove button) opens the
+        // per-student trend sheet. Enter/Space too because role="button".
+        for (const row of studList.querySelectorAll('.student-row-clickable')) {
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('[data-stop]')) return;
+            openTrendSheet(row.dataset.studentId, row.dataset.studentName);
+          });
+          row.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openTrendSheet(row.dataset.studentId, row.dataset.studentName);
+            }
+          });
+        }
+        // Prevent the icon-remove's outer-row click from drilling in
+        for (const btn of studList.querySelectorAll('.icon-remove[data-stop]')) {
+          btn.addEventListener('click', (e) => e.stopPropagation());
+        }
       }
+    }
+
+    // --- Per-student trend bottom sheet ---
+    async function openTrendSheet(studentId, studentName) {
+      const sheet = document.getElementById('trendSheet');
+      document.getElementById('trendStudent').textContent = studentName;
+      document.getElementById('trendBody').innerHTML = '<p class="text-muted text-center">Loading...</p>';
+
+      document.getElementById('trendBackdrop').classList.add('open');
+      sheet.classList.add('open');
+      sheet.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      openModal(sheet);
+      enableSheetDrag(sheet, closeTrendSheet);
+
+      const res = await apiGet(`/api/courses/${courseId}/attendance/student/${studentId}`);
+      if (!res || !res.ok) {
+        document.getElementById('trendBody').innerHTML = '<p class="message error">Could not load trend.</p>';
+        return;
+      }
+      const data = await res.json();
+      const presentCount = data.sessions.filter((s) => s.status === 'present').length;
+      const excusedCount = data.sessions.filter((s) => s.status === 'excused').length;
+      const absentCount  = data.sessions.filter((s) => s.status === 'absent').length;
+
+      // Compact sparkline-style row of squares, newest on the right. Each
+      // square shows status by color so the eye reads the recent pattern.
+      const pattern = data.sessions.slice(-30).map((s) =>
+        `<span class="trend-cell status-${s.status}" title="${new Date(s.date).toLocaleDateString()}"></span>`,
+      ).join('');
+
+      const recent = data.sessions.slice(-8).reverse().map((s) => `
+        <li class="trend-session">
+          <span class="trend-session-date">${new Date(s.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+          <span class="roster-status-pill status-${s.status}">${s.status}</span>
+        </li>
+      `).join('');
+
+      document.getElementById('trendBody').innerHTML = `
+        <div class="trend-summary">
+          <div class="trend-pct">${(data.attendancePct || 0).toFixed(1)}%</div>
+          <div class="trend-counts">
+            <span><strong>${presentCount}</strong> present</span>
+            <span><strong>${excusedCount}</strong> excused</span>
+            <span><strong>${absentCount}</strong> absent</span>
+            <span class="text-muted">of ${data.sessions.length} closed sessions</span>
+          </div>
+        </div>
+        ${data.sessions.length > 0 ? `<div class="trend-strip" aria-label="Recent session pattern">${pattern}</div>` : ''}
+        <h4 class="section-heading" style="margin-top:1rem;">Recent sessions</h4>
+        <ul class="trend-session-list">${recent || '<li class="text-muted">No closed sessions yet.</li>'}</ul>
+      `;
+    }
+
+    function closeTrendSheet() {
+      const sheet = document.getElementById('trendSheet');
+      document.getElementById('trendBackdrop').classList.remove('open');
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      closeModal(sheet);
     }
 
     async function cancelSession(sessionId) {
@@ -382,6 +476,14 @@
       document.body.style.overflow = '';
       closeModal(sheet);
     }
+    // Trend sheet close wiring
+    document.getElementById('trendClose').addEventListener('click', closeTrendSheet);
+    document.getElementById('trendCloseBottom').addEventListener('click', closeTrendSheet);
+    document.getElementById('trendBackdrop').addEventListener('click', closeTrendSheet);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('trendSheet').classList.contains('open')) closeTrendSheet();
+    });
+
     document.getElementById('deleteCourseBtn').addEventListener('click', openDeleteSheet);
     document.getElementById('deleteSheetClose').addEventListener('click', closeDeleteSheet);
     document.getElementById('deleteSheetCancel').addEventListener('click', closeDeleteSheet);

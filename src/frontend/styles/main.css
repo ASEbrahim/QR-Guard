@@ -1041,6 +1041,70 @@ body:not(.has-bottom-nav) .fab {
 .attendance-badge.band-warn { background: var(--warning-light); color: var(--warning); }
 .attendance-badge.band-low  { background: var(--danger-light);  color: var(--danger); }
 
+/* Student row turns clickable + adds keyboard focus ring */
+.student-row-clickable {
+  cursor: pointer;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.student-row-clickable:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+.student-row-clickable:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Per-student trend sheet content */
+.trend-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.trend-pct {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+.trend-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.85rem;
+}
+.trend-strip {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+.trend-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.trend-cell.status-present { background: var(--success); }
+.trend-cell.status-absent  { background: var(--danger); }
+.trend-cell.status-excused { background: var(--warning); }
+
+.trend-session-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.trend-session {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.trend-session:last-child { border-bottom: none; }
+.trend-session-date { font-size: 0.85rem; color: var(--text); }
+
 .section-heading {
   margin: 1.5rem 0 0.5rem;
   font-size: 0.75rem;
