@@ -806,23 +806,18 @@ body:not(.has-bottom-nav) .fab {
   bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* --- Course card accent stripe --- */
+/* AUK brand accent: a thin gradient on the top of every card.
+   Uniform across courses to avoid the "color-coded per item" look. */
 .course-card::before {
   content: '';
   position: absolute;
   left: 0;
+  right: 0;
   top: 0;
-  bottom: 0;
-  width: 6px;
-  border-radius: 14px 0 0 14px;
-  background: var(--border);
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary) 65%, var(--accent) 100%);
+  border-radius: 14px 14px 0 0;
 }
-
-.course-accent-red::before    { background: var(--primary); }
-.course-accent-gold::before   { background: var(--accent); }
-.course-accent-blue::before   { background: #2563eb; }
-.course-accent-green::before  { background: #16a34a; }
-.course-accent-purple::before { background: #7c3aed; }
 
 /* --- Course detail hero --- */
 .course-hero {

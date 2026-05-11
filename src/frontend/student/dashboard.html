@@ -51,14 +51,6 @@
 
   <!-- scripts already loaded above -->
   <script>
-    function accentFor(code) {
-      const prefix = String(code).trim().split(/\s+/)[0].toUpperCase();
-      const palette = ['red', 'gold', 'blue', 'green', 'purple'];
-      let hash = 0;
-      for (let i = 0; i < prefix.length; i++) hash = (hash * 31 + prefix.charCodeAt(i)) >>> 0;
-      return palette[hash % palette.length];
-    }
-
     async function loadDashboard() {
       const meRes = await apiGet('/api/auth/me');
       if (!meRes || !meRes.ok) return;
@@ -82,7 +74,7 @@
         const pct = c.attendancePct !== null && c.attendancePct !== undefined ? c.attendancePct.toFixed(1) : null;
         const pctColor = pct === null ? 'var(--text-muted)' : parseFloat(pct) >= 85 ? 'var(--success)' : parseFloat(pct) >= 70 ? 'var(--warning)' : 'var(--danger)';
         return `
-        <div class="card course-card course-accent-${accentFor(c.code)}">
+        <div class="card course-card">
           <h2>${esc(c.code)} — ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
