@@ -948,6 +948,13 @@ body:not(.has-bottom-nav) .fab {
 .roster-status-pill.status-absent  { background: var(--danger-light);  color: var(--danger); }
 .roster-status-pill.status-excused { background: var(--warning-light); color: var(--warning); }
 
+.roster-override-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .section-heading {
   margin: 1.5rem 0 0.5rem;
   font-size: 0.75rem;

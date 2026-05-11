@@ -59,6 +59,32 @@
 
   </div>
 
+  <!-- Override bottom sheet -->
+  <div class="sheet-backdrop" id="overrideBackdrop"></div>
+  <div class="bottom-sheet" id="overrideSheet" role="dialog" aria-labelledby="overrideTitle" aria-modal="true" aria-hidden="true">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="overrideTitle">Override <span id="overrideStudent"></span></h3>
+      <button type="button" class="sheet-close" id="overrideClose" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label for="overrideStatus">New status</label>
+      <select id="overrideStatus"></select>
+    </div>
+    <div class="form-group">
+      <label for="overrideReason">Reason</label>
+      <input type="text" id="overrideReason" placeholder="e.g. Doctor's note, sick day, fire drill" required>
+    </div>
+
+    <div id="overrideError" class="message error" role="alert" style="display:none;"></div>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-secondary" id="overrideCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="overrideSubmit">Apply override</button>
+    </div>
+  </div>
+
   <script>
     const sessionId = new URLSearchParams(window.location.search).get('id');
     if (!sessionId) window.location.href = '/instructor/dashboard';
@@ -115,7 +141,7 @@
         // Sort order is by name (server-side); status pill is the visual
         // anchor on the right so the eye scans down a column of pills.
         return `
-          <div class="roster-row">
+          <div class="roster-row" data-student-id="${esc(r.studentId)}">
             <div class="roster-name">
               ${esc(r.name)}
               ${r.universityId ? `<div class="roster-meta">${esc(r.universityId)}</div>` : ''}
@@ -123,10 +149,101 @@
             </div>
             <span class="roster-time">${time}</span>
             <span class="roster-status-pill status-${r.status}">${r.status}</span>
+            <button type="button" class="btn btn-secondary btn-sm roster-override-btn"
+                    data-student-id="${esc(r.studentId)}"
+                    data-current-status="${esc(r.status)}">
+              Override
+            </button>
           </div>
         `;
       }).join('');
+
+      // Wire override clicks once per row (event delegation would also work
+      // but per-button keeps the handler local).
+      for (const btn of list.querySelectorAll('.roster-override-btn')) {
+        btn.addEventListener('click', () => onOverrideClick(btn));
+      }
     }
+
+    function onOverrideClick(btn) {
+      const studentId = btn.dataset.studentId;
+      const current = btn.dataset.currentStatus;
+      const row = btn.closest('.roster-row');
+      const name = row.querySelector('.roster-name').firstChild.textContent.trim();
+      openOverrideSheet({ studentId, current, name });
+    }
+
+    // --- Override bottom sheet ---
+    const STATUSES = ['present', 'absent', 'excused'];
+
+    function openOverrideSheet({ studentId, current, name }) {
+      const sheet = document.getElementById('overrideSheet');
+      document.getElementById('overrideStudent').textContent = name;
+      document.getElementById('overrideError').style.display = 'none';
+      document.getElementById('overrideReason').value = '';
+      const statusSel = document.getElementById('overrideStatus');
+      statusSel.innerHTML = STATUSES.map((s) =>
+        `<option value="${s}"${s === current ? '' : ''}>${s}</option>`,
+      ).join('');
+      // Pre-select something OTHER than current so the override actually flips
+      const next = STATUSES.find((s) => s !== current) || 'present';
+      statusSel.value = next;
+      sheet.dataset.studentId = studentId;
+
+      document.getElementById('overrideBackdrop').classList.add('open');
+      sheet.classList.add('open');
+      sheet.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      openModal(sheet);
+      enableSheetDrag(sheet, closeOverrideSheet);
+    }
+
+    function closeOverrideSheet() {
+      const sheet = document.getElementById('overrideSheet');
+      document.getElementById('overrideBackdrop').classList.remove('open');
+      sheet.classList.remove('open');
+      sheet.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      closeModal(sheet);
+    }
+
+    async function submitOverride() {
+      const sheet = document.getElementById('overrideSheet');
+      const studentId = sheet.dataset.studentId;
+      const status = document.getElementById('overrideStatus').value;
+      const reason = document.getElementById('overrideReason').value.trim();
+      const err = document.getElementById('overrideError');
+      err.style.display = 'none';
+      if (!reason) {
+        err.textContent = 'A reason is required for overrides.';
+        err.style.display = 'block';
+        return;
+      }
+      const btn = document.getElementById('overrideSubmit');
+      const restore = setButtonLoading(btn);
+      const res = await apiPost(`/api/sessions/${sessionId}/override`, { studentId, status, reason });
+      restore();
+      if (res && res.ok) {
+        closeOverrideSheet();
+        loadSession(); // refresh roster + stats
+      } else {
+        let msg = 'Override failed. Try again.';
+        if (res) { try { const j = await res.json(); if (j && j.error) msg = j.error; } catch (_) {} }
+        err.textContent = msg;
+        err.style.display = 'block';
+      }
+    }
+
+    // Wire override sheet buttons once
+    document.getElementById('overrideClose').addEventListener('click', closeOverrideSheet);
+    document.getElementById('overrideCancel').addEventListener('click', closeOverrideSheet);
+    document.getElementById('overrideBackdrop').addEventListener('click', closeOverrideSheet);
+    document.getElementById('overrideSubmit').addEventListener('click', submitOverride);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('overrideSheet').classList.contains('open')) {
+        closeOverrideSheet();
+      }
+    });
 
     loadSession();
   </script>
