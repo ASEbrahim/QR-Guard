@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Detail | QR-Guard</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+  <script src="/scripts/api.js"></script>
+  <script src="/scripts/components.js"></script>
+  <script>
+    // Read course id from query if present so the Back link returns to the
+    // right course detail page; falls back to the dashboard.
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const back = params.get('courseId')
+        ? `/instructor/course?id=${params.get('courseId')}`
+        : '/instructor/dashboard';
+      const label = params.get('courseId') ? 'Back to Course' : 'Back to Courses';
+      renderNavWithBack(back, label);
+    })();
+  </script>
+
+  <div class="container-wide">
+    <!-- Hero: course + session header -->
+    <div id="sessionInfo" class="course-hero">
+      <h1 id="sessionTitle" class="course-hero-title">Loading...</h1>
+      <p id="sessionMeta" class="course-hero-meta"></p>
+
+      <!-- Status pill rendered inline so it inherits the hero contrast -->
+      <div id="statusBadge" class="session-status-badge" hidden></div>
+
+      <div class="stat-tiles">
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="statPresent">&ndash;</span></div>
+          <div class="stat-tile-label">Present</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="statAbsent">&ndash;</span></div>
+          <div class="stat-tile-label">Absent</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="statExcused">&ndash;</span></div>
+          <div class="stat-tile-label">Excused</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-value"><span id="statTotal">&ndash;</span></div>
+          <div class="stat-tile-label">Enrolled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Roster, override controls, rejected scans land in subsequent commits. -->
+    <div id="rosterError" class="message error" role="alert" style="display:none;"></div>
+
+  </div>
+
+  <script>
+    const sessionId = new URLSearchParams(window.location.search).get('id');
+    if (!sessionId) window.location.href = '/instructor/dashboard';
+
+    async function loadSession() {
+      const res = await apiGet(`/api/sessions/${sessionId}/detail`);
+      if (!res || !res.ok) {
+        const err = document.getElementById('rosterError');
+        err.textContent = res && res.status === 403
+          ? 'You are not authorized to view this session.'
+          : 'Could not load session detail.';
+        err.style.display = 'block';
+        document.getElementById('sessionTitle').textContent = 'Unable to load';
+        return;
+      }
+      const data = await res.json();
+
+      const start = new Date(data.session.scheduledStart);
+      const end = new Date(data.session.scheduledEnd);
+      const dateLine = start.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      const timeLine = `${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+      const course = data.session.course;
+      document.getElementById('sessionTitle').textContent = `${course.code} | ${course.name}`;
+      document.getElementById('sessionMeta').textContent = `${dateLine} . ${timeLine} . Section ${course.section}`;
+
+      const badge = document.getElementById('statusBadge');
+      badge.textContent = data.session.status.toUpperCase();
+      badge.className = `session-status-badge status-${data.session.status}`;
+      badge.hidden = false;
+
+      document.getElementById('statPresent').textContent = data.stats.present;
+      document.getElementById('statAbsent').textContent = data.stats.absent;
+      document.getElementById('statExcused').textContent = data.stats.excused;
+      document.getElementById('statTotal').textContent = data.stats.total;
+    }
+
+    loadSession();
+  </script>
+</body>
+</html>
