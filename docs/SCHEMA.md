@@ -80,8 +80,10 @@ Instructor-specific fields. One-to-one with `users` where `role = 'instructor'`.
 | `semester_start` | `date` | NOT NULL | Start of semester for session auto-generation |
 | `semester_end` | `date` | NOT NULL | End of semester for session auto-generation |
 | `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `deleted_at` | `timestamptz` | NULL | Soft-delete sentinel (migration 0007). Queries surfacing live courses must filter `WHERE deleted_at IS NULL`; historical attendance + audit-log rows remain queryable. |
 
 **Index:** `CREATE INDEX courses_instructor_idx ON courses(instructor_id);`
+**Index:** `CREATE INDEX courses_instructor_active_idx ON courses(instructor_id) WHERE deleted_at IS NULL;` (migration 0007 — keeps the instructor dashboard's "live courses" query fast even with many soft-deleted rows.)
 
 ### `enrollments`
 
@@ -111,6 +113,7 @@ A class session for a course.
 | `actual_end` | `timestamptz` | NULL | Set when stopped or window expires |
 | `status` | `text` | NOT NULL, default `'scheduled'`, CHECK in (`'scheduled'`, `'active'`, `'closed'`, `'cancelled'`) | |
 | `created_at` | `timestamptz` | NOT NULL, default `now()` | |
+| `notes` | `text` | NULL | Free-text instructor notes (migration 0008). Max 2000 chars enforced server-side. Surfaces on the session-detail page; small pencil icon appears on the course row when set. |
 
 **Index:** `CREATE INDEX sessions_course_idx ON sessions(course_id, scheduled_start);`
 
@@ -159,7 +162,7 @@ Append-only log of every scan attempt + every override.
 |---|---|---|---|
 | `log_id` | `uuid` | PRIMARY KEY, default `uuid_generate_v4()` | |
 | `timestamp` | `timestamptz` | NOT NULL, default `now()` | |
-| `event_type` | `text` | NOT NULL, CHECK in (`'scan_attempt'`, `'override'`, `'auth'`) | |
+| `event_type` | `text` | NOT NULL, CHECK in (`'scan_attempt'`, `'override'`, `'auth'`, `'course_deleted'`) | `course_deleted` added by migration 0007 for soft-delete events. |
 | `actor_id` | `uuid` | NULL, REFERENCES `users(user_id)` | NULL if unauthenticated |
 | `target_id` | `uuid` | NULL | Session ID for scan, student ID for override |
 | `result` | `text` | NOT NULL, CHECK in (`'success'`, `'rejected'`) | |
