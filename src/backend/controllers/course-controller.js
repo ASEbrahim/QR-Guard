@@ -1,7 +1,7 @@
 import { eq, and, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../config/database.js';
-import { courses, enrollments, sessions, auditLog } from '../db/schema/index.js';
+import { courses, enrollments, sessions } from '../db/schema/index.js';
 import { generateEnrollmentCode } from '../services/enrollment-code.js';
 import { generateSessions } from '../services/session-generator.js';
 import {
@@ -74,13 +74,7 @@ async function getCourseForInstructor(courseId, instructorId) {
   const [course] = await db
     .select()
     .from(courses)
-    .where(
-      and(
-        eq(courses.courseId, courseId),
-        eq(courses.instructorId, instructorId),
-        isNull(courses.deletedAt),
-      ),
-    )
+    .where(and(eq(courses.courseId, courseId), eq(courses.instructorId, instructorId)))
     .limit(1);
   return course || null;
 }
@@ -185,16 +179,11 @@ export async function listCourses(req, res) {
     const result = await db
       .select()
       .from(courses)
-      .where(
-        and(
-          eq(courses.instructorId, req.session.userId),
-          isNull(courses.deletedAt),
-        ),
-      );
+      .where(eq(courses.instructorId, req.session.userId));
     return res.json({ courses: result });
   }
 
-  // Student - list enrolled courses (skip soft-deleted courses too)
+  // Student - list enrolled courses
   const result = await db
     .select({
       courseId: courses.courseId,
@@ -210,7 +199,6 @@ export async function listCourses(req, res) {
       and(
         eq(enrollments.studentId, req.session.userId),
         isNull(enrollments.removedAt),
-        isNull(courses.deletedAt),
       ),
     );
 
@@ -224,11 +212,7 @@ export async function listCourses(req, res) {
 export async function getCourse(req, res) {
   const { id } = req.params;
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(and(eq(courses.courseId, id), isNull(courses.deletedAt)))
-    .limit(1);
+  const [course] = await db.select().from(courses).where(eq(courses.courseId, id)).limit(1);
   if (!course) return res.status(404).json({ error: 'Course not found' });
 
   // Authorization: instructor must own it, student must be enrolled
@@ -298,33 +282,6 @@ export async function updateCourse(req, res) {
 }
 
 /**
- * DELETE /api/courses/:id
- * Soft-deletes a course. The instructor must own it. Historical attendance
- * rows, audit-log entries, and warning-email-log rows are preserved so
- * student transcripts remain queryable. The course simply stops appearing
- * in instructor and student dashboards and cannot be enrolled in.
- */
-export async function deleteCourse(req, res) {
-  const { id } = req.params;
-  const course = await getCourseForInstructor(id, req.session.userId);
-  if (!course) return res.status(404).json({ error: 'Course not found or not authorized' });
-
-  await db.transaction(async (tx) => {
-    await tx.update(courses).set({ deletedAt: new Date() }).where(eq(courses.courseId, id));
-    await tx.insert(auditLog).values({
-      eventType: 'course_deleted',
-      actorId: req.session.userId,
-      targetId: id,
-      result: 'success',
-      reason: 'instructor_initiated',
-      details: { code: course.code, name: course.name, section: course.section, semester: course.semester },
-    });
-  });
-
-  res.status(204).end();
-}
-
-/**
  * POST /api/courses/:id/enroll
  * Student enrolls in a course using the enrollment code.
  */
@@ -338,13 +295,7 @@ export async function enrollInCourse(req, res) {
   const [course] = await db
     .select()
     .from(courses)
-    .where(
-      and(
-        eq(courses.courseId, id),
-        eq(courses.enrollmentCode, parsed.data.enrollmentCode),
-        isNull(courses.deletedAt),
-      ),
-    )
+    .where(and(eq(courses.courseId, id), eq(courses.enrollmentCode, parsed.data.enrollmentCode)))
     .limit(1);
 
   if (!course) return res.status(404).json({ error: 'Invalid course or enrollment code' });
@@ -366,12 +317,7 @@ export async function enrollByCode(req, res) {
   const [course] = await db
     .select()
     .from(courses)
-    .where(
-      and(
-        eq(courses.enrollmentCode, parsed.data.enrollmentCode),
-        isNull(courses.deletedAt),
-      ),
-    )
+    .where(eq(courses.enrollmentCode, parsed.data.enrollmentCode))
     .limit(1);
 
   if (!course) return res.status(404).json({ error: 'Invalid enrollment code' });

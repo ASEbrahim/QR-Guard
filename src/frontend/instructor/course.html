@@ -34,9 +34,6 @@
           <div class="stat-tile-label">QR refresh</div>
         </div>
       </div>
-      <div class="course-hero-actions">
-        <button type="button" id="deleteCourseBtn" class="btn btn-danger btn-sm">Delete course</button>
-      </div>
     </div>
 
     <!-- Tabs: Sessions / Students. aria-controls wires each tab to its
@@ -68,22 +65,6 @@
   </div>
 
   <button type="button" id="toggleAddSession" class="fab" aria-label="Add session" title="Add session">+</button>
-
-  <!-- Delete course confirmation modal -->
-  <div class="sheet-backdrop" id="deleteBackdrop"></div>
-  <div class="bottom-sheet" id="deleteSheet" role="dialog" aria-labelledby="deleteTitle" aria-modal="true" aria-hidden="true">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <h3 id="deleteTitle">Delete this course?</h3>
-      <button type="button" class="sheet-close" id="deleteSheetClose" aria-label="Close">&times;</button>
-    </div>
-    <p>The course will stop appearing on your dashboard and students will no longer see it. Historical attendance records and audit logs are preserved.</p>
-    <div id="deleteError" class="message error" role="alert" style="display:none;"></div>
-    <div class="sheet-actions">
-      <button type="button" class="btn btn-secondary" id="deleteSheetCancel">Cancel</button>
-      <button type="button" class="btn btn-danger" id="deleteSheetConfirm">Delete</button>
-    </div>
-  </div>
 
   <!-- Bottom sheet: Add session -->
   <div class="sheet-backdrop" id="sheetBackdrop"></div>
@@ -315,48 +296,6 @@
         return;
       }
       submitSession(new Date(`${dateVal}T${startVal}`), new Date(`${dateVal}T${endVal}`));
-    });
-
-    // --- Delete course flow ---
-    function openDeleteSheet() {
-      document.getElementById('deleteError').style.display = 'none';
-      document.getElementById('deleteBackdrop').classList.add('open');
-      const sheet = document.getElementById('deleteSheet');
-      sheet.classList.add('open');
-      sheet.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      openModal(sheet);
-      enableSheetDrag(sheet, closeDeleteSheet);
-    }
-    function closeDeleteSheet() {
-      document.getElementById('deleteBackdrop').classList.remove('open');
-      const sheet = document.getElementById('deleteSheet');
-      sheet.classList.remove('open');
-      sheet.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      closeModal(sheet);
-    }
-    document.getElementById('deleteCourseBtn').addEventListener('click', openDeleteSheet);
-    document.getElementById('deleteSheetClose').addEventListener('click', closeDeleteSheet);
-    document.getElementById('deleteSheetCancel').addEventListener('click', closeDeleteSheet);
-    document.getElementById('deleteBackdrop').addEventListener('click', closeDeleteSheet);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && document.getElementById('deleteSheet').classList.contains('open')) closeDeleteSheet();
-    });
-    document.getElementById('deleteSheetConfirm').addEventListener('click', async (e) => {
-      const btn = e.currentTarget;
-      const restore = setButtonLoading(btn);
-      const res = await apiDelete(`/api/courses/${courseId}`);
-      restore();
-      if (res && res.ok) {
-        window.location.href = '/instructor/dashboard';
-      } else {
-        const err = document.getElementById('deleteError');
-        let msg = 'Could not delete the course. Try again.';
-        if (res) { try { const j = await res.json(); if (j && j.error) msg = j.error; } catch (_) {} }
-        err.textContent = msg;
-        err.style.display = 'block';
-      }
     });
 
     loadCourse();
