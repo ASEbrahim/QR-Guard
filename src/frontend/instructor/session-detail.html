@@ -57,6 +57,13 @@
     <div id="rosterList" class="roster-list"></div>
     <p id="rosterEmpty" class="text-muted text-center" style="display:none;">No students enrolled in this course.</p>
 
+    <details id="rejectedSection" class="rejected-section" hidden>
+      <summary>
+        <span id="rejectedHeading">Rejected scan attempts</span>
+      </summary>
+      <div id="rejectedList" class="rejected-list"></div>
+    </details>
+
   </div>
 
   <!-- Override bottom sheet -->
@@ -122,6 +129,72 @@
       document.getElementById('statTotal').textContent = data.stats.total;
 
       renderRoster(data.roster);
+      renderRejected(data.rejected);
+    }
+
+    // Map raw audit-log reasons to a human-friendly label. Falls back to the
+    // raw token so new reasons appear (just less polished) instead of being
+    // silently swallowed.
+    const REASON_LABELS = {
+      outside_geofence:    'Outside geofence',
+      wrong_device:        'Wrong device',
+      qr_expired:          'QR code expired',
+      qr_invalid:          'QR code invalid',
+      gps_inaccurate:      'GPS not accurate enough',
+      ip_outside_kuwait:   'IP outside Kuwait',
+      vpn_detected:        'VPN / proxy detected',
+      already_recorded:    'Already recorded this session',
+      ip_check_skipped:    'IP check skipped (FAIL-OPEN)',
+      attendance_insert_failed: 'Database insert failed',
+      course_not_found:    'Course not found',
+    };
+    function reasonLabel(r) { return REASON_LABELS[r] || (r || 'Unknown reason'); }
+
+    function renderRejected(rejected) {
+      const section = document.getElementById('rejectedSection');
+      const list = document.getElementById('rejectedList');
+      const heading = document.getElementById('rejectedHeading');
+
+      if (!rejected || rejected.length === 0) {
+        section.hidden = true;
+        return;
+      }
+      section.hidden = false;
+      heading.textContent = `Rejected scan attempts (${rejected.length})`;
+
+      // Group by reason for the eyeball-scan view; ungrouped chronological
+      // detail lives inside each group.
+      const groups = new Map();
+      for (const r of rejected) {
+        const key = r.reason || 'unknown';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(r);
+      }
+      // Sort groups by descending count so the most common reason is first
+      const sortedGroups = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+
+      list.innerHTML = sortedGroups.map(([reason, items]) => `
+        <div class="rejected-group">
+          <div class="rejected-group-header">
+            <span class="rejected-count">${items.length}x</span>
+            ${esc(reasonLabel(reason))}
+          </div>
+          <div class="rejected-items">
+            ${items.map((r) => {
+              const time = new Date(r.timestamp).toLocaleString([], {
+                month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit',
+              });
+              return `
+                <div class="rejected-item">
+                  <span class="rejected-time">${time}</span>
+                  <span class="rejected-student">${esc(r.studentName || 'Unknown student')}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
     }
 
     function renderRoster(roster) {
