@@ -5,53 +5,10 @@
  */
 
 /**
- * Injects a skip-to-content link at the top of the body and guarantees
- * that `#main-content` exists as a focusable target.
- *
- * Previously the link targeted `#main-content` but no page had that id —
- * the anchor was dead (a prior audit marked it as a fix that wasn't).
- * Now the helper walks the body and marks the first content element
- * (i.e. the first child that is not nav / header / footer / script /
- * bottom-nav) with id="main-content" and tabindex="-1" so pressing the
- * link delivers focus into the main region for screen-reader users.
- */
-function ensureSkipLink() {
-  if (document.querySelector('.skip-link')) return; // idempotent
-  const skip = document.createElement('a');
-  skip.className = 'skip-link';
-  skip.href = '#main-content';
-  skip.textContent = 'Skip to main content';
-  document.body.prepend(skip);
-
-  // Defer the main-content marker until after the nav has been injected.
-  queueMicrotask(() => {
-    if (document.getElementById('main-content')) return;
-    const SKIP_TAGS = new Set(['NAV', 'HEADER', 'FOOTER', 'SCRIPT', 'STYLE', 'LINK']);
-    for (const child of document.body.children) {
-      if (SKIP_TAGS.has(child.tagName)) continue;
-      if (child.classList.contains('skip-link')) continue;
-      if (child.classList.contains('bottom-nav')) continue;
-      if (child.classList.contains('site-footer')) continue;
-      child.id = 'main-content';
-      child.setAttribute('tabindex', '-1');
-      // Mark as the main landmark so assistive tech has a region to
-      // skip into (WCAG 2.4.1 / 1.3.1). role="main" is equivalent to
-      // <main> and avoids wrapping existing markup.
-      if (child.tagName !== 'MAIN' && !child.hasAttribute('role')) {
-        child.setAttribute('role', 'main');
-      }
-      break;
-    }
-  });
-}
-
-/**
  * Renders the top nav bar.
- * @param {string} userName — display name (empty string if unknown yet)
+ * @param {string} userName  display name (empty string if unknown yet)
  */
 function renderNav(userName) {
-  ensureSkipLink();
-
   const nav = document.createElement('nav');
   nav.className = 'nav';
   nav.innerHTML = `
@@ -66,12 +23,10 @@ function renderNav(userName) {
 
 /**
  * Renders the top nav with a back button (for sub-pages).
- * @param {string} backUrl — URL to go back to
- * @param {string} backLabel — button text
+ * @param {string} backUrl   URL to go back to
+ * @param {string} backLabel button text
  */
 function renderNavWithBack(backUrl, backLabel) {
-  ensureSkipLink();
-
   const nav = document.createElement('nav');
   nav.className = 'nav';
   nav.innerHTML = `

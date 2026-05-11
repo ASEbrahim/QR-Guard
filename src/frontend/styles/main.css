@@ -651,10 +651,6 @@ th {
 
 /* Footer removed — campus image used as nav background */
 
-/* --- Skip-to-content (accessibility) --- */
-.skip-link { position: absolute; transform: translateY(-100%); background: var(--primary); color: white; padding: 0.5rem 1rem; z-index: 9999; font-weight: 600; text-decoration: none; }
-.skip-link:focus { transform: translateY(0); }
-
 /* Screen-reader-only text: keeps the label in the accessibility tree
    without taking visible space. Used for inputs that have visible
    context but no visible <label>. */
@@ -667,10 +663,6 @@ th {
   white-space: nowrap;
   border: 0;
 }
-
-/* Make JS-marked focus targets non-outlined but still focusable
-   programmatically (for the skip-link main-content target). */
-#main-content:focus { outline: none; }
 
 /* Respect user motion preferences. Without this the slideUp / pulse /
    staggered card animations run even for users who request reduced

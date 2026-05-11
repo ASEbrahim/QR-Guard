@@ -1,12 +1,12 @@
 <!--
 last_updated: 2026-04-18
-audience: Claude Code (locate files), maintainer (review structure), professor (code walkthrough)
+audience: maintainer (review structure), professor (code walkthrough)
 role: a one-line description of every code file in the project
 -->
 
 # CODEBASE_MAP.md
 
-> Every code file in the project, with a one-line description. Updated after every implementation session.
+> Every code file in the project, with a one-line description.
 
 ---
 
@@ -26,7 +26,6 @@ All complete. 8 audits passed. Security hardened. Deployed to qrguard.strat-os.n
 | `drizzle.config.js` | Drizzle Kit config: PostgreSQL dialect, schema path, DB URL from env |
 | `vitest.config.js` | Vitest config: Node environment, sequential file execution, env vars for test DB |
 | `render.yaml` | Render deployment blueprint: build/start commands, env var declarations |
-| `CLAUDE.md` | Claude Code instructions: rules, key files, stack, code style |
 | `.env.example` | Template for environment variables (DATABASE_URL, SESSION_SECRET, EMAIL_PROVIDER, etc.) |
 | `.gitignore` | Ignores node_modules, .env, dist, coverage, logs |
 

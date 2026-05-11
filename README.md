@@ -34,8 +34,6 @@ Every scan passes through 6 checks in order (cheapest first, fail-fast):
 
 ```
 docs/           Design documents, FRS, UML diagrams, schema
-increments/     Per-increment plans and notes
-sprint-prompts/ Copy-paste prompts for Claude Code
 src/
   backend/      Express server, controllers, validators, services
   frontend/     Vanilla HTML/CSS/JS pages

@@ -1,7 +1,7 @@
 <!--
 last_updated: 2026-04-18
 verified_against: FRS v1.1
-audience: Claude Code (the spec for implementation), maintainer (progress tracking)
+audience: maintainer (progress tracking)
 role: the canonical 5-increment plan with binary acceptance criteria
 -->
 
@@ -47,7 +47,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 **Dependencies:** none (this is the foundation)
 
-**Estimated effort:** 1 sprint (~30-60 minutes with Claude Code)
+**Estimated effort:** 1 sprint
 
 ---
 

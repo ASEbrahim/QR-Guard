@@ -1,6 +1,6 @@
 <!--
 last_updated: 2026-04-18
-audience: Claude Code (terminology lookup), maintainer (reference)
+audience: maintainer (reference)
 role: canonical definitions of every term used in QR-Guard
 -->
 

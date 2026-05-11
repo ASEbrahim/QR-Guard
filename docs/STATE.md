@@ -1,12 +1,12 @@
 <!--
 last_updated: 2026-04-18
-audience: Claude Code (read at the start of every session), maintainer (track progress)
+audience: maintainer (track progress)
 role: the live state of the QR-Guard build — what's done, what's in progress, what's next
 -->
 
 # STATE.md
 
-> The single source of truth for "where are we right now." Update this at the end of every session. Read it at the start of every session.
+> The single source of truth for "where are we right now."
 
 ---
 
@@ -65,7 +65,7 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Next steps
 
-1. Update FRS v1.1 to v2.0 (see `docs/DOCUMENT_UPDATE_INSTRUCTIONS.md` for exact changes)
+1. Update FRS v1.1 to v2.0 with final hosting (Render + Neon), 6-digit verification code flow, student-only registration, and 12 security fixes
 2. Update PR2 document with final implementation metrics, audit results, and challenges
 3. Update PPTX presentation slides (architecture, demo URL, audit results, color scheme)
 4. Campus GPS test — verify geofence accuracy with real AUK coordinates

@@ -1,7 +1,7 @@
 <!--
 last_updated: 2026-04-18
 verified_against: class diagram (docs/uml/04-class-diagram.svg) and FRS v1.1
-audience: Claude Code (DB implementation), maintainer (review)
+audience: maintainer (review)
 role: canonical PostgreSQL schema for QR-Guard
 -->
 
