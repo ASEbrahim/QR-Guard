@@ -16,6 +16,9 @@ export const sessions = pgTable(
       .notNull()
       .default('scheduled'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    // Free-text instructor notes ("midterm", "guest lecture", etc.).
+    // Null when none set; never indexed because it is not searched.
+    notes: text('notes'),
   },
   (table) => [index('sessions_course_idx').on(table.courseId, table.scheduledStart)],
 );

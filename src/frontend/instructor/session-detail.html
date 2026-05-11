@@ -71,6 +71,15 @@
     <div id="rosterList" class="roster-list"></div>
     <p id="rosterEmpty" class="text-muted text-center" style="display:none;">No students enrolled in this course.</p>
 
+    <h2 class="section-heading">Session notes</h2>
+    <div class="notes-card">
+      <textarea id="sessionNotes" rows="3" placeholder="e.g. 'midterm review', 'guest lecture', 'fire drill at 11:30'" maxlength="2000"></textarea>
+      <div class="notes-card-actions">
+        <span id="notesStatus" class="text-muted notes-status"></span>
+        <button type="button" class="btn btn-secondary btn-sm" id="notesSave">Save notes</button>
+      </div>
+    </div>
+
     <details id="rejectedSection" class="rejected-section" hidden>
       <summary>
         <span id="rejectedHeading">Rejected scan attempts</span>
@@ -144,6 +153,39 @@
 
       renderRoster(data.roster);
       renderRejected(data.rejected);
+      document.getElementById('sessionNotes').value = data.session.notes || '';
+      // Stash the loaded value so the save button can compare and avoid
+      // pointless PATCHes when the user clicks Save without changes.
+      document.getElementById('sessionNotes').dataset.original = data.session.notes || '';
+
+      // courseId comes from session.courseId so a deep-link without ?courseId
+      // in the URL can still POST notes back via /api/courses/<id>/sessions/<id>.
+      window.__courseIdForNotes = data.session.courseId;
+    }
+
+    async function saveNotes() {
+      const ta = document.getElementById('sessionNotes');
+      const status = document.getElementById('notesStatus');
+      const value = ta.value;
+      if (value === (ta.dataset.original || '')) {
+        status.textContent = 'No changes';
+        setTimeout(() => { status.textContent = ''; }, 1500);
+        return;
+      }
+      const btn = document.getElementById('notesSave');
+      const restore = setButtonLoading(btn);
+      const courseId = window.__courseIdForNotes;
+      const res = await apiPatch(`/api/courses/${courseId}/sessions/${sessionId}`, { notes: value || null });
+      restore();
+      if (res && res.ok) {
+        ta.dataset.original = value;
+        status.textContent = 'Saved';
+        setTimeout(() => { status.textContent = ''; }, 1500);
+      } else {
+        let msg = 'Could not save notes.';
+        if (res) { try { const j = await res.json(); if (j && j.error) msg = j.error; } catch (_) {} }
+        status.textContent = msg;
+      }
     }
 
     // Map raw audit-log reasons to a human-friendly label. Falls back to the
@@ -371,6 +413,8 @@
     // Wire bulk bar
     document.getElementById('bulkApply').addEventListener('click', applyBulk);
     document.getElementById('bulkClear').addEventListener('click', clearSelection);
+
+    document.getElementById('notesSave').addEventListener('click', saveNotes);
 
     // Wire override sheet buttons once
     document.getElementById('overrideClose').addEventListener('click', closeOverrideSheet);

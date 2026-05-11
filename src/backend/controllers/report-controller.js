@@ -389,6 +389,7 @@ export async function getSessionDetail(req, res) {
       scheduledStart: row.session.scheduledStart,
       scheduledEnd: row.session.scheduledEnd,
       status: row.session.status,
+      notes: row.session.notes || null,
       qrRefreshIntervalSeconds: row.session.qrRefreshIntervalSeconds,
       course: {
         code: row.course.code,

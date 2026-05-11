@@ -982,6 +982,44 @@ body:not(.has-bottom-nav) .fab {
 }
 .bulk-bar select { width: auto; }
 
+/* Session notes card under the roster on the session-detail page. */
+.notes-card {
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 0.5rem;
+}
+.notes-card textarea {
+  resize: vertical;
+  min-height: 4rem;
+  font-family: inherit;
+}
+.notes-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.notes-status {
+  flex: 1;
+  font-size: 0.8rem;
+}
+
+/* Small note icon inline on the course-detail session row when notes
+   exist on that session. Pure visual hint that there is context to read. */
+.session-notes-icon {
+  display: inline-flex;
+  width: 1.1em;
+  height: 1.1em;
+  margin-left: 0.4rem;
+  font-style: normal;
+  color: var(--accent);
+  font-size: 0.9em;
+  vertical-align: -2px;
+}
+.session-notes-icon::before { content: '\270e'; } /* lower-right pencil */
+
 /* Rejected-scans collapsible section. Uses native <details>/<summary> so
    keyboard + assistive tech support is free. */
 .rejected-section {

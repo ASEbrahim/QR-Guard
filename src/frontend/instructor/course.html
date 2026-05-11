@@ -212,7 +212,7 @@
             <div class="date-badge-month">${MONTHS[start.getMonth()]}</div>
           </div>
           <div class="session-row-main">
-            <div class="session-row-time">${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+            <div class="session-row-time">${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}${s.notes ? `<span class="session-notes-icon" aria-label="Has notes" title="${esc(s.notes)}"></span>` : ''}</div>
             <div class="session-row-status">${statusLabel}${countBadge}</div>
           </div>
           ${actions.length ? `<div class="session-row-actions">${actions.join('')}</div>` : ''}
