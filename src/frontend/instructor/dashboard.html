@@ -24,7 +24,7 @@
     <!-- Create course form (collapsible) -->
     <div class="card" id="createCard" style="display:none;">
       <form id="createForm">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+        <div class="form-grid-2">
           <div class="form-group"><label for="cName">Course Name</label><input id="cName" required></div>
           <div class="form-group"><label for="cCode">Course Code</label><input id="cCode" placeholder="CSIS 330" required></div>
           <div class="form-group"><label for="cSection">Section</label><input id="cSection" placeholder="01" required></div>
@@ -42,7 +42,7 @@
         <h2 class="mt-2" id="geofenceHeading">Geofence</h2>
         <p class="text-muted" id="geofenceHelp">Click the map to set the center point, or search for a location. Keyboard: Tab to the map, use arrow keys to pan, Enter to place a marker.</p>
         <div style="position:relative; margin-bottom:0.5rem;">
-          <div style="display:flex; gap:0.5rem;">
+          <div class="search-row">
             <label for="mapSearch" class="visually-hidden">Search location</label>
             <input type="text" id="mapSearch" placeholder="Search location..." style="flex:1;" autocomplete="off" aria-describedby="geofenceHelp">
             <button type="button" class="btn btn-secondary" id="mapSearchBtn">Search</button>
@@ -280,19 +280,19 @@
       const container = document.getElementById('scheduleSlots');
       const row = document.createElement('div');
       row.id = `slot-${id}`;
-      row.style.cssText = 'display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem;';
+      row.className = 'schedule-slot-row';
       row.innerHTML = `
-        <select data-field="day" style="flex:1;">
+        <select data-field="day" class="slot-day">
           ${DAYS.map(d => `<option value="${d.value}">${d.label}</option>`).join('')}
         </select>
-        <select data-field="start" style="flex:0.7;">
+        <select data-field="start" class="slot-time">
           ${TIMES.map(t => `<option value="${t}">${t}</option>`).join('')}
         </select>
-        <span style="color:#64748b;">to</span>
-        <select data-field="end" style="flex:0.7;">
+        <span class="slot-to">to</span>
+        <select data-field="end" class="slot-time">
           ${TIMES.map(t => `<option value="${t}"${t === '10:15' ? ' selected' : ''}>${t}</option>`).join('')}
         </select>
-        <button type="button" onclick="document.getElementById('slot-${id}').remove()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:1.25rem;">&times;</button>
+        <button type="button" class="slot-remove" onclick="document.getElementById('slot-${id}').remove()" aria-label="Remove time slot">&times;</button>
       `;
       container.appendChild(row);
     }

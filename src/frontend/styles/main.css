@@ -150,8 +150,8 @@ select:hover { border-color: var(--text-muted); }
   padding: 1.5rem 1.5rem;
 }
 
-h1 { font-size: clamp(1.25rem, 4vw, 1.5rem); font-weight: 700; margin-bottom: 1.5rem; }
-h2 { font-size: clamp(1.05rem, 3vw, 1.2rem); font-weight: 600; margin-bottom: 0.75rem; }
+h1 { font-size: clamp(1.25rem, 4vw, 1.5rem); font-weight: 700; margin-bottom: 1.5rem; overflow-wrap: anywhere; }
+h2 { font-size: clamp(1.05rem, 3vw, 1.2rem); font-weight: 600; margin-bottom: 0.75rem; overflow-wrap: anywhere; }
 
 /* --- Cards --- */
 .card {
@@ -229,6 +229,43 @@ h2 { font-size: clamp(1.05rem, 3vw, 1.2rem); font-weight: 600; margin-bottom: 0.
 /* --- Forms --- */
 .form-group {
   margin-bottom: 1rem;
+  min-width: 0; /* lets the group shrink inside grid/flex parents */
+}
+
+/* Fluid 2-col form grid. Each column gets at least min(180px, 100%) so the
+   grid collapses to one column on narrow viewports without needing a media
+   query. */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+/* Search bar above the geofence map - input + button. Wraps when there
+   isn't enough room. */
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.search-row > input { flex: 1 1 200px; min-width: 0; }
+
+/* Weekly schedule slot row. Day select + start + 'to' + end + remove.
+   Wraps cleanly on narrow screens; selects expand to fill available
+   space rather than competing for fixed flex ratios. */
+.schedule-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.schedule-slot-row .slot-day { flex: 2 1 8rem; min-width: 0; }
+.schedule-slot-row .slot-time { flex: 1 1 5rem; min-width: 0; }
+.schedule-slot-row .slot-to { color: var(--text-muted); }
+.schedule-slot-row .slot-remove {
+  background: none; border: none; color: var(--danger);
+  cursor: pointer; font-size: 1.25rem; padding: 0 0.25rem;
 }
 
 label {
@@ -1218,11 +1255,13 @@ body:not(.has-bottom-nav) .fab {
 
 .sheet-time-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
 .sheet-time-row .form-group {
-  flex: 1;
+  flex: 1 1 8rem;
+  min-width: 0;
 }
 
 .sheet-actions {
