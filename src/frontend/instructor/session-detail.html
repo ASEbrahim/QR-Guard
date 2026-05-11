@@ -54,6 +54,20 @@
     <div id="rosterError" class="message error" role="alert" style="display:none;"></div>
 
     <h2 class="section-heading">Roster</h2>
+
+    <!-- Bulk-actions bar: appears only when at least one row is checked -->
+    <div id="bulkBar" class="bulk-bar" hidden>
+      <span><span id="bulkCount">0</span> selected</span>
+      <select id="bulkStatus">
+        <option value="present">Mark present</option>
+        <option value="absent">Mark absent</option>
+        <option value="excused" selected>Mark excused</option>
+      </select>
+      <input type="text" id="bulkReason" placeholder="Reason (required)" style="flex:1 1 12rem; min-width:0;">
+      <button type="button" class="btn btn-primary btn-sm" id="bulkApply">Apply to all</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="bulkClear">Clear</button>
+    </div>
+
     <div id="rosterList" class="roster-list"></div>
     <p id="rosterEmpty" class="text-muted text-center" style="display:none;">No students enrolled in this course.</p>
 
@@ -215,6 +229,7 @@
         // anchor on the right so the eye scans down a column of pills.
         return `
           <div class="roster-row" data-student-id="${esc(r.studentId)}">
+            <input type="checkbox" class="roster-check" aria-label="Select ${esc(r.name)}">
             <div class="roster-name">
               ${esc(r.name)}
               ${r.universityId ? `<div class="roster-meta">${esc(r.universityId)}</div>` : ''}
@@ -236,6 +251,52 @@
       for (const btn of list.querySelectorAll('.roster-override-btn')) {
         btn.addEventListener('click', () => onOverrideClick(btn));
       }
+      // Wire checkbox changes - they update the bulk bar visibility/count.
+      for (const cb of list.querySelectorAll('.roster-check')) {
+        cb.addEventListener('change', updateBulkBar);
+      }
+    }
+
+    function selectedStudentIds() {
+      return Array.from(document.querySelectorAll('.roster-row .roster-check:checked'))
+        .map((cb) => cb.closest('.roster-row').dataset.studentId);
+    }
+    function updateBulkBar() {
+      const ids = selectedStudentIds();
+      const bar = document.getElementById('bulkBar');
+      document.getElementById('bulkCount').textContent = ids.length;
+      bar.hidden = ids.length === 0;
+    }
+    function clearSelection() {
+      for (const cb of document.querySelectorAll('.roster-check')) cb.checked = false;
+      updateBulkBar();
+    }
+    async function applyBulk() {
+      const ids = selectedStudentIds();
+      const status = document.getElementById('bulkStatus').value;
+      const reason = document.getElementById('bulkReason').value.trim();
+      if (ids.length === 0) return;
+      if (!reason) {
+        alert('A reason is required for overrides.');
+        return;
+      }
+      const btn = document.getElementById('bulkApply');
+      const restore = setButtonLoading(btn);
+      // Serial loop so the server's per-student transaction + notification
+      // checks all run cleanly without head-of-line blocking. With <=300
+      // students per course this is well under a second of wall time.
+      let failures = 0;
+      for (const studentId of ids) {
+        const res = await apiPost(`/api/sessions/${sessionId}/override`, { studentId, status, reason });
+        if (!res || !res.ok) failures++;
+      }
+      restore();
+      if (failures > 0) {
+        alert(`${failures} of ${ids.length} overrides failed. The rest were applied.`);
+      }
+      document.getElementById('bulkReason').value = '';
+      clearSelection();
+      loadSession();
     }
 
     function onOverrideClick(btn) {
@@ -306,6 +367,10 @@
         err.style.display = 'block';
       }
     }
+
+    // Wire bulk bar
+    document.getElementById('bulkApply').addEventListener('click', applyBulk);
+    document.getElementById('bulkClear').addEventListener('click', clearSelection);
 
     // Wire override sheet buttons once
     document.getElementById('overrideClose').addEventListener('click', closeOverrideSheet);
