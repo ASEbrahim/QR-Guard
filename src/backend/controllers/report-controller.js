@@ -2,7 +2,7 @@ import { eq, and, isNull, gte, lte, sql, inArray } from 'drizzle-orm';
 import { stringify } from 'csv-stringify/sync';
 import { db } from '../config/database.js';
 import {
-  courses, sessions, attendance, enrollments, students, users,
+  courses, sessions, attendance, enrollments, students, users, auditLog,
 } from '../db/schema/index.js';
 import {
   calculateAttendancePct,
@@ -290,6 +290,117 @@ export async function getAuditLog(req, res) {
     entries: result.rows,
     total: parseInt(countResult.rows[0].total),
     page,
+  });
+}
+
+/**
+ * GET /api/sessions/:sessionId/detail
+ * One-shot fetch backing the instructor session-detail page.
+ * Returns session + course header, attendance stats, full roster with
+ * scan times + GPS, and the audit-log rejection rows for this session.
+ *
+ * Authorization: instructor must own the course this session belongs to.
+ */
+export async function getSessionDetail(req, res) {
+  // Route mounts the param as :id so this stays consistent with the other
+  // session sub-routes (start, stop, qr, override).
+  const { id: sessionId } = req.params;
+
+  // Look up session + course in one round trip + ownership gate
+  const [row] = await db
+    .select({
+      session: sessions,
+      course: courses,
+    })
+    .from(sessions)
+    .innerJoin(courses, eq(sessions.courseId, courses.courseId))
+    .where(eq(sessions.sessionId, sessionId))
+    .limit(1);
+
+  if (!row) return res.status(404).json({ error: 'Session not found' });
+  if (row.course.instructorId !== req.session.userId) {
+    return res.status(403).json({ error: 'Not authorized for this session' });
+  }
+
+  // Roster (every currently-enrolled student) + their attendance row for
+  // this session (LEFT JOIN so absent students still appear).
+  const rosterRaw = await db
+    .select({
+      studentId: enrollments.studentId,
+      name: users.name,
+      universityId: students.universityId,
+      status: attendance.status,
+      recordedAt: attendance.recordedAt,
+      gpsLat: attendance.gpsLat,
+      gpsLng: attendance.gpsLng,
+      excuseReason: attendance.excuseReason,
+    })
+    .from(enrollments)
+    .innerJoin(users, eq(enrollments.studentId, users.userId))
+    .innerJoin(students, eq(enrollments.studentId, students.userId))
+    .leftJoin(
+      attendance,
+      and(eq(attendance.studentId, enrollments.studentId), eq(attendance.sessionId, sessionId)),
+    )
+    .where(and(eq(enrollments.courseId, row.course.courseId), isNull(enrollments.removedAt)))
+    .orderBy(users.name);
+
+  // Fill 'absent' for students with no attendance row
+  const roster = rosterRaw.map((r) => ({
+    studentId: r.studentId,
+    name: r.name,
+    universityId: r.universityId,
+    status: r.status || 'absent',
+    recordedAt: r.recordedAt,
+    gpsLat: r.gpsLat,
+    gpsLng: r.gpsLng,
+    excuseReason: r.excuseReason,
+  }));
+
+  // Aggregate counts
+  const stats = { present: 0, absent: 0, excused: 0, total: roster.length };
+  for (const r of roster) stats[r.status] = (stats[r.status] || 0) + 1;
+
+  // Rejected scan attempts logged for this session. actorId is the student;
+  // join to users to surface their display name.
+  const rejected = await db
+    .select({
+      timestamp: auditLog.timestamp,
+      studentId: auditLog.actorId,
+      studentName: users.name,
+      reason: auditLog.reason,
+      details: auditLog.details,
+    })
+    .from(auditLog)
+    .leftJoin(users, eq(auditLog.actorId, users.userId))
+    .where(
+      and(
+        eq(auditLog.targetId, sessionId),
+        eq(auditLog.eventType, 'scan_attempt'),
+        eq(auditLog.result, 'rejected'),
+      ),
+    )
+    .orderBy(sql`${auditLog.timestamp} DESC`);
+
+  res.json({
+    session: {
+      sessionId: row.session.sessionId,
+      courseId: row.session.courseId,
+      scheduledStart: row.session.scheduledStart,
+      scheduledEnd: row.session.scheduledEnd,
+      status: row.session.status,
+      qrRefreshIntervalSeconds: row.session.qrRefreshIntervalSeconds,
+      course: {
+        code: row.course.code,
+        name: row.course.name,
+        section: row.course.section,
+        semester: row.course.semester,
+        geofenceRadiusM: row.course.geofenceRadiusM,
+      },
+    },
+    stats,
+    roster,
+    rejected,
   });
 }
 
