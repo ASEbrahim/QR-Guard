@@ -866,6 +866,21 @@ body:not(.has-bottom-nav) .fab {
   box-shadow: 0 4px 12px rgba(154, 24, 43, 0.2);
 }
 
+.course-hero-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.course-hero-actions .btn-danger {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  box-shadow: none;
+}
+.course-hero-actions .btn-danger:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .course-hero h3 {
   margin: 0 0 0.25rem;
   color: #fff;

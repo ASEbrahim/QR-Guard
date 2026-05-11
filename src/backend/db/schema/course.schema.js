@@ -25,6 +25,10 @@ export const courses = pgTable(
     semesterStart: date('semester_start').notNull(),
     semesterEnd: date('semester_end').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    // Soft-delete sentinel. Queries surfacing "live" courses must include
+    // isNull(courses.deletedAt); historical attendance/audit rows remain
+    // queryable after deletion.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (table) => [index('courses_instructor_idx').on(table.instructorId)],
 );
