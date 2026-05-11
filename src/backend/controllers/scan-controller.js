@@ -17,7 +17,7 @@ const scanSchema = z.object({
 
 /**
  * POST /api/scan
- * Student scans a QR code — runs the 6-layer verification pipeline.
+ * Student scans a QR code - runs the 6-layer verification pipeline.
  */
 export async function handleScan(req, res) {
   const parsed = scanSchema.safeParse(req.body);
@@ -54,7 +54,7 @@ export async function handleScan(req, res) {
     ipCheckSkipped: result.ipCheckSkipped || false,
   };
 
-  // Pipeline passed — record attendance
+  // Pipeline passed - record attendance
   try {
     await db.insert(attendance).values({
       sessionId: result.sessionId,
@@ -93,7 +93,7 @@ export async function handleScan(req, res) {
     throw err;
   }
 
-  // Attendance persisted — now log the success audit row.
+  // Attendance persisted - now log the success audit row.
   await logAudit({
     eventType: 'scan_attempt',
     actorId: req.session.userId,
@@ -104,10 +104,10 @@ export async function handleScan(req, res) {
   });
 
   // Broadcast live counter update. Two independent subselects are cheaper
-  // than the prior 3-way JOIN — each hits a PK/index directly:
+  // than the prior 3-way JOIN - each hits a PK/index directly:
   //  - attendance: PK (attendance_id) + UNIQUE (session_id, student_id) +
   //    index on session_id via the UNIQUE
-  //  - enrollments: PK (course_id, student_id) — course_id-prefix seek
+  //  - enrollments: PK (course_id, student_id) - course_id-prefix seek
   try {
     const countResult = await db.execute(sql`
       SELECT

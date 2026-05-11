@@ -1,7 +1,7 @@
 <!--
 last_updated: 2026-04-18
 audience: maintainer (track progress)
-role: the live state of the QR-Guard build — what's done, what's in progress, what's next
+role: the live state of the QR-Guard build - what's done, what's in progress, what's next
 -->
 
 # STATE.md
@@ -12,12 +12,12 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 ## Current sprint
 
-**Active increment:** All 5 complete — feature-complete, audited, security-hardened, deployed
-**Active sprint focus:** none — all implementation, auditing, and deployment work finished
+**Active increment:** All 5 complete - feature-complete, audited, security-hardened, deployed
+**Active sprint focus:** none - all implementation, auditing, and deployment work finished
 **Last commit:** 58 commits across April 16-18, 2026
 **Audit status:** 8 audit passes complete (77 findings, 65 fixed)
 **Security audit:** 29 vulnerabilities found; all critical/high fixed
-**UI redesign:** Complete — crimson + gold AUK branding, bottom nav, FAB, bottom sheets
+**UI redesign:** Complete - crimson + gold AUK branding, bottom nav, FAB, bottom sheets
 **Deployment:** Live at https://qrguard.strat-os.net (Render + Neon, custom domain via Cloudflare CNAME)
 
 ---
@@ -48,10 +48,10 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 
 (Anything implemented differently from the FRS or class diagram. Each entry: what was deviated, why, and whether the FRS/diagram should be updated.)
 
-- Added `semester_start` and `semester_end` to courses table (not in original SCHEMA.md) — needed for session auto-generation
-- Stored geofence as WKT text string instead of native geography column — Drizzle ORM doesn't support PostGIS geography type natively. GeofenceChecker uses `ST_GeogFromText()` cast in raw SQL.
-- `attendance.ip_address` stored as `text` not `inet` — SCHEMA.md says inet, but text avoids Drizzle type headaches. Functionally identical.
-- Single-use enforcement is per (student, session) not per (student, session, refresh_window) — simpler, students who fail can ask instructor for override in Sprint C.
+- Added `semester_start` and `semester_end` to courses table (not in original SCHEMA.md) - needed for session auto-generation
+- Stored geofence as WKT text string instead of native geography column - Drizzle ORM doesn't support PostGIS geography type natively. GeofenceChecker uses `ST_GeogFromText()` cast in raw SQL.
+- `attendance.ip_address` stored as `text` not `inet` - SCHEMA.md says inet, but text avoids Drizzle type headaches. Functionally identical.
+- Single-use enforcement is per (student, session) not per (student, session, refresh_window) - simpler, students who fail can ask instructor for override in Sprint C.
 
 ---
 
@@ -68,8 +68,8 @@ role: the live state of the QR-Guard build — what's done, what's in progress, 
 1. Update FRS v1.1 to v2.0 with final hosting (Render + Neon), 6-digit verification code flow, student-only registration, and 12 security fixes
 2. Update PR2 document with final implementation metrics, audit results, and challenges
 3. Update PPTX presentation slides (architecture, demo URL, audit results, color scheme)
-4. Campus GPS test — verify geofence accuracy with real AUK coordinates
-5. Demo rehearsal — cold start timing, test accounts, walkthrough flow
+4. Campus GPS test - verify geofence accuracy with real AUK coordinates
+5. Demo rehearsal - cold start timing, test accounts, walkthrough flow
 
 ---
 

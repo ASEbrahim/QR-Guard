@@ -6,7 +6,7 @@ import { emitQrRefresh, emitSessionClosed } from '../services/socket-service.js'
 
 /**
  * POST /api/sessions/:id/start
- * Instructor starts a session — activates QR generation loop.
+ * Instructor starts a session - activates QR generation loop.
  */
 export async function startSession(req, res) {
   const { id } = req.params;
@@ -45,7 +45,7 @@ export async function startSession(req, res) {
 
 /**
  * POST /api/sessions/:id/stop
- * Instructor stops a session — closes QR generation.
+ * Instructor stops a session - closes QR generation.
  */
 export async function stopSession(req, res) {
   const { id } = req.params;
@@ -73,7 +73,7 @@ export async function stopSession(req, res) {
 
 /**
  * GET /api/sessions/:id/qr
- * HTTP polling fallback — returns the current QR token.
+ * HTTP polling fallback - returns the current QR token.
  * Only accessible to the course instructor or enrolled students.
  */
 export async function getQr(req, res) {

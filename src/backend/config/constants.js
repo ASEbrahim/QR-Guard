@@ -1,4 +1,4 @@
-/** @module constants — Named constants for QR-Guard. No magic numbers. */
+/** @module constants - Named constants for QR-Guard. No magic numbers. */
 
 export const BCRYPT_ROUNDS = 12;
 export const PASSWORD_MIN_LENGTH = 8;
@@ -31,7 +31,7 @@ export const GEOFENCE_MIN_RADIUS_M = 10;
 export const GEOFENCE_MAX_RADIUS_M = 500;
 export const GEOFENCE_INDOOR_MARGIN_M = 15;
 
-// AUK email validation — strict, no subdomains
+// AUK email validation - strict, no subdomains
 export const AUK_EMAIL_REGEX = /^[^@\s]+@auk\.edu\.kw$/i;
 
 // Session config

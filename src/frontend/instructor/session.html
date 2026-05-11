@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Session — QR-Guard</title>
+  <title>Live Session | QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
   <style>
     .session-layout {
@@ -148,7 +148,7 @@
 
   <!--
     Client-side QR rendering (qrcodejs v1.0.0 from cdnjs, pinned + SRI).
-    The QR payload is a signed scan-authorization token — rendering it
+    The QR payload is a signed scan-authorization token - rendering it
     client-side prevents transmission to any third party.
   -->
   <script
@@ -216,13 +216,13 @@
       socket.emit('join-session', sessionId);
     });
 
-    // Surface connection errors in the console (not the UI — the polling
+    // Surface connection errors in the console (not the UI - the polling
     // fallback kicks in on disconnect, so the user experience continues).
     socket.on('connect_error', (err) => {
       console.warn('[session] Socket.IO connect_error:', err.message || err);
     });
 
-    // qrcodejs instance — reused across refreshes so we don't allocate a new
+    // qrcodejs instance - reused across refreshes so we don't allocate a new
     // renderer every 25s. Lazily created on first render.
     let qrInstance = null;
     function renderQr(payload) {
@@ -260,7 +260,7 @@
       // Only mark closed if the server actually stopped the session. A
       // failed stop (network error, 500) previously still flipped the UI,
       // giving the instructor the false impression that the session had
-      // ended — while students could still scan.
+      // ended - while students could still scan.
       if (stopRes && stopRes.ok) {
         showClosed();
       } else {

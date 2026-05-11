@@ -31,7 +31,7 @@ All complete. 8 audits passed. Security hardened. Deployed to qrguard.strat-os.n
 
 ---
 
-## Backend — Config (`src/backend/config/`)
+## Backend - Config (`src/backend/config/`)
 
 | File | Purpose |
 |---|---|
@@ -40,7 +40,7 @@ All complete. 8 audits passed. Security hardened. Deployed to qrguard.strat-os.n
 
 ---
 
-## Backend — Database Schema (`src/backend/db/schema/`)
+## Backend - Database Schema (`src/backend/db/schema/`)
 
 Each file defines one Drizzle table. All tables use UUID primary keys via `gen_random_uuid()`.
 
@@ -55,20 +55,20 @@ Each file defines one Drizzle table. All tables use UUID primary keys via `gen_r
 | `attendance.schema.js` | `attendance` | sessionId + studentId (unique), status, gpsLat/Lng, gpsAccuracyM, ipAddress (text), deviceHash, excuseReason | One row per student per session. ip_address stored as text (not inet) for Drizzle compatibility |
 | `audit-log.schema.js` | `audit_log` | eventType, actorId, targetId, result, reason, details (JSONB) | Append-only: DB triggers reject UPDATE/DELETE. Indexes on timestamp DESC and actorId |
 | `warning-email-log.schema.js` | `warning_email_log` | courseId + studentId + crossedBelowAt (composite PK), recoveredAboveAt | One-per-crossing email semantics. New row on each threshold crossing |
-| `index.js` | — | Re-exports all 10 table schemas | Single import point for all schemas |
+| `index.js` | - | Re-exports all 10 table schemas | Single import point for all schemas |
 
 ---
 
-## Backend — Middleware (`src/backend/middleware/`)
+## Backend - Middleware (`src/backend/middleware/`)
 
 | File | Purpose |
 |---|---|
-| `auth-middleware.js` | `requireAuth` (checks session, returns 401) and `requireRole(role)` (checks role, returns 403). Instructors exempt from device binding — documented in code comment |
+| `auth-middleware.js` | `requireAuth` (checks session, returns 401) and `requireRole(role)` (checks role, returns 403). Instructors exempt from device binding - documented in code comment |
 | `rate-limiter.js` | Four express-rate-limit configs: login (5/10min), register (10/hr), scan (60/min), global (200/min). All skipped in dev mode via `skip` option |
 
 ---
 
-## Backend — Routes (`src/backend/routes/`)
+## Backend - Routes (`src/backend/routes/`)
 
 | File | Endpoints | Auth |
 |---|---|---|
@@ -80,7 +80,7 @@ Each file defines one Drizzle table. All tables use UUID primary keys via `gen_r
 
 ---
 
-## Backend — Controllers (`src/backend/controllers/`)
+## Backend - Controllers (`src/backend/controllers/`)
 
 | File | Responsibility | Key functions |
 |---|---|---|
@@ -93,30 +93,30 @@ Each file defines one Drizzle table. All tables use UUID primary keys via `gen_r
 
 ---
 
-## Backend — Validators (`src/backend/validators/`)
+## Backend - Validators (`src/backend/validators/`)
 
 The 6-layer scan pipeline. Each file is one validator. Order is law (per sequence diagram).
 
 | File | Layer | Responsibility | On failure | Complexity |
 |---|---|---|---|---|
-| `qr-validator.js` | 1 | Decode Base64 payload, find non-expired token in DB | "QR expired — wait for refresh" | O(1) — indexed lookup |
-| `device-checker.js` | 2 | Match FingerprintJS visitor ID against stored binding | "Device not recognized" | O(1) — PK lookup |
-| `ip-validator.js` | 3 | Call ip-api.com: country=Kuwait, no VPN/proxy. FAIL-OPEN on timeout | "Location verification failed" | O(1) — external API call |
-| `gps-accuracy-checker.js` | 4 | Reject if accuracy > 150m or === 0 (likely spoofed) | "Location verification failed" | O(1) — comparison |
-| `geofence-checker.js` | 5 | PostGIS ST_DWithin via ST_GeogFromText() cast + 15m margin | "Outside classroom area" or "Course not found" (distinct codes) | O(1) — spatial index |
-| `audit-logger.js` | 6 | Append every attempt to audit_log (success or failure). Never throws | — | O(1) — insert |
-| `scan-verifier.js` | — | Orchestrator: runs 1-5 in order, short-circuits on first failure, 6 always runs in finally block. Returns {success, sessionId, courseId, reason, message} | — | O(1) total |
-| `scan-error.js` | — | Custom ScanError class with `code` property for API response reason codes | — | — |
+| `qr-validator.js` | 1 | Decode Base64 payload, find non-expired token in DB | "QR expired - wait for refresh" | O(1) - indexed lookup |
+| `device-checker.js` | 2 | Match FingerprintJS visitor ID against stored binding | "Device not recognized" | O(1) - PK lookup |
+| `ip-validator.js` | 3 | Call ip-api.com: country=Kuwait, no VPN/proxy. FAIL-OPEN on timeout | "Location verification failed" | O(1) - external API call |
+| `gps-accuracy-checker.js` | 4 | Reject if accuracy > 150m or === 0 (likely spoofed) | "Location verification failed" | O(1) - comparison |
+| `geofence-checker.js` | 5 | PostGIS ST_DWithin via ST_GeogFromText() cast + 15m margin | "Outside classroom area" or "Course not found" (distinct codes) | O(1) - spatial index |
+| `audit-logger.js` | 6 | Append every attempt to audit_log (success or failure). Never throws | - | O(1) - insert |
+| `scan-verifier.js` | - | Orchestrator: runs 1-5 in order, short-circuits on first failure, 6 always runs in finally block. Returns {success, sessionId, courseId, reason, message} | - | O(1) total |
+| `scan-error.js` | - | Custom ScanError class with `code` property for API response reason codes | - | - |
 
 ---
 
-## Backend — Services (`src/backend/services/`)
+## Backend - Services (`src/backend/services/`)
 
 | File | Purpose |
 |---|---|
 | `email-service.js` | Three-mode email abstraction: console (dev), resend (production via mail.strat-os.net), SMTP (placeholder). Styled HTML templates with AUK branding for verification code, password reset, device rebind. `sendVerificationCode()` sends 6-digit OTP with large monospace display |
 | `enrollment-code.js` | Generates 6-char codes from filtered alphabet (no 0/O/1/I/L). Uses crypto.randomBytes. Retries on DB collision up to ENROLLMENT_CODE_MAX_RETRIES |
-| `session-generator.js` | Generates session rows from weekly schedule JSON + semester date range. Uses date-fns for date math. Kuwait has no DST — documented in code |
+| `session-generator.js` | Generates session rows from weekly schedule JSON + semester date range. Uses date-fns for date math. Kuwait has no DST - documented in code |
 | `attendance-calculator.js` | Shared % calculation using CTE with COALESCE for absent students (no attendance row → 'absent'). Excused excluded from denominator. Also `calculateAllAttendancePcts()` for bulk roster view |
 | `notification-service.js` | Warning email on threshold crossing. One-per-crossing via warning_email_log. AUK 15% limit notification to instructor. Threshold check fires after every scan AND every override |
 | `qr-service.js` | QR token generation (Base64 payload with sessionId, courseId, geofence coords). Refresh loop via setInterval. getCurrentToken for HTTP polling fallback (DESC sort for latest) |
@@ -124,7 +124,7 @@ The 6-layer scan pipeline. Each file is one validator. Order is law (per sequenc
 
 ---
 
-## Backend — Server Entry Point
+## Backend - Server Entry Point
 
 | File | Purpose |
 |---|---|
@@ -132,7 +132,7 @@ The 6-layer scan pipeline. Each file is one validator. Order is law (per sequenc
 
 ---
 
-## Frontend — Scripts (`src/frontend/scripts/`)
+## Frontend - Scripts (`src/frontend/scripts/`)
 
 | File | Purpose |
 |---|---|
@@ -142,7 +142,7 @@ The 6-layer scan pipeline. Each file is one validator. Order is law (per sequenc
 
 ---
 
-## Frontend — Pages (`src/frontend/`)
+## Frontend - Pages (`src/frontend/`)
 
 | File | Role | Key features |
 |---|---|---|
@@ -161,17 +161,17 @@ The 6-layer scan pipeline. Each file is one validator. Order is law (per sequenc
 
 ---
 
-## Frontend — Assets (`src/frontend/assets/`)
+## Frontend - Assets (`src/frontend/assets/`)
 
 | File | Purpose |
 |---|---|
-| `auk-logo.svg` | AUK logo (garnet #8D2222 + gold #D4A037) for auth pages — 140px display |
+| `auk-logo.svg` | AUK logo (garnet #8D2222 + gold #D4A037) for auth pages - 140px display |
 | `auk-logo-white.svg` | White + gold variant for dark nav bar backgrounds |
-| `campus-bg.jpg` | AUK campus night photo — used as footer background with crimson overlay |
+| `campus-bg.jpg` | AUK campus night photo - used as footer background with crimson overlay |
 
 ---
 
-## Frontend — Styles (`src/frontend/styles/`)
+## Frontend - Styles (`src/frontend/styles/`)
 
 | File | Purpose |
 |---|---|

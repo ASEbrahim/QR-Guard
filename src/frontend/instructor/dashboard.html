@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instructor Dashboard — QR-Guard</title>
+  <title>Instructor Dashboard | QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
   <link rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -157,11 +157,11 @@
       // AUK-area quick picks shown when input is focused and empty
       const QUICK_PICKS = [
         { name: 'American University of Kuwait (AUK)', lat: 29.3117, lon: 47.9835 },
-        { name: 'AUK — Science Building', lat: 29.3121, lon: 47.9839 },
-        { name: 'AUK — Liberal Arts Building', lat: 29.3113, lon: 47.9831 },
-        { name: 'AUK — Auditorium', lat: 29.3119, lon: 47.9828 },
-        { name: 'Kuwait University — Khaldiya', lat: 29.3266, lon: 47.9718 },
-        { name: 'Kuwait University — Shuwaikh', lat: 29.3445, lon: 47.9602 },
+        { name: 'AUK · Science Building', lat: 29.3121, lon: 47.9839 },
+        { name: 'AUK · Liberal Arts Building', lat: 29.3113, lon: 47.9831 },
+        { name: 'AUK · Auditorium', lat: 29.3119, lon: 47.9828 },
+        { name: 'Kuwait University · Khaldiya', lat: 29.3266, lon: 47.9718 },
+        { name: 'Kuwait University · Shuwaikh', lat: 29.3445, lon: 47.9602 },
       ];
 
       function showSuggestions(items) {
@@ -329,7 +329,7 @@
 
       container.innerHTML = courses.map(c => `
         <a href="/instructor/course?id=${c.courseId}" class="card card-clickable course-card">
-          <h2>${esc(c.code)} — ${esc(c.name)}</h2>
+          <h2>${esc(c.code)} · ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
             <span class="enrollment-code">${esc(c.enrollmentCode)}</span>

@@ -17,7 +17,7 @@ export const attendance = pgTable(
     gpsLat: numeric('gps_lat', { precision: 10, scale: 7 }),
     gpsLng: numeric('gps_lng', { precision: 10, scale: 7 }),
     gpsAccuracyM: numeric('gps_accuracy_m', { precision: 8, scale: 2 }),
-    // Stored as text, not inet — deviation from SCHEMA.md noted in STATE.md
+    // Stored as text, not inet - deviation from SCHEMA.md noted in STATE.md
     ipAddress: text('ip_address'),
     deviceHash: text('device_hash'),
     excuseReason: text('excuse_reason'),

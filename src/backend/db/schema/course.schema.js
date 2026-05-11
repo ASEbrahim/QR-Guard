@@ -13,7 +13,7 @@ export const courses = pgTable(
     section: text('section').notNull(),
     semester: text('semester').notNull(),
     enrollmentCode: text('enrollment_code').unique().notNull(),
-    // PostGIS geography point — stored as raw SQL type since Drizzle doesn't have native geography
+    // PostGIS geography point - stored as raw SQL type since Drizzle doesn't have native geography
     geofenceCenter: text('geofence_center').notNull(),
     geofenceRadiusM: integer('geofence_radius_m').notNull(),
     attendanceWindowSeconds: integer('attendance_window_seconds').notNull().default(300),

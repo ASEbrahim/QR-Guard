@@ -7,7 +7,7 @@ import { ScanError } from './scan-error.js';
  * Layer 1: Validate QR token against current refresh cycle.
  * Decodes the Base64 payload and checks if a matching, non-expired token exists.
  *
- * @param {string} qrPayload — Base64-encoded payload from the student's scan
+ * @param {string} qrPayload - Base64-encoded payload from the student's scan
  * @returns {Promise<{sessionId: string, courseId: string}>} decoded token data
  * @throws {ScanError} code='qr_expired' if token not found or expired
  */
@@ -31,7 +31,7 @@ export async function validateQrToken(qrPayload) {
     .limit(1);
 
   if (!token) {
-    throw new ScanError('QR expired — wait for refresh', 'qr_expired');
+    throw new ScanError('QR expired - wait for refresh', 'qr_expired');
   }
 
   return {

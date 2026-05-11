@@ -1,5 +1,5 @@
 /**
- * FingerprintJS integration — open-source via CDN.
+ * FingerprintJS integration - open-source via CDN.
  * Returns a stable visitor ID for device binding.
  *
  * Pinned to v4.5 (not the floating `v4`) so a breaking change in a future

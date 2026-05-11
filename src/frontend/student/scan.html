@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan Attendance — QR-Guard</title>
+  <title>Scan Attendance | QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
   <style>
     .scan-container { max-width: 480px; margin: 0 auto; padding: 1.5rem 1rem; }
@@ -126,7 +126,7 @@
     );
 
     // Start camera scanner. The scanner holds a live MediaStream that
-    // must be stopped before navigation/BFCache — otherwise the camera
+    // must be stopped before navigation/BFCache - otherwise the camera
     // LED stays on (iOS/Android) and the stream leaks indefinitely.
     const scanner = new Html5Qrcode('reader');
 

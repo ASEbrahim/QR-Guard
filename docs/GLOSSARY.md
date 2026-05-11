@@ -6,7 +6,7 @@ role: canonical definitions of every term used in QR-Guard
 
 # GLOSSARY.md
 
-> Every term, acronym, and naming convention used in QR-Guard. When you encounter an unfamiliar term in the FRS, UML diagrams, or code — look it up here. If a term is missing, add it after using it for the first time.
+> Every term, acronym, and naming convention used in QR-Guard. When you encounter an unfamiliar term in the FRS, UML diagrams, or code - look it up here. If a term is missing, add it after using it for the first time.
 
 ---
 
@@ -26,7 +26,7 @@ role: canonical definitions of every term used in QR-Guard
 | VPN | Virtual Private Network | Detected by ip-api.com, results in scan rejection |
 | PR | Progress Report | PR1 = proposal phase, PR2 = current milestone |
 | SOLID | Single resp / Open-closed / Liskov / Interface seg / Dependency inv | Design principles enforced (Ch07) |
-| COTS | Commercial Off-The-Shelf | Reused components (qrcode.js, bcrypt, etc.) — Ch02 |
+| COTS | Commercial Off-The-Shelf | Reused components (qrcode.js, bcrypt, etc.) - Ch02 |
 | CMM | Capability Maturity Model | Process maturity scale (Ch02) |
 | TDD | Test-Driven Development | Test-influenced approach used here (Ch08) |
 | V&V | Verification & Validation | Quality assurance approach (Ch08) |
@@ -63,7 +63,7 @@ role: canonical definitions of every term used in QR-Guard
 | **ScanError** | Custom error class (`scan-error.js`) with a `code` property (e.g., `qr_expired`, `device_mismatch`, `outside_geofence`). Thrown by pipeline validators, caught by ScanVerifier for structured API responses. |
 | **Session regeneration** | Security measure: `req.session.regenerate()` called after successful login to prevent session fixation attacks. The old session ID is invalidated and a new one is issued. |
 | **ALLOWED_ORIGIN** | Environment variable restricting CORS to a single origin (e.g., `https://qrguard.strat-os.net`). Replaces the insecure `origin: true` default. Set in Render env vars. |
-| **Custom domain** | `qrguard.strat-os.net` — the production URL. Configured via Cloudflare CNAME pointing to `qr-guard.onrender.com`. Used as `BASE_URL` and `ALLOWED_ORIGIN` in production. |
+| **Custom domain** | `qrguard.strat-os.net` - the production URL. Configured via Cloudflare CNAME pointing to `qr-guard.onrender.com`. Used as `BASE_URL` and `ALLOWED_ORIGIN` in production. |
 
 ---
 

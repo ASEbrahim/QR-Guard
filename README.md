@@ -71,7 +71,7 @@ See `docs/INCREMENTS.md` for full acceptance criteria.
 2. Create a Web Service at [render.com](https://render.com) connected to this GitHub repo
    - Set env vars: `DATABASE_URL` (Neon connection string), `NODE_ENV=production`, `BASE_URL=https://your-app.onrender.com`
    - Render auto-detects `render.yaml` for build/start commands
-3. Done — HTTPS, WebSocket, GPS, camera all work on any device
+3. Done - HTTPS, WebSocket, GPS, camera all work on any device
 
 **Local development:**
 

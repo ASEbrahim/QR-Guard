@@ -6,7 +6,7 @@
 -- ops) can bypass it. Adding CHECK constraints at the database makes the
 -- invariant load-bearing for every writer.
 --
--- Naming: <table>_<column>_check — matches PostgreSQL's default suggestion
+-- Naming: <table>_<column>_check - matches PostgreSQL's default suggestion
 -- when a table constraint is auto-named. Safe to DROP by name for rollback
 -- (see 0003_enum_checks_rollback.sql).
 --

@@ -11,7 +11,7 @@ const { Pool } = pg;
  * 100 across all clients on the free tier).
  *
  * statement_timeout: 15s. A single query that exceeds this either hit a
- * missing index, a lock wait, or an upstream outage — cheaper to let it
+ * missing index, a lock wait, or an upstream outage - cheaper to let it
  * fail fast and surface the error than to hold the pool connection.
  */
 const pool = new Pool({

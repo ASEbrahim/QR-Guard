@@ -1,4 +1,4 @@
-/* QR-Guard — shared styles. Mobile-first, clean, professional. */
+/* QR-Guard - shared styles. Mobile-first, clean, professional. */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -7,7 +7,7 @@
 }
 
 :root {
-  /* AUK Brand — change these to retheme the entire app */
+  /* AUK Brand - change these to retheme the entire app */
   --primary: #9a182b;
   --primary-hover: #7d1323;
   --primary-light: #fcedef;
@@ -48,7 +48,7 @@ body {
 
 /* ═══════════════════════════════════════════════════
    GLOBAL INTERACTIVITY BASELINE
-   Inspired by StratOS — every element feels alive
+   Inspired by StratOS - every element feels alive
    ═══════════════════════════════════════════════════ */
 
 /* Page entrance */
@@ -68,7 +68,7 @@ input, select, textarea { transition: border-color 0.2s ease, box-shadow 0.2s ea
 select { cursor: pointer; }
 select:hover { border-color: var(--text-muted); }
 
-/* Custom scrollbar — accent-tinted, thin */
+/* Custom scrollbar - accent-tinted, thin */
 * { scrollbar-width: thin; scrollbar-color: rgba(154,24,43,0.25) transparent; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -187,7 +187,7 @@ h2 { font-size: clamp(1.05rem, 3vw, 1.2rem); font-weight: 600; margin-bottom: 0.
   box-shadow: 0 6px 20px rgba(154,24,43,0.1), 0 0 0 2px var(--primary-light);
 }
 
-/* Course card — stacked layout for mobile */
+/* Course card - stacked layout for mobile */
 .course-card {
   position: relative;
   padding: 1.5rem;
@@ -649,7 +649,7 @@ th {
   100% { background-position: 200% 0; }
 }
 
-/* Footer removed — campus image used as nav background */
+/* Footer removed - campus image used as nav background */
 
 /* Screen-reader-only text: keeps the label in the accessibility tree
    without taking visible space. Used for inputs that have visible

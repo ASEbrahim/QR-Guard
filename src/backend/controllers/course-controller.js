@@ -46,7 +46,7 @@ const addSessionSchema = z.object({
   scheduledEnd: z.string().datetime(),
 });
 
-// updateCourse is a partial update — every field is optional, but values
+// updateCourse is a partial update - every field is optional, but values
 // that ARE provided must still be valid (previously only
 // geofenceRadius was range-checked; lat/lng/window/threshold were not).
 const updateCourseSchema = z
@@ -126,7 +126,7 @@ export async function createCourse(req, res) {
   const data = parsed.data;
   const enrollmentCode = await generateEnrollmentCode();
 
-  // Store geofence as WKT string — we'll use raw SQL for PostGIS operations
+  // Store geofence as WKT string - we'll use raw SQL for PostGIS operations
   const geofenceCenter = `SRID=4326;POINT(${data.geofenceLng} ${data.geofenceLat})`;
 
   // Course + auto-generated sessions are written in one transaction. Without
@@ -183,7 +183,7 @@ export async function listCourses(req, res) {
     return res.json({ courses: result });
   }
 
-  // Student — list enrolled courses
+  // Student - list enrolled courses
   const result = await db
     .select({
       courseId: courses.courseId,
@@ -322,7 +322,7 @@ export async function enrollByCode(req, res) {
 
   if (!course) return res.status(404).json({ error: 'Invalid enrollment code' });
 
-  const result = await executeEnrollment(course.courseId, req.session.userId, `${course.code} — ${course.name}`);
+  const result = await executeEnrollment(course.courseId, req.session.userId, `${course.code} - ${course.name}`);
   res.status(result.status).json(result.body);
 }
 

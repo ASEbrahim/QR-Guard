@@ -1,6 +1,6 @@
 /**
  * Authentication and authorization middleware.
- * Instructors do NOT get device binding — only students have device_fingerprint in the schema.
+ * Instructors do NOT get device binding - only students have device_fingerprint in the schema.
  */
 
 /**

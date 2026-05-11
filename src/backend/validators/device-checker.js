@@ -7,8 +7,8 @@ import { ScanError } from './scan-error.js';
  * Layer 2: Check device fingerprint matches stored binding.
  * Instructors are exempt (no device binding).
  *
- * @param {string} studentId — the authenticated student's user ID
- * @param {string} providedFingerprint — FingerprintJS visitor ID from the scan request
+ * @param {string} studentId - the authenticated student's user ID
+ * @param {string} providedFingerprint - FingerprintJS visitor ID from the scan request
  * @throws {ScanError} code='device_mismatch' if fingerprints don't match
  */
 export async function checkDevice(studentId, providedFingerprint) {

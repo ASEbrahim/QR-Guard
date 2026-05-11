@@ -163,7 +163,7 @@ export async function login(req, res) {
 
   // Device binding: capture fingerprint on first login, but don't block login
   // from other devices. Device verification happens in the scan pipeline
-  // (DeviceChecker, Layer 2) — students can log in from any device to view
+  // (DeviceChecker, Layer 2) - students can log in from any device to view
   // their dashboard, but can only SCAN from their bound device.
   if (user.role === 'student' && deviceFingerprint) {
     const [student] = await db
@@ -330,7 +330,7 @@ export async function forgotPassword(req, res) {
     await sendTokenEmail(email, token, 'password_reset');
   }
 
-  // Always 200 — don't reveal whether email exists
+  // Always 200 - don't reveal whether email exists
   res.json({ message: 'If that email exists, a reset link has been sent.' });
 }
 
@@ -415,7 +415,7 @@ export async function resetPassword(req, res) {
 
 /**
  * POST /api/auth/request-rebind
- * Student requests device rebind — sends an email to clear their current fingerprint.
+ * Student requests device rebind - sends an email to clear their current fingerprint.
  */
 export async function requestRebind(req, res) {
   if (req.session.role !== 'student') {

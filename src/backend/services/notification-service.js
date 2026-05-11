@@ -42,7 +42,7 @@ export async function checkThresholdAndNotify(courseId, studentId) {
   if (pct < threshold) {
     // Below threshold
     if (!openCrossing) {
-      // New crossing — atomically claim it via ON CONFLICT DO NOTHING against
+      // New crossing - atomically claim it via ON CONFLICT DO NOTHING against
       // the partial unique index on (course_id, student_id) WHERE
       // recovered_above_at IS NULL (migration 0004). If our INSERT returned
       // zero rows, a concurrent call already claimed it and will email;
@@ -58,7 +58,7 @@ export async function checkThresholdAndNotify(courseId, studentId) {
         .returning();
 
       if (claim.length === 0) {
-        // Lost the race — peer will handle it.
+        // Lost the race - peer will handle it.
         return;
       }
 
@@ -78,7 +78,7 @@ export async function checkThresholdAndNotify(courseId, studentId) {
             text: [
               `Dear ${student.name},`,
               '',
-              `Your attendance in ${course.code} — ${course.name} has dropped below the warning threshold.`,
+              `Your attendance in ${course.code} - ${course.name} has dropped below the warning threshold.`,
               '',
               `  Current attendance: ${pct.toFixed(1)}%`,
               `  Warning threshold: ${threshold}%`,
@@ -120,7 +120,7 @@ export async function checkThresholdAndNotify(courseId, studentId) {
     }
     // If openCrossing already exists, don't send another email
   } else {
-    // Above threshold — close the open crossing if one exists
+    // Above threshold - close the open crossing if one exists
     if (openCrossing) {
       await db
         .update(warningEmailLog)
@@ -154,7 +154,7 @@ async function notifyInstructorAukLimit(course, student, pct) {
     text: [
       `Dear ${instructor.name},`,
       '',
-      `${student.name} has exceeded the AUK 15% absence limit in ${course.code} — ${course.name}.`,
+      `${student.name} has exceeded the AUK 15% absence limit in ${course.code} - ${course.name}.`,
       `Current attendance: ${pct.toFixed(1)}%`,
       '',
       'This notification is sent once per threshold crossing.',

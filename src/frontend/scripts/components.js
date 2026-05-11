@@ -1,5 +1,5 @@
 /**
- * Shared UI components — nav bar, bottom nav, footer.
+ * Shared UI components - nav bar, bottom nav, footer.
  * Import once per page: <script src="/scripts/components.js"></script>
  * Call: renderNav(role), renderFooter()
  */
@@ -41,7 +41,7 @@ function renderNavWithBack(backUrl, backLabel) {
 /**
  * Renders the bottom navigation bar.
  * @param {'student'|'instructor'} role
- * @param {string} activePage — which tab is active: 'courses', 'scan', 'device'
+ * @param {string} activePage - which tab is active: 'courses', 'scan', 'device'
  */
 function renderBottomNav(role, activePage) {
   document.body.classList.add('has-bottom-nav');
@@ -94,7 +94,7 @@ function renderFooter() {
   footer.innerHTML = `
     <div class="site-footer-inner">
       <div class="site-footer-brand">QR-Guard</div>
-      <p>American University of Kuwait — Attendance System</p>
+      <p>American University of Kuwait - Attendance System</p>
     </div>
   `;
   // Insert before bottom nav if it exists, otherwise append
@@ -135,11 +135,11 @@ async function loadUserName() {
 /**
  * Focus-management helpers for bottom-sheet / modal dialogs.
  *
- * openModal(sheetEl) — remembers the currently focused element, focuses
+ * openModal(sheetEl) - remembers the currently focused element, focuses
  * the first focusable element inside the sheet, and installs a keydown
  * handler that traps Tab / Shift+Tab within the sheet.
  *
- * closeModal(sheetEl) — removes the handler and restores focus to the
+ * closeModal(sheetEl) - removes the handler and restores focus to the
  * element that was focused when openModal was called.
  *
  * Caller is still responsible for the visual open/close transitions and

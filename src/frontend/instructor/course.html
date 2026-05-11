@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Course Detail — QR-Guard</title>
+  <title>Course Detail | QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
@@ -110,7 +110,7 @@
       const { course, sessions } = await res.json();
       currentCourse = course;
 
-      document.getElementById('courseTitle').textContent = `${course.code} — ${course.name}`;
+      document.getElementById('courseTitle').textContent = `${course.code} · ${course.name}`;
       document.getElementById('courseMeta').textContent = `Section ${course.section} · ${course.semester}`;
       document.getElementById('enrollCode').textContent = course.enrollmentCode;
       document.getElementById('geoRadius').textContent = course.geofenceRadiusM;
@@ -184,7 +184,7 @@
       if (res && res.ok) loadCourse();
     }
 
-    // Tab switching — click + keyboard (roving tabindex, ArrowLeft/Right
+    // Tab switching - click + keyboard (roving tabindex, ArrowLeft/Right
      // cycle). WAI-ARIA Authoring Practices "tabs" pattern.
     const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
 

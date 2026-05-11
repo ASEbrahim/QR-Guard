@@ -64,7 +64,7 @@ function buildHtmlEmail(heading, bodyHtml) {
       ${bodyHtml}
     </div>
     <div style="padding:16px 32px;background:#f8f9fa;text-align:center;border-top:1px solid #e2e8f0;">
-      <p style="margin:0;color:#94a3b8;font-size:12px;">American University of Kuwait — QR-Guard Attendance System</p>
+      <p style="margin:0;color:#94a3b8;font-size:12px;">American University of Kuwait - QR-Guard Attendance System</p>
     </div>
   </div>
 </body>
@@ -127,7 +127,7 @@ export async function sendTokenEmail(email, token, purpose) {
 /**
  * Sends a 6-digit verification code email (for registration).
  * @param {string} email
- * @param {string} code — 6-digit numeric code
+ * @param {string} code - 6-digit numeric code
  */
 export async function sendVerificationCode(email, code) {
   const html = buildHtmlEmail('Verify Your Email', `
@@ -142,5 +142,5 @@ export async function sendVerificationCode(email, code) {
 
   const text = `Your QR-Guard verification code is: ${code}\n\nEnter this code on the registration page. It expires in 24 hours.`;
 
-  await sendEmail({ to: email, subject: `${code} — QR-Guard verification code`, text, html });
+  await sendEmail({ to: email, subject: `${code} - QR-Guard verification code`, text, html });
 }

@@ -41,7 +41,7 @@ import { calculateAttendancePct } from './attendance-calculator.js';
 import { sendEmail } from './email-service.js';
 import { db } from '../config/database.js';
 
-describe('NotificationService — threshold crossing', () => {
+describe('NotificationService - threshold crossing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

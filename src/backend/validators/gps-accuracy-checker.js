@@ -5,7 +5,7 @@ import { ScanError } from './scan-error.js';
  * Layer 4: Check GPS accuracy field.
  * Rejects if accuracy > 150m (too imprecise) or === 0 (likely spoofed/unavailable).
  *
- * @param {number} accuracy — GPS accuracy in meters from the browser Geolocation API
+ * @param {number} accuracy - GPS accuracy in meters from the browser Geolocation API
  * @throws {ScanError} code='gps_accuracy_failed' if suspicious
  */
 export function checkGpsAccuracy(accuracy) {

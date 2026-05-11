@@ -10,13 +10,13 @@ const activeLoops = new Map();
  * Payload = Base64({sessionId, courseId, ts, lat, lng, r})
  *
  * @param {string} sessionId
- * @param {object} course — the course row (for geofence + refresh interval)
+ * @param {object} course - the course row (for geofence + refresh interval)
  * @returns {Promise<{payload: string, expiresAt: Date}>}
  */
 export async function generateQrToken(sessionId, course) {
   // Parse geofence from WKT: "SRID=4326;POINT(lng lat)".
   // A course with a malformed WKT shouldn't silently emit QR tokens pointing
-  // at (0,0) — every scan would fail the geofence check and the instructor
+  // at (0,0) - every scan would fail the geofence check and the instructor
   // would have no idea why. Surface the error; callers (session start) can
   // decide whether to fail the request or continue without embedded coords.
   const match = course.geofenceCenter.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
@@ -56,7 +56,7 @@ export async function generateQrToken(sessionId, course) {
  *
  * @param {string} sessionId
  * @param {object} course
- * @param {function} onRefresh — callback(payload, expiresAt) called on each refresh
+ * @param {function} onRefresh - callback(payload, expiresAt) called on each refresh
  * @returns {Promise<{payload: string, expiresAt: Date}>} the first token
  */
 export async function startRefreshLoop(sessionId, course, onRefresh) {
@@ -135,7 +135,7 @@ export async function getCurrentToken(sessionId) {
  *     window so audit queries ("did user X ever request a rebind?")
  *     stay available, but trim far-expired rows so the table doesn't
  *     grow without bound. Used tokens (usedAt IS NOT NULL) older than
- *     30 days are also purged — they're no-ops from auth's perspective.
+ *     30 days are also purged - they're no-ops from auth's perspective.
  */
 export async function cleanupExpiredTokens() {
   try {

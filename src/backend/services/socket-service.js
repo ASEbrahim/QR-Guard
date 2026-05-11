@@ -24,7 +24,7 @@ async function canAccessSession(userId, role, sessionId) {
     return !!course;
   }
 
-  // Student — must be enrolled
+  // Student - must be enrolled
   const [enrollment] = await db.select().from(enrollments)
     .where(and(
       eq(enrollments.courseId, session.courseId),
@@ -40,7 +40,7 @@ async function canAccessSession(userId, role, sessionId) {
  * Called once from server.js after the HTTP server starts.
  *
  * @param {import('http').Server} httpServer
- * @param {function} sessionMiddleware — express-session middleware for cookie parsing
+ * @param {function} sessionMiddleware - express-session middleware for cookie parsing
  */
 export function initSocketIO(httpServer, sessionMiddleware) {
   io = new Server(httpServer, {
@@ -95,7 +95,7 @@ export function initSocketIO(httpServer, sessionMiddleware) {
 /**
  * Emits a QR refresh event to all clients in a session room.
  * @param {string} sessionId
- * @param {string} payload — Base64-encoded QR payload
+ * @param {string} payload - Base64-encoded QR payload
  * @param {Date} expiresAt
  */
 export function emitQrRefresh(sessionId, payload, expiresAt) {

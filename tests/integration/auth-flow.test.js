@@ -131,7 +131,7 @@ describe('Auth Flow', () => {
   });
 
   // AC 5: Instructor redirect
-  // Instructors are provisioned via scripts/seed.js — not via the public
+  // Instructors are provisioned via scripts/seed.js - not via the public
   // register endpoint (student-only). This test seeds an instructor directly
   // to verify login redirect behavior.
   it('should redirect instructor to instructor dashboard', async () => {

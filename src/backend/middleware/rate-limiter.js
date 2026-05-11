@@ -38,7 +38,7 @@ export const scanLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   // Prefer the authenticated userId so a classroom behind a single NAT
-  // doesn't share one counter. Fall back to IP — via ipKeyGenerator which
+  // doesn't share one counter. Fall back to IP - via ipKeyGenerator which
   // normalises IPv6 to the /64 prefix, preventing an attacker from rotating
   // through addresses in the same subnet to bypass the limit.
   keyGenerator: (req, res) => (req.session && req.session.userId) || ipKeyGenerator(req, res),
@@ -57,7 +57,7 @@ export const globalLimiter = rateLimit({
 
 /**
  * Sensitive-auth flows: password-reset, email verify link, rebind verify,
- * rebind request. Each carries a token or triggers a token-issuing email —
+ * rebind request. Each carries a token or triggers a token-issuing email -
  * more aggressive than login limit to throttle brute-force + email spam.
  * 10 requests per 10 minutes per IP.
  */

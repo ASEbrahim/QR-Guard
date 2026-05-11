@@ -22,7 +22,7 @@ const KUWAIT_UTC_OFFSET_HOURS = 3;
 
 /**
  * Parses 'YYYY-MM-DD' into [year, month, day] WITHOUT timezone interpretation.
- * `new Date('2026-02-01')` treats the string as UTC midnight — we need the
+ * `new Date('2026-02-01')` treats the string as UTC midnight - we need the
  * calendar date itself, independent of the parser's locale.
  */
 function parseIsoDate(s) {

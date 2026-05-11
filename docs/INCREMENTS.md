@@ -7,11 +7,11 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 # INCREMENTS.md
 
-> The 5 increments that make up QR-Guard. Each increment is a self-contained, testable unit. An increment is **not done** until every acceptance criterion below it passes. Increments must be built in order — Inc 3 depends on Inc 1 and Inc 2.
+> The 5 increments that make up QR-Guard. Each increment is a self-contained, testable unit. An increment is **not done** until every acceptance criterion below it passes. Increments must be built in order - Inc 3 depends on Inc 1 and Inc 2.
 
 ---
 
-## Increment 1 — Authentication & accounts
+## Increment 1 - Authentication & accounts
 
 **Implements:** FR1.1 through FR1.8
 
@@ -32,7 +32,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 **Acceptance criteria:**
 1. ✅ A student can register with valid @auk.edu.kw credentials and receive a verification email
-2. ✅ A student cannot register with a non-AUK email — server-side rejection with clear error
+2. ✅ A student cannot register with a non-AUK email - server-side rejection with clear error
 3. ✅ Login fails until the verification link is clicked
 4. ✅ After verification, login succeeds and redirects to the student dashboard
 5. ✅ An instructor can register and is redirected to the instructor dashboard on login
@@ -51,7 +51,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 ---
 
-## Increment 2 — Course management
+## Increment 2 - Course management
 
 **Implements:** FR2.1 through FR2.8
 
@@ -88,7 +88,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 ---
 
-## Increment 3 — Dynamic QR & scan pipeline
+## Increment 3 - Dynamic QR & scan pipeline
 
 **Implements:** FR3.1 through FR3.6, FR4.1 through FR4.10
 
@@ -105,13 +105,13 @@ role: the canonical 5-increment plan with binary acceptance criteria
 - Student web UI: tap "Scan" → camera activates → decodes QR
 - Browser Geolocation API call with accuracy field
 - POST `/api/scan` with `{qrPayload, gpsLat, gpsLng, gpsAccuracy, deviceFingerprint, clientIp}`
-- **Full 6-layer scan pipeline (in order — see `docs/uml/02-sequence-scan.svg`):**
-  1. `QrValidator` — token valid for current refresh cycle?
-  2. `DeviceChecker` — fingerprint matches stored binding?
-  3. `IpValidator` — country = Kuwait, no VPN/proxy flag?
-  4. `GpsAccuracyChecker` — accuracy ≤ 150m and ≠ 0?
-  5. `GeofenceChecker` — PostGIS ST_DWithin (radius + 15m margin)?
-  6. `AuditLogger` — append every attempt with full context
+- **Full 6-layer scan pipeline (in order - see `docs/uml/02-sequence-scan.svg`):**
+  1. `QrValidator` - token valid for current refresh cycle?
+  2. `DeviceChecker` - fingerprint matches stored binding?
+  3. `IpValidator` - country = Kuwait, no VPN/proxy flag?
+  4. `GpsAccuracyChecker` - accuracy ≤ 150m and ≠ 0?
+  5. `GeofenceChecker` - PostGIS ST_DWithin (radius + 15m margin)?
+  6. `AuditLogger` - append every attempt with full context
 - Specific error message per failure layer (per FR4.8)
 - Successful scans recorded with: student ID, session ID, timestamp, GPS, IP, accuracy, device hash
 - Offline queue (local cache, auto-submit on reconnect, within window)
@@ -126,7 +126,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 2. ✅ Stopping the WebSocket server and reloading triggers HTTP polling fallback within 10 sec
 3. ✅ Scanning a current QR with valid GPS, device, and IP records attendance and shows green checkmark in ≤3 sec (FR N1)
 4. ✅ Scanning the same QR a second time returns "Already recorded"
-5. ✅ Scanning an expired QR returns "QR expired — wait for refresh"
+5. ✅ Scanning an expired QR returns "QR expired - wait for refresh"
 6. ✅ Scanning from a different device returns "Device not recognized"
 7. ✅ Scanning while VPN-connected (or test mock returning country ≠ Kuwait) returns "Location verification failed"
 8. ✅ Scanning with mocked GPS accuracy of 0 or 200 returns "Location verification failed"
@@ -139,11 +139,11 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 **Dependencies:** Inc 1 (auth, device binding), Inc 2 (course config, geofence)
 
-**Estimated effort:** 2 sprints (the hardest increment — split DB+server from frontend)
+**Estimated effort:** 2 sprints (the hardest increment - split DB+server from frontend)
 
 ---
 
-## Increment 4 — Reports & analytics
+## Increment 4 - Reports & analytics
 
 **Implements:** FR5.1 through FR5.7
 
@@ -181,7 +181,7 @@ role: the canonical 5-increment plan with binary acceptance criteria
 
 ---
 
-## Increment 5 — Notifications, override, audit, hardening
+## Increment 5 - Notifications, override, audit, hardening
 
 **Implements:** FR6.1 through FR6.4, FR7.1 through FR7.3
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Dashboard — QR-Guard</title>
+  <title>Student Dashboard | QR-Guard</title>
   <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
@@ -75,7 +75,7 @@
         const pctColor = pct === null ? 'var(--text-muted)' : parseFloat(pct) >= 85 ? 'var(--success)' : parseFloat(pct) >= 70 ? 'var(--warning)' : 'var(--danger)';
         return `
         <div class="card course-card">
-          <h2>${esc(c.code)} — ${esc(c.name)}</h2>
+          <h2>${esc(c.code)} · ${esc(c.name)}</h2>
           <p class="course-card-meta">Section ${esc(c.section)} · ${esc(c.semester)}</p>
           <div class="course-card-actions">
             <a href="/student/scan" class="btn btn-primary" style="flex:1;">Scan QR</a>

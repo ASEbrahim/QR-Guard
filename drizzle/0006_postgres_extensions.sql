@@ -1,9 +1,9 @@
 -- Migration 0006: ensure required PostgreSQL extensions exist.
 --
 -- The codebase uses:
---   * gen_random_uuid()  — built into PostgreSQL 13+, no extension needed.
+--   * gen_random_uuid()  - built into PostgreSQL 13+, no extension needed.
 --     Listed here only to document the dependency.
---   * PostGIS functions  — ST_GeogFromText, ST_DWithin. Require the
+--   * PostGIS functions  - ST_GeogFromText, ST_DWithin. Require the
 --     'postgis' extension. Neon pre-enables it, which is why the app has
 --     been working on prod. A fresh local Postgres (per README.md) would
 --     silently fail at the first geofence scan.

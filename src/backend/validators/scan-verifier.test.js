@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// We test pipeline ordering via spies — mock all validators
+// We test pipeline ordering via spies - mock all validators
 vi.mock('./qr-validator.js', () => ({
   validateQrToken: vi.fn(),
 }));
@@ -39,7 +39,7 @@ const baseScanData = {
   clientIp: '1.2.3.4',
 };
 
-describe('ScanVerifier — pipeline order', () => {
+describe('ScanVerifier - pipeline order', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     validateQrToken.mockResolvedValue({ sessionId: 's1', courseId: 'c1' });
@@ -59,12 +59,12 @@ describe('ScanVerifier — pipeline order', () => {
     expect(checkIp).toHaveBeenCalledOnce();
     expect(checkGpsAccuracy).toHaveBeenCalledOnce();
     expect(checkGeofence).toHaveBeenCalledOnce();
-    // Audit on success is the controller's responsibility — see
+    // Audit on success is the controller's responsibility - see
     // scan-controller.js after the attendance row is persisted.
     expect(logAudit).not.toHaveBeenCalled();
   });
 
-  it('should short-circuit at layer 1 — layers 2-5 not called', async () => {
+  it('should short-circuit at layer 1 - layers 2-5 not called', async () => {
     validateQrToken.mockRejectedValue(new ScanError('QR expired', 'qr_expired'));
 
     const result = await verifyScan(baseScanData);
@@ -79,7 +79,7 @@ describe('ScanVerifier — pipeline order', () => {
     expect(logAudit).toHaveBeenCalledOnce();
   });
 
-  it('should short-circuit at layer 2 — layers 3-5 not called', async () => {
+  it('should short-circuit at layer 2 - layers 3-5 not called', async () => {
     checkDevice.mockRejectedValue(new ScanError('Device not recognized', 'device_mismatch'));
 
     const result = await verifyScan(baseScanData);
@@ -90,7 +90,7 @@ describe('ScanVerifier — pipeline order', () => {
     expect(logAudit).toHaveBeenCalledOnce();
   });
 
-  it('should short-circuit at layer 5 — geofence fail', async () => {
+  it('should short-circuit at layer 5 - geofence fail', async () => {
     checkGeofence.mockRejectedValue(new ScanError('Outside classroom area', 'outside_geofence'));
 
     const result = await verifyScan(baseScanData);

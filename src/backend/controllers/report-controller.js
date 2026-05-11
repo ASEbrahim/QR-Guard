@@ -86,7 +86,7 @@ export async function getPerStudentReport(req, res) {
   const { id, studentId } = req.params;
 
   // Auth check: instructor of the course OR the student themselves.
-  // In BOTH branches the student must be enrolled in the course — otherwise
+  // In BOTH branches the student must be enrolled in the course - otherwise
   // the endpoint becomes an IDOR oracle for any user UUID (leaks name +
   // universityId).
   if (req.session.role === 'instructor') {
@@ -272,7 +272,7 @@ export async function getAuditLog(req, res) {
 
   if (sessionIds.length === 0) return res.json({ entries: [], total: 0, page });
 
-  // Entries + count are independent — run in parallel.
+  // Entries + count are independent - run in parallel.
   const [result, countResult] = await Promise.all([
     db.execute(sql`
       SELECT * FROM audit_log

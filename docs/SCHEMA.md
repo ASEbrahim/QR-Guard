@@ -26,7 +26,7 @@ PostGIS is required for `GeofenceChecker` (uses `ST_DWithin`).
 
 ### `users`
 
-The base user table — both students and instructors. `role` discriminates.
+The base user table - both students and instructors. `role` discriminates.
 
 | Column | Type | Constraints | Notes |
 |---|---|---|---|
@@ -95,7 +95,7 @@ Many-to-many between students and courses.
 | `removed_at` | `timestamptz` | NULL | Soft-delete; historical records retained |
 
 **Primary key:** `(course_id, student_id)`
-**Index:** `CREATE INDEX enrollments_student_idx ON enrollments(student_id);` (migration 0005 — the composite PK can't serve student_id-only queries used by Socket.IO `canAccessSession`, `getMyAttendance`, and the student branch of `listCourses`.)
+**Index:** `CREATE INDEX enrollments_student_idx ON enrollments(student_id);` (migration 0005 - the composite PK can't serve student_id-only queries used by Socket.IO `canAccessSession`, `getMyAttendance`, and the student branch of `listCourses`.)
 
 ### `sessions`
 
@@ -148,7 +148,7 @@ The persistent record of a student's attendance for a session.
 | `device_hash` | `text` | NULL | FingerprintJS visitor ID at scan time |
 | `excuse_reason` | `text` | NULL | Required when status = 'excused' |
 
-**Unique constraint:** `(session_id, student_id)` — one record per student per session
+**Unique constraint:** `(session_id, student_id)` - one record per student per session
 **Index:** `CREATE INDEX attendance_student_idx ON attendance(student_id);`
 
 ### `audit_log`
@@ -168,7 +168,7 @@ Append-only log of every scan attempt + every override.
 
 **Index:** `CREATE INDEX audit_log_timestamp_idx ON audit_log(timestamp DESC);`
 **Index:** `CREATE INDEX audit_log_actor_idx ON audit_log(actor_id);`
-**Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);` (added by migration 0005 — used by `getAuditLog` filter)
+**Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);` (added by migration 0005 - used by `getAuditLog` filter)
 **Index:** `CREATE INDEX audit_log_target_idx ON audit_log(target_id);`
 
 **Trigger:** Reject UPDATE and DELETE on this table at the DB level (append-only):

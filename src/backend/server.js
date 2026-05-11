@@ -81,7 +81,7 @@ app.use('/api/auth/verify-code', loginLimiter);
 app.use('/api/auth/forgot-password', loginLimiter);
 app.use('/api/auth/resend-verification', loginLimiter);
 
-// Token-handling / sensitive-auth flows — tighter than the global limiter.
+// Token-handling / sensitive-auth flows - tighter than the global limiter.
 app.use('/api/auth/reset-password', sensitiveAuthLimiter);
 app.use('/api/auth/verify-email', sensitiveAuthLimiter);
 app.use('/api/auth/verify-rebind', sensitiveAuthLimiter);
@@ -168,7 +168,7 @@ httpServer.listen(PORT, HOST, () => {
 /**
  * Graceful shutdown: stop accepting new connections, close in-flight
  * resources (intervals, QR refresh loops, Socket.IO, HTTP server, PG pool),
- * then exit. Idempotent — subsequent signals during shutdown are ignored.
+ * then exit. Idempotent - subsequent signals during shutdown are ignored.
  *
  * On Render, SIGTERM is sent on deploy and on scale-down. Honoring it means
  * in-flight scans can complete (within the platform's grace window) rather
@@ -212,7 +212,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (err) => {
   console.error('[server] UNCAUGHT EXCEPTION', err);
-  // uncaughtException means state is unreliable — shutdown with failure code.
+  // uncaughtException means state is unreliable - shutdown with failure code.
   shutdown('uncaughtException', 1);
 });
 

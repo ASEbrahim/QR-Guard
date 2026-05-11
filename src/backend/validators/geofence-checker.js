@@ -9,8 +9,8 @@ import { GEOFENCE_INDOOR_MARGIN_M } from '../config/constants.js';
  * with the indoor margin (+15m).
  *
  * @param {string} courseId
- * @param {number} lat — student GPS latitude
- * @param {number} lng — student GPS longitude
+ * @param {number} lat - student GPS latitude
+ * @param {number} lng - student GPS longitude
  * @throws {ScanError} code='outside_geofence' if student is outside the geofence
  */
 export async function checkGeofence(courseId, lat, lng) {

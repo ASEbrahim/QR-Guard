@@ -1,12 +1,12 @@
-# QR-Guard — Chapter-by-Chapter Concept Mapping
+# QR-Guard - Chapter-by-Chapter Concept Mapping
 
-**Project:** QR-Guard — Location-Based QR Attendance System  
-**Course:** CSIS 330 — Software Engineering, Dr. Aaron Rababaah, AUK  
+**Project:** QR-Guard - Location-Based QR Attendance System  
+**Course:** CSIS 330 - Software Engineering, Dr. Aaron Rababaah, AUK  
 **Purpose:** Maps every relevant concept from Ch01–Ch09 + Ch23 to QR-Guard design decisions.
 
 ---
 
-## Ch01 — Introduction
+## Ch01 - Introduction
 
 ### Software Type
 **Customized product** (slide 15–16). The specification is owned by the client (AUK / Dr. Rababaah), not the dev team. Decisions on changes are made by the client. This is not a generic product sold to any customer.
@@ -22,10 +22,10 @@ Secondary classification: **Data collection system** (slide 23). Collects GPS co
 |-----------|--------------------------|
 | Maintainability | MVC architecture. SOLID principles. Modular increments allow isolated component updates. |
 | Dependability (Reliability + Security + Safety) | HTTPS, bcrypt (12 rounds), 6-layer anti-fraud (dynamic QR, GPS geofence, device binding via FingerprintJS, IP country check via ip-api.com, GPS accuracy validation, audit logging). No single point of failure for attendance data (local queue + server sync). |
-| Efficiency | QR verification < 3 sec. WebSocket push (no polling). Lightweight web interface — no native app overhead. |
+| Efficiency | QR verification < 3 sec. WebSocket push (no polling). Lightweight web interface - no native app overhead. |
 | Acceptability | ≤ 2 taps login-to-scan. Any mobile browser. Zero installation. Mobile-first responsive UI. |
 
-### Software Process Activities — SDIVE (slide 18)
+### Software Process Activities - SDIVE (slide 18)
 
 | Activity | QR-Guard |
 |----------|----------|
@@ -39,8 +39,8 @@ Secondary classification: **Data collection system** (slide 23). Collects GPS co
 
 | | QR-Guard |
 |---|----------|
-| Verification ("built it right") | Code inspections, unit tests, RTM completeness checks — does implementation match the FRS? |
-| Validation ("built the right thing") | QR scanning prototype demo (Inc 3), beta test with real course section, acceptance testing with Dr. Rababaah — does it solve AUK's attendance problem? |
+| Verification ("built it right") | Code inspections, unit tests, RTM completeness checks - does implementation match the FRS? |
+| Validation ("built the right thing") | QR scanning prototype demo (Inc 3), beta test with real course section, acceptance testing with Dr. Rababaah - does it solve AUK's attendance problem? |
 
 ### QA vs QC (slide 14)
 
@@ -53,46 +53,46 @@ Secondary classification: **Data collection system** (slide 23). Collects GPS co
 
 | Principle | Application |
 |-----------|-------------|
-| 1 — PUBLIC | GPS collected only during active scan, never continuous tracking. No biometric data stored. Student privacy respected. |
-| 2 — CLIENT & EMPLOYER | Enforces AUK's 15% absence policy as client requires. Attendance data accurate and tamper-evident. |
-| 3 — PRODUCT | Anti-fraud measures (dynamic QR, geofencing, device binding) ensure data integrity. |
-| 7 — COLLEAGUES | Known limitations documented honestly. No overclaiming capabilities. |
-| 8 — SELF | Team learning WebSocket, Geolocation API, browser fingerprinting — lifelong learning. |
+| 1 - PUBLIC | GPS collected only during active scan, never continuous tracking. No biometric data stored. Student privacy respected. |
+| 2 - CLIENT & EMPLOYER | Enforces AUK's 15% absence policy as client requires. Attendance data accurate and tamper-evident. |
+| 3 - PRODUCT | Anti-fraud measures (dynamic QR, geofencing, device binding) ensure data integrity. |
+| 7 - COLLEAGUES | Known limitations documented honestly. No overclaiming capabilities. |
+| 8 - SELF | Team learning WebSocket, Geolocation API, browser fingerprinting - lifelong learning. |
 
 ### Professional Responsibility (slides 26–27)
 
 | Issue | QR-Guard |
 |-------|----------|
 | Confidentiality | Attendance records accessible only to enrolled instructor and individual student. No cross-course data leakage. |
-| Competence | Team prototypes the QR/GPS pipeline in Inc 3 because that's the area with least experience — acknowledging competence boundaries. |
+| Competence | Team prototypes the QR/GPS pipeline in Inc 3 because that's the area with least experience - acknowledging competence boundaries. |
 | Intellectual property | Open-source libraries (qrcode.js, bcrypt, Express/Flask) used with appropriate licenses. |
 | Computer misuse | System prevents misuse of attendance data. Audit log ensures accountability. |
 
 ### Ethical Dilemmas (slide 33)
 GPS location tracking raises a privacy dilemma: the system needs location data to prevent fraud, but collecting location data on students is sensitive. Resolution: GPS is collected only at the moment of scanning (not continuous), coordinates are stored only as part of the attendance record, and the system does not track movement patterns.
 
-### Case Study Parallel — Mentcare (slides 40–45)
+### Case Study Parallel - Mentcare (slides 40–45)
 Both QR-Guard and Mentcare are information systems managing sensitive personal records with multiple user roles and centralized databases accessed from multiple locations. Mentcare has patient data privacy concerns; QR-Guard has student location data privacy concerns. Mentcare monitors for dangerous patients; QR-Guard monitors for at-risk attendance levels. Both require high availability during operating hours.
 
 ---
 
-## Ch02 — Software Processes
+## Ch02 - Software Processes
 
-### Process Model — Incremental (slides 9, 29–31)
+### Process Model - Incremental (slides 9, 29–31)
 
 Originally proposed Waterfall in PR1. Updated to **Incremental** for PR2.
 
 | Model | Why NOT for QR-Guard |
 |-------|----------------------|
 | Waterfall | Can't test QR/GPS pipeline until everything is built. If GPS doesn't work indoors, discovered too late. Slide 28: "difficulty of accommodating change after the process is underway." |
-| Iterative | Entire system at low fidelity each iteration. 6 people, 14 weeks — spreading across all features means nothing is demo-ready until late. |
+| Iterative | Entire system at low fidelity each iteration. 6 people, 14 weeks - spreading across all features means nothing is demo-ready until late. |
 | Pure Agile | Requires constant communication across all features. Fixed academic deadline + parallel team layers = too much coordination overhead. |
 | Integration & Config (COTS) | No existing system meets AUK's specific needs (dynamic QR + geofencing + device binding + AUK policy). Core is built from scratch; some components reused (qrcode.js, bcrypt, Geolocation API). |
 
 **Why Incremental:**
-- Slide 30: "easier to get customer feedback" — Dr. Rababaah reviews via progress reports.
-- Slide 30: "more rapid delivery of useful software" — working scan pipeline by week 10.
-- Slide 31 (problem: "process not visible") — mitigated by RTM and increment milestone table.
+- Slide 30: "easier to get customer feedback" - Dr. Rababaah reviews via progress reports.
+- Slide 30: "more rapid delivery of useful software" - working scan pipeline by week 10.
+- Slide 31 (problem: "process not visible") - mitigated by RTM and increment milestone table.
 
 ### 3D Slicing Model (slides 18–25)
 Incremental = **feature dimension**. Each increment delivers a subset of features at full fidelity. Not layer-by-layer (Waterfall), not all features at partial fidelity (Iterative).
@@ -103,7 +103,7 @@ Incremental = **feature dimension**. Each increment delivers a subset of feature
 |--------|-------------|-------|
 | Schedule | 5 increments, fixed weeks | Scope within each increment flexible |
 | Architecture | MVC + Client-Server upfront | Implementation details evolve |
-| Documentation | FRS, RTM, progress reports | Lightweight — no full SRS per increment |
+| Documentation | FRS, RTM, progress reports | Lightweight - no full SRS per increment |
 | Feedback | Progress report reviews | Prototype demos, beta testing |
 | Testing | Strategy in RTM | Tests written alongside code |
 
@@ -116,7 +116,7 @@ Incremental = **feature dimension**. Each increment delivers a subset of feature
 | 3 | Dynamic QR (WebSocket), camera scanning, GPS, full verification pipeline | 7–10 | End-to-end attendance |
 | 4 | Reports, % calculation, CSV export, real-time dashboard | 10–11 | Data viewable |
 | 5 | Email warnings, manual override, audit log, hardening | 11–12 | Feature-complete |
-| — | System testing, release testing, UAT, demo prep | 12–14 | Submission |
+| - | System testing, release testing, UAT, demo prep | 12–14 | Submission |
 
 ### POC → Prototype → MVP (slides 58–59)
 
@@ -164,27 +164,27 @@ Incremental = **feature dimension**. Each increment delivers a subset of feature
 | Prototyping | Browser dev tools + mobile live preview |
 
 ### CMM Level (slide 67)
-Team operates at **Level 2 — Repeatable**. Partially defined process (incremental plan, RTM, FRS) but application may be inconsistent across 6 members. Goal: approach **Level 3 — Defined** by semester end.
+Team operates at **Level 2 - Repeatable**. Partially defined process (incremental plan, RTM, FRS) but application may be inconsistent across 6 members. Goal: approach **Level 3 - Defined** by semester end.
 
 ### Throw-away Prototype (slide 57)
 The QR scanning POC from week 6–7 is a **throw-away prototype**. Focuses on functional validation (does the camera scan work? does GPS resolve indoors?) without non-functional concerns (security, reliability). Will be rebuilt properly in Inc 3 implementation.
 
 ---
 
-## Ch04 — Requirements Engineering
+## Ch04 - Requirements Engineering
 
 ### User vs System Requirements (slide 2)
 
 | Level | Example |
 |-------|---------|
-| User requirement | "Students scan a QR code to mark attendance" — natural language, for stakeholders. |
-| System requirement | "FR4.3: The system shall verify the student's GPS location falls within the defined geofence (radius + 15 m indoor margin) before recording attendance." — structured, technical, for developers. |
+| User requirement | "Students scan a QR code to mark attendance" - natural language, for stakeholders. |
+| System requirement | "FR4.3: The system shall verify the student's GPS location falls within the defined geofence (radius + 15 m indoor margin) before recording attendance." - structured, technical, for developers. |
 
 ### Feasibility Categories (slide 5)
 
 | Category | Assessment |
 |----------|------------|
-| Technical | HTML/CSS/JS, Python/Node.js, PostgreSQL within team experience. qrcode.js, Geolocation API, WebSocket — mature tech. |
+| Technical | HTML/CSS/JS, Python/Node.js, PostgreSQL within team experience. qrcode.js, Geolocation API, WebSocket - mature tech. |
 | Economic | $0. Neon (serverless PostgreSQL + PostGIS, scale-to-zero). Vercel + Railway free tiers. Resend free email. Browser-native GPS/camera. |
 | Schedule | 14 weeks, 5 increments + 2-week buffer. Critical path: Inc 3. |
 | Operational | Students carry smartphones. AUK has Wi-Fi. No hardware or IT department involvement. |
@@ -203,13 +203,13 @@ The QR scanning POC from week 6–7 is a **throw-away prototype**. Focuses on fu
 | NFR Category | QR-Guard Metric |
 |--------------|-----------------|
 | Time / Response | ≤ 3 sec scan-to-response |
-| Space | PostgreSQL DB — no special storage constraints for class-scale data |
+| Space | PostgreSQL DB - no special storage constraints for class-scale data |
 | Usability | ≤ 2 taps (student), ≤ 3 clicks (instructor) |
 | Reliability | ≥ 99% uptime during class hours |
 | Robustness | Auto-fallback to HTTP polling on WebSocket disconnect. ≤ 60 sec server recovery. |
 | Portability | Chrome, Safari, Firefox ≥ 320px. No native app. |
 
-### Structured Specification (slide 22 — FR template)
+### Structured Specification (slide 22 - FR template)
 Applied to FR4 (scan pipeline) in the FRS document with all fields: Function, Inputs, Source, Outputs, Destination, Action, Preconditions, Postconditions, Side Effects.
 
 ### Shall / Should / May (slide 19, ISO convention)
@@ -223,7 +223,7 @@ Applied to FR4 (scan pipeline) in the FRS document with all fields: Function, In
 ### Requirements Elicitation (slide 12)
 Iterative cycle: specify → discover → evaluate → refine. QR-Guard requirements were initially broad (PR1 proposal), then refined through feasibility analysis (GPS testing), research (anti-fraud literature), and course concept application.
 
-### RTM — Three Traceability Types (slide 26)
+### RTM - Three Traceability Types (slide 26)
 
 | Type | QR-Guard Application |
 |------|----------------------|
@@ -232,23 +232,23 @@ Iterative cycle: specify → discover → evaluate → refine. QR-Guard requirem
 | Design traceability | Each FR linked to UML artifacts and test cases in RTM. |
 
 ### Requirements Change Management (slide 13)
-If requirements change mid-semester: identify problem → analyze impact → check feasibility → implement change if passed → revise FRS and RTM. Incremental model limits blast radius — changes only affect the current or future increment.
+If requirements change mid-semester: identify problem → analyze impact → check feasibility → implement change if passed → revise FRS and RTM. Incremental model limits blast radius - changes only affect the current or future increment.
 
 ### Scenarios (slide 15)
 
 **Scenario: Student scans QR for attendance**
 - Starting situation: Instructor has started a QR session. Student is in the classroom with their phone.
 - Normal flow: Student opens web app → taps "Scan" → points camera at projected QR → system validates GPS + QR + device → green checkmark → attendance recorded.
-- What can go wrong: GPS denied (show permission message), outside geofence (show "Outside classroom area"), QR expired (show "QR expired — wait for refresh"), device mismatch (show "Device not recognized").
+- What can go wrong: GPS denied (show permission message), outside geofence (show "Outside classroom area"), QR expired (show "QR expired - wait for refresh"), device mismatch (show "Device not recognized").
 - Concurrent activities: Other students scanning simultaneously. Instructor sees live counter updating.
 - End state: Attendance recorded with timestamp and GPS. Student sees confirmation on dashboard.
 
-### WBS — Work Breakdown Structure (slide 33)
+### WBS - Work Breakdown Structure (slide 33)
 QR-Guard WBS follows the incremental plan: each increment is a top-level work package, decomposed into frontend/backend/DB/testing sub-tasks.
 
 ---
 
-## Ch04-UML — UML Diagrams
+## Ch04-UML - UML Diagrams
 
 ### Diagrams needed for QR-Guard (mapped to Ch05 slide 6):
 
@@ -258,16 +258,16 @@ QR-Guard WBS follows the incremental plan: each increment is a top-level work pa
 | Sequence | Key interactions: Login flow, QR lifecycle (generate → refresh → expire), Scan-Verify-Record pipeline, Email warning trigger, Manual override. |
 | Activity | Verification pipeline (FR4): decode → validate time → check GPS → check device → spoof check → record or reject. Also: enrollment flow, report generation. |
 | State Machine | QR Code states: Idle → Active → Refreshing → Expired → Stopped. Session states: Not Started → Active → Closed. |
-| Class | User (Student, Instructor inheritance), Course, Session, Attendance, AuditLog, QRToken. Relationships: composition (Course—Session), aggregation (Course—Student enrollment), association (Session—Attendance). |
+| Class | User (Student, Instructor inheritance), Course, Session, Attendance, AuditLog, QRToken. Relationships: composition (Course-Session), aggregation (Course-Student enrollment), association (Session-Attendance). |
 
 ### UML Relationships Applied (from UML slides 14–20):
 
 | Relationship | QR-Guard Example |
 |--------------|------------------|
-| Association | Student ↔ Course (enrollment — many-to-many) |
+| Association | Student ↔ Course (enrollment - many-to-many) |
 | Dependency | QRToken --→ Session (QR depends on session existence) |
-| Aggregation | Course ◇— Student (students can exist without the course) |
-| Composition | Course ◆— Session (sessions cannot exist without the course) |
+| Aggregation | Course ◇- Student (students can exist without the course) |
+| Composition | Course ◆- Session (sessions cannot exist without the course) |
 | Inheritance | User ← Student, User ← Instructor |
 | Interface | Diagnosable interface for health check endpoints |
 
@@ -279,7 +279,7 @@ QR-Guard WBS follows the incremental plan: each increment is a top-level work pa
 
 ---
 
-## Ch05 — System Modeling
+## Ch05 - System Modeling
 
 ### System Perspectives (slide 5)
 
@@ -290,7 +290,7 @@ QR-Guard WBS follows the incremental plan: each increment is a top-level work pa
 | Behavioral | Activity diagram (verification pipeline), State machine (QR code lifecycle, session lifecycle). |
 | Structural | Class diagram (User, Course, Session, Attendance, QRToken, AuditLog). |
 
-### Context Model — DFD Level 0 (slides 9–13)
+### Context Model - DFD Level 0 (slides 9–13)
 
 External entities and data flows:
 - **Student** → Scan data, GPS coords, registration info → **QR-Guard** → Attendance confirmation, warnings, dashboard data → **Student**
@@ -298,16 +298,16 @@ External entities and data flows:
 - **Email Server** ← Warning emails, verification emails, confirmations ← **QR-Guard**
 - **GPS Service** → Student coordinates → **QR-Guard**
 
-### DFD Level 1 — Internal Processes (slides 16–21)
+### DFD Level 1 - Internal Processes (slides 16–21)
 
 Decompose QR-Guard into internal processes:
-1. **Auth Controller** — handles registration, login, email verification, device binding
-2. **Course Manager** — course CRUD, enrollment, geofence config
-3. **QR Generator** — creates/refreshes dynamic QR codes, manages WebSocket push
-4. **Scan Verifier** — decodes QR, validates GPS/time/device/spoof, records attendance
-5. **Report Engine** — calculates percentages, generates per-session/per-student reports, CSV export
-6. **Notification Service** — threshold monitoring, email dispatch
-7. **Override Handler** — manual attendance changes with audit logging
+1. **Auth Controller** - handles registration, login, email verification, device binding
+2. **Course Manager** - course CRUD, enrollment, geofence config
+3. **QR Generator** - creates/refreshes dynamic QR codes, manages WebSocket push
+4. **Scan Verifier** - decodes QR, validates GPS/time/device/spoof, records attendance
+5. **Report Engine** - calculates percentages, generates per-session/per-student reports, CSV export
+6. **Notification Service** - threshold monitoring, email dispatch
+7. **Override Handler** - manual attendance changes with audit logging
 
 Data stores: **User DB**, **Course DB**, **Attendance DB**, **Audit Log**
 
@@ -318,36 +318,36 @@ Data stores: **User DB**, **Course DB**, **Attendance DB**, **Audit Log**
 - "Start Session" includes "Generate QR"
 - "Record Attendance" extends with "Send Warning Email" (conditional: if threshold crossed)
 
-**Sequence Diagrams:** One per major interaction. The scan pipeline sequence is the most complex — Student → Browser UI → Backend Controller → GPS Validator → Device Checker → Database → Email Service.
+**Sequence Diagrams:** One per major interaction. The scan pipeline sequence is the most complex - Student → Browser UI → Backend Controller → GPS Validator → Device Checker → Database → Email Service.
 
 ### Behavioral Models (slides 45–56)
 
-**Activity Diagram — Verification Pipeline:**
+**Activity Diagram - Verification Pipeline:**
 Start → Decode QR → [Valid?] → Retrieve GPS → [Within geofence?] → Check device → [Bound?] → Check spoof → [Clean?] → Record attendance → End
 Each decision diamond has an error path returning a specific rejection message.
 
-**State Machine — QR Code Lifecycle:**
+**State Machine - QR Code Lifecycle:**
 Idle → (instructor starts session) → Active → (25 sec timer) → Refreshing → (new token generated) → Active → ... → (instructor stops / window expires) → Expired → (session closed) → Idle
 
-**State Machine — Session Lifecycle:**
+**State Machine - Session Lifecycle:**
 Not Started → (instructor clicks "Start") → Active → (attendance window expires OR instructor stops) → Closed
 
 ### Data Flow vs Activity Model (slide 50)
 
 | Aspect | DFD | Activity |
 |--------|-----|----------|
-| Theme | Relational — data movement | Procedural — control flow |
+| Theme | Relational - data movement | Procedural - control flow |
 | Focus | Where data goes | What steps execute |
 | QR-Guard use | Context model, showing data between entities | Verification pipeline, showing decision logic |
 
 ### Model-Driven Engineering (slides 58–60)
-Not directly applicable — QR-Guard is hand-coded, not generated from models. But models serve as design documentation and communication tools with Dr. Rababaah.
+Not directly applicable - QR-Guard is hand-coded, not generated from models. But models serve as design documentation and communication tools with Dr. Rababaah.
 
 ---
 
-## Ch06 — Architectural Design
+## Ch06 - Architectural Design
 
-### Architecture Pattern — Client-Server + MVC (slides 16–19, 28–32)
+### Architecture Pattern - Client-Server + MVC (slides 16–19, 28–32)
 
 **Client-Server** (slide 28): Students and instructors are clients accessing services on a central web server. Server manages QR generation, GPS validation, attendance storage, email dispatch.
 
@@ -360,7 +360,7 @@ WebSocket for real-time QR refresh. REST API for everything else.
 
 Why NOT other patterns:
 - **Repository** (slide 25): Components do communicate directly (scan verifier calls GPS validator calls device checker). Not purely repository-mediated.
-- **Pipe-filter** (slide 33): The verification pipeline resembles pipe-filter, but it's embedded within the MVC controller — not the system-level architecture.
+- **Pipe-filter** (slide 33): The verification pipeline resembles pipe-filter, but it's embedded within the MVC controller - not the system-level architecture.
 - **Layered** (slide 18): MVC is a form of layered architecture. Could argue 3 layers: presentation (View), application logic (Controller), data (Model). But MVC is more precise for this system.
 
 ### Architecture and System Characteristics (slide 11)
@@ -370,42 +370,42 @@ Why NOT other patterns:
 | Performance | Large-grain Controller handles entire verification pipeline in one request. WebSocket avoids polling overhead. |
 | Security | Layered validation: 6 checks (QR freshness, GPS geofence, device fingerprint, IP country/VPN flag, GPS accuracy, audit log) as separate modules within the Controller. Critical data in Model layer only. |
 | Safety | Configurable thresholds prevent incorrect policy enforcement. Manual override as safety valve. |
-| Availability | Free-tier hosting has cold starts — accepted trade-off. WebSocket fallback to HTTP polling for reliability. |
+| Availability | Free-tier hosting has cold starts - accepted trade-off. WebSocket fallback to HTTP polling for reliability. |
 | Maintainability | MVC = fine-grain separation. Each increment modifies one layer primarily. |
 
 ### Architectural Conflicts (slide 12)
 **Performance vs Maintainability**: Large components improve performance (one request for full pipeline), small components improve maintainability (separate GPS validator, device checker, etc.). Resolution: pipeline is one Controller endpoint internally composed of modular functions. External granularity is coarse (one API call), internal granularity is fine (separate validation modules).
 
 ### Uniqueness of Architectural Models (slide 14)
-The architecture model decomposes QR-Guard into structural components (Auth, Course Manager, QR Generator, Scan Verifier, Report Engine, Notification Service, Override Handler) with component-to-component interfaces — distinct from use cases (interactions), classes (code structure), or activities (behavior).
+The architecture model decomposes QR-Guard into structural components (Auth, Course Manager, QR Generator, Scan Verifier, Report Engine, Notification Service, Override Handler) with component-to-component interfaces - distinct from use cases (interactions), classes (code structure), or activities (behavior).
 
 ---
 
-## Ch07 — Design & Implementation
+## Ch07 - Design & Implementation
 
 ### Design Models Recommended Order (slide 3)
 1. Requirements ✓ (FRS)
-2. Context model (DFD L0) — to produce
-3. Use case model — to produce
-4. Sequence model — to produce
-5. Data flow (DFD L1) — to produce
-6. Activity model — to produce
+2. Context model (DFD L0) - to produce
+3. Use case model - to produce
+4. Sequence model - to produce
+5. Data flow (DFD L1) - to produce
+6. Activity model - to produce
 7. Architecture model ✓ (Client-Server + MVC in FRS)
-8. Component design — to produce
-9. Class structure — to produce
+8. Component design - to produce
+9. Class structure - to produce
 
 ### Make, Buy, or Lease (slides 4–5)
 
 | Factor | Decision |
 |--------|----------|
-| Core system (scan pipeline, verification) | **Make** — no existing system meets AUK's specific needs |
-| QR generation | **Buy** (reuse) — qrcode.js library, open-source |
-| Password hashing | **Buy** — bcrypt library |
-| GPS | **Buy** — browser Geolocation API (free, built-in) |
-| Camera | **Buy** — browser MediaDevices API (free, built-in) |
-| Email | **Lease** — Resend free tier (100/day) or Gmail SMTP |
-| Hosting | **Lease** — Vercel + Railway free tiers |
-| Database | **Make** — PostgreSQL schema with PostGIS extension for native geofence queries |
+| Core system (scan pipeline, verification) | **Make** - no existing system meets AUK's specific needs |
+| QR generation | **Buy** (reuse) - qrcode.js library, open-source |
+| Password hashing | **Buy** - bcrypt library |
+| GPS | **Buy** - browser Geolocation API (free, built-in) |
+| Camera | **Buy** - browser MediaDevices API (free, built-in) |
+| Email | **Lease** - Resend free tier (100/day) or Gmail SMTP |
+| Hosting | **Lease** - Vercel + Railway free tiers |
+| Database | **Make** - PostgreSQL schema with PostGIS extension for native geofence queries |
 
 ### Object Class Identification (slides 12–13)
 
@@ -421,7 +421,7 @@ The architecture model decomposes QR-Guard into structural components (Auth, Cou
 - Locations: classroom (geofence)
 
 ### Interface Specification (slides 17–18)
-Object interfaces hide internal representation (slide 17): GPS validator exposes `isWithinGeofence(lat, lng, geofence)` — caller doesn't know if it uses haversine formula, ray-casting, or simple radius check. QR encoder exposes `generateToken(sessionId, timestamp, geofence)` — internal encoding could change from Base64 to JWT without affecting callers.
+Object interfaces hide internal representation (slide 17): GPS validator exposes `isWithinGeofence(lat, lng, geofence)` - caller doesn't know if it uses haversine formula, ray-casting, or simple radius check. QR encoder exposes `generateToken(sessionId, timestamp, geofence)` - internal encoding could change from Base64 to JWT without affecting callers.
 
 ### Reuse Levels (slide 21)
 
@@ -430,7 +430,7 @@ Object interfaces hide internal representation (slide 17): GPS validator exposes
 | Abstraction | MVC pattern, Client-Server pattern, anti-fraud research |
 | Object | bcrypt, qrcode.js, Geolocation API, WebSocket library |
 | Component | Express/Flask framework, Nodemailer/Resend email SDK |
-| System | No full system reuse — core is built from scratch |
+| System | No full system reuse - core is built from scratch |
 
 ### Configuration Management (slide 24)
 
@@ -451,7 +451,7 @@ Phase 0 = alpha (within team) for all increments. Phase 1 = beta for Inc 5 pilot
 - **Target** (deployment): Vercel (frontend), Railway/Render (backend), Neon (PostgreSQL + PostGIS, serverless), free-tier cloud
 
 ### Open Source Licensing (slides 31–33)
-All dependencies are permissively licensed (MIT, Apache 2.0, BSD). QR-Guard itself is academic — no public release planned. No GPL components that would force open-sourcing.
+All dependencies are permissively licensed (MIT, Apache 2.0, BSD). QR-Guard itself is academic - no public release planned. No GPL components that would force open-sourcing.
 
 ### SOLID Principles (slide 36)
 
@@ -460,7 +460,7 @@ All dependencies are permissively licensed (MIT, Apache 2.0, BSD). QR-Guard itse
 | Single Responsibility | GPS validator only validates GPS. QR generator only generates QR. Email service only sends email. |
 | Open/Closed | Verification pipeline: can add new checks (e.g., Wi-Fi SSID verification) without modifying existing GPS/device checks. |
 | Liskov Substitution | Student and Instructor both extend User. Any code expecting a User works with either subclass. |
-| Interface Segregation | Instructor dashboard API and Student scan API are separate interfaces — students don't need report endpoints, instructors don't need scan endpoints. |
+| Interface Segregation | Instructor dashboard API and Student scan API are separate interfaces - students don't need report endpoints, instructors don't need scan endpoints. |
 | Dependency Inversion | Verification pipeline depends on abstractions (ValidatorInterface) not concrete implementations. Can swap GPS validator for Wi-Fi validator without changing pipeline. |
 
 ### Design Smells (slides 34–35)
@@ -476,11 +476,11 @@ All dependencies are permissively licensed (MIT, Apache 2.0, BSD). QR-Guard itse
 | Singularity | Validation logic centralized in pipeline, not duplicated across endpoints. |
 
 ### Simulation vs Emulation (slide 30)
-GPS testing uses **simulation** — mock GPS coordinates injected during unit tests to simulate inside/outside/boundary scenarios. Not emulating real GPS hardware.
+GPS testing uses **simulation** - mock GPS coordinates injected during unit tests to simulate inside/outside/boundary scenarios. Not emulating real GPS hardware.
 
 ---
 
-## Ch08 — Testing
+## Ch08 - Testing
 
 ### Testing Objectives (slide 3)
 - Functional: show the scan pipeline does what it's supposed to do.
@@ -536,7 +536,7 @@ GPS testing uses **simulation** — mock GPS coordinates injected during unit te
 ### Interface Errors (slide 40)
 - **Misuse**: Frontend sends GPS as strings instead of floats.
 - **Misunderstanding**: Frontend assumes scan endpoint returns attendance ID, but it returns confirmation message.
-- **Timing**: WebSocket QR refresh arrives after student already scanned old QR — race condition.
+- **Timing**: WebSocket QR refresh arrives after student already scanned old QR - race condition.
 
 ### TDD Approach (slides 45–47)
 Not strictly TDD (no time for full TDD in 14 weeks), but TDD-influenced: tests written for each increment alongside code. Regression suite grows with each increment.
@@ -561,7 +561,7 @@ Benefits applied:
 | Acceptance | Dr. Rababaah evaluates against requirements in final demo. |
 
 ### Inspection Process (slides 19–21)
-Code reviews after each increment. Team members exchange roles — frontend dev reviews backend code, backend dev reviews frontend. Fresh eyes catch errors the author misses (slide 19: "errors can mask other errors" in testing, but not in inspection).
+Code reviews after each increment. Team members exchange roles - frontend dev reviews backend code, backend dev reviews frontend. Fresh eyes catch errors the author misses (slide 19: "errors can mask other errors" in testing, but not in inspection).
 
 ### Output vs Outcome (slide 57)
 
@@ -572,7 +572,7 @@ Code reviews after each increment. Team members exchange roles — frontend dev 
 
 ---
 
-## Ch09 — Software Evolution
+## Ch09 - Software Evolution
 
 ### Software Change Drivers (slide 3)
 QR-Guard will face change after deployment:
@@ -582,7 +582,7 @@ QR-Guard will face change after deployment:
 - Performance improvement: optimize for larger class sizes
 
 ### Evolution Cost (slide 4)
-Majority of software budget goes to evolution, not development. QR-Guard is designed for this: MVC, configurable thresholds, modular validators — changes are localized.
+Majority of software budget goes to evolution, not development. QR-Guard is designed for this: MVC, configurable thresholds, modular validators - changes are localized.
 
 ### Phases After Delivery (slide 9)
 
@@ -607,14 +607,14 @@ Not applicable during initial development. But if QR-Guard is used for several y
 ### Value-Quality Matrix (slide 29)
 QR-Guard should aim for **high quality + high business value** quadrant (continue maintaining). Design decisions (MVC, SOLID, audit logs, configurable thresholds) are investments in staying in that quadrant.
 
-### Lehman's Laws (slides 46–47) — relevant ones:
+### Lehman's Laws (slides 46–47) - relevant ones:
 
 | Law | QR-Guard Implication |
 |-----|----------------------|
-| 1 — Continuing Change | Must keep updating GPS validation as spoofing techniques evolve. Must adapt to new browser APIs. |
-| 2 — Increasing Complexity | Each new feature (admin panel, LMS integration) increases complexity unless refactored. MVC and modular design slow this. |
-| 5 — Conservation of Familiarity | If original team leaves (graduation), new maintainers need documentation. FRS + UML models serve this purpose. |
-| 7 — Declining Quality | Without maintenance investment, QR-Guard's quality will degrade. Technical debt from Inc 3 (if prototype code isn't properly refactored) compounds. |
+| 1 - Continuing Change | Must keep updating GPS validation as spoofing techniques evolve. Must adapt to new browser APIs. |
+| 2 - Increasing Complexity | Each new feature (admin panel, LMS integration) increases complexity unless refactored. MVC and modular design slow this. |
+| 5 - Conservation of Familiarity | If original team leaves (graduation), new maintainers need documentation. FRS + UML models serve this purpose. |
+| 7 - Declining Quality | Without maintenance investment, QR-Guard's quality will degrade. Technical debt from Inc 3 (if prototype code isn't properly refactored) compounds. |
 
 ### Technical Debt (slide 48)
 
@@ -629,11 +629,11 @@ QR-Guard should aim for **high quality + high business value** quadrant (continu
 Applied during Inc 5 hardening: fix duplicate validation logic, split complex scan pipeline if it's grown too large, extract common patterns from endpoint handlers, ensure consistent error handling.
 
 ### Bad Smells (slides 54–55)
-Watch for during development: duplicate GPS validation code in multiple endpoints (centralize), long verification pipeline method (split into sub-functions), data clumping (lat/lng/radius always passed together — create Geofence object).
+Watch for during development: duplicate GPS validation code in multiple endpoints (centralize), long verification pipeline method (split into sub-functions), data clumping (lat/lng/radius always passed together - create Geofence object).
 
 ---
 
-## Ch23 — Project Planning
+## Ch23 - Project Planning
 
 ### Project Plan Sections (slide 4)
 QR-Guard project plan includes: introduction (FRS §1), project organization (team roles in PR1), risk analysis (below), resource requirements ($0), work breakdown (increment plan), schedule (Gantt chart), monitoring (progress reports).
@@ -654,9 +654,9 @@ QR-Guard project plan includes: introduction (FRS §1), project organization (te
 | Free-tier hosting cold starts | High | Low | Acceptable for class scale. Upgrade path exists. |
 | Team member drops course | Low | High | Documentation + modular increments = anyone can pick up any module. |
 | Scope creep | Medium | Medium | FRS locked after PR2. Changes go through change management (Ch04). |
-| Browser API deprecation | Low | Medium | Standard APIs (Geolocation, MediaDevices) — stable for years. |
+| Browser API deprecation | Low | Medium | Standard APIs (Geolocation, MediaDevices) - stable for years. |
 
-### COCOMO Estimation — Application Composition Model (slides 26–28)
+### COCOMO Estimation - Application Composition Model (slides 26–28)
 
 **NAP (Number of Application Points):**
 
@@ -671,7 +671,7 @@ QR-Guard project plan includes: introduction (FRS §1), project organization (te
 **NAP = 8 + 3 + 7 + 6 + 7 = 31**
 
 - %REUSE = 30% (bcrypt, qrcode.js, Geolocation API, WebSocket library, email SDK)
-- PROD = 7 (Low — student team, first time with this stack combination)
+- PROD = 7 (Low - student team, first time with this stack combination)
 
 **PM = (31 × (1 - 0.30)) / 7 = 3.1 person-months**
 
@@ -695,7 +695,7 @@ With 6 team members over ~3.5 months (14 weeks): 6 × 3.5 = 21 person-months ava
 
 | Task | Effort | Duration | Dependencies |
 |------|--------|----------|--------------|
-| T1: FRS + RTM | 3 person-days | Week 1–2 | — |
+| T1: FRS + RTM | 3 person-days | Week 1–2 | - |
 | T2: UML models | 5 person-days | Week 2–3 | T1 |
 | T3: Auth implementation (Inc 1) | 8 person-days | Week 3–5 | T2 |
 | T4: Course management (Inc 2) | 6 person-days | Week 5–7 | T3 |

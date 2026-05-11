@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { checkIp } from './ip-validator.js';
 
-// Mock ip-api.com responses — never hit the real API in tests
+// Mock ip-api.com responses - never hit the real API in tests
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
