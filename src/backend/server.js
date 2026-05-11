@@ -108,8 +108,20 @@ app.get(/\.html$/, (req, res) => {
 });
 
 // --- Static frontend ---
+// Cache-Control policy: JS, CSS, and HTML get `no-cache` (forces the browser
+// to revalidate via ETag on every request). Without this, JS/CSS sat in
+// browser cache for the default 4-hour max-age and users hit stale code
+// after every deploy - including a real "enableSheetDrag is not defined"
+// reference error after May 11 2026 once features split helpers across
+// commits. Assets (images, fonts, SVGs) keep a long cache because they
+// are deterministic by URL.
 app.use(express.static(path.join(__dirname, '../frontend'), {
   extensions: ['html'],
+  setHeaders: (res, filePath) => {
+    if (/\.(?:js|css|html)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
 }));
 
 // --- Catch-all: unknown API routes return 404 ---
