@@ -124,10 +124,31 @@
     let currentCourse = null;
 
     async function loadCourse() {
-      const res = await apiGet(`/api/courses/${courseId}`);
+      // Course detail and per-session attendance counts are independent, so
+      // fetch them in parallel and tolerate the attendance request failing
+      // (it only feeds the count badge; the rest of the page is still useful
+      // without counts).
+      const [res, attRes] = await Promise.all([
+        apiGet(`/api/courses/${courseId}`),
+        apiGet(`/api/courses/${courseId}/attendance`),
+      ]);
       if (!res || !res.ok) { window.location.href = '/instructor/dashboard'; return; }
       const { course, sessions } = await res.json();
       currentCourse = course;
+
+      // Build a per-session count map from the per-session report. Closed
+      // sessions are the only ones with finalized counts; the rest stay
+      // unknown and the row falls back to the status label only.
+      const countsBySession = new Map();
+      if (attRes && attRes.ok) {
+        const attBody = await attRes.json();
+        for (const row of (attBody.sessions || [])) {
+          countsBySession.set(row.session.sessionId, {
+            present: row.presentCount,
+            total: row.totalEnrolled,
+          });
+        }
+      }
 
       document.getElementById('courseTitle').textContent = `${course.code} | ${course.name}`;
       document.getElementById('courseMeta').textContent = `Section ${course.section} · ${course.semester}`;
@@ -144,26 +165,51 @@
         const start = new Date(s.scheduledStart);
         const end = new Date(s.scheduledEnd);
         const statusLabel = { scheduled: 'Scheduled', active: 'Active', closed: 'Closed', cancelled: 'Cancelled' }[s.status] || s.status;
+
+        // Build the per-session count badge for closed sessions. Color reflects
+        // the percentage band so the eye can scan a column of pills and spot
+        // low-attendance days.
+        const counts = countsBySession.get(s.sessionId);
+        let countBadge = '';
+        if (counts && counts.total > 0 && s.status === 'closed') {
+          const pct = (counts.present / counts.total) * 100;
+          const band = pct >= 85 ? 'good' : pct >= 70 ? 'warn' : 'low';
+          countBadge = `<span class="attendance-badge band-${band}">${counts.present}/${counts.total} . ${pct.toFixed(0)}%</span>`;
+        }
+
         const actions = [];
         if (s.status === 'scheduled') {
-          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm">Start</a>`);
-          actions.push(`<button class="btn btn-danger btn-sm" onclick="cancelSession('${s.sessionId}')">Cancel</button>`);
+          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm" data-stop>Start</a>`);
+          actions.push(`<button class="btn btn-danger btn-sm" onclick="cancelSession('${s.sessionId}')" data-stop>Cancel</button>`);
         }
         if (s.status === 'active') {
-          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm">View QR</a>`);
+          actions.push(`<a href="/instructor/session?id=${s.sessionId}" class="btn btn-primary btn-sm" data-stop>View QR</a>`);
         }
-        return `<div class="session-row session-status-${s.status}">
+        // Only closed sessions have meaningful detail data to show
+        const isClickable = s.status === 'closed';
+        const wrapperTag = isClickable ? 'a' : 'div';
+        const wrapperAttrs = isClickable
+          ? `href="/instructor/session-detail?id=${s.sessionId}&courseId=${courseId}" class="session-row session-row-link session-status-${s.status}"`
+          : `class="session-row session-status-${s.status}"`;
+
+        return `<${wrapperTag} ${wrapperAttrs}>
           <div class="date-badge">
             <div class="date-badge-day">${start.getDate()}</div>
             <div class="date-badge-month">${MONTHS[start.getMonth()]}</div>
           </div>
           <div class="session-row-main">
             <div class="session-row-time">${start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} – ${end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
-            <div class="session-row-status">${statusLabel}</div>
+            <div class="session-row-status">${statusLabel}${countBadge}</div>
           </div>
           ${actions.length ? `<div class="session-row-actions">${actions.join('')}</div>` : ''}
-        </div>`;
+        </${wrapperTag}>`;
       }).join('');
+
+      // Prevent clicks on action buttons inside a clickable row from
+      // navigating to the detail page. data-stop is the opt-in marker.
+      for (const btn of sessList.querySelectorAll('[data-stop]')) {
+        btn.addEventListener('click', (e) => e.stopPropagation());
+      }
 
       // Students
       const studRes = await apiGet(`/api/courses/${courseId}/students`);

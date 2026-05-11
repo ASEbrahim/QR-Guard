@@ -1013,6 +1013,34 @@ body:not(.has-bottom-nav) .fab {
 .rejected-time { font-variant-numeric: tabular-nums; }
 .rejected-student { color: var(--text); font-weight: 500; }
 
+/* Clickable session rows (closed only). Anchor reset so the row stays
+   visually identical to the legacy <div> rows; the cursor + hover lift
+   are the only affordance changes. */
+.session-row-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+.session-row-link:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.attendance-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.attendance-badge.band-good { background: var(--success-light); color: var(--success); }
+.attendance-badge.band-warn { background: var(--warning-light); color: var(--warning); }
+.attendance-badge.band-low  { background: var(--danger-light);  color: var(--danger); }
+
 .section-heading {
   margin: 1.5rem 0 0.5rem;
   font-size: 0.75rem;
