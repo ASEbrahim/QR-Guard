@@ -73,8 +73,8 @@ Each file defines one Drizzle table. All tables use UUID primary keys via `gen_r
 | File | Endpoints | Auth |
 |---|---|---|
 | `auth-routes.js` | POST register, login, logout, verify-code, resend-verification, forgot-password, reset-password, request-rebind; GET verify-email, verify-rebind, me | Mixed: register/login/verify public, rest require auth |
-| `course-routes.js` | POST create, enroll (by code); GET list, detail, students; PUT update; DELETE remove student; POST/PATCH sessions | All require auth. Create/update/delete require instructor role |
-| `session-routes.js` | POST start, stop, override; GET qr (polling fallback) | Start/stop/override: instructor only. QR: any auth'd with enrollment check |
+| `course-routes.js` | POST create, enroll (by code); GET list, detail, students; PUT update; DELETE course (soft), DELETE remove student; POST/PATCH sessions (PATCH accepts status:cancelled OR notes) | All require auth. Create/update/delete require instructor role |
+| `session-routes.js` | POST start, stop, override; GET qr (polling fallback), detail | Start/stop/override/detail: instructor only. QR: any auth'd with enrollment check |
 | `scan-routes.js` | POST /api/scan | Student only |
 | `report-routes.js` | GET per-session, per-student, CSV, self-view, audit-log | Instructor for reports, student for self-view |
 
@@ -158,6 +158,7 @@ The 6-layer scan pipeline. Each file is one validator. Order is law (per sequenc
 | `instructor/dashboard.html` | Instructor | Course list with gold enrollment code badges, collapsible create form with Leaflet satellite map + location search + schedule day/time dropdowns, bottom nav, campus footer |
 | `instructor/course.html` | Instructor | Course detail: enrollment code, geofence/window/refresh config display, student roster table with remove, session list with Start/Cancel/View QR buttons, add ad-hoc session. Error-checked API calls |
 | `instructor/session.html` | Instructor | Live session: QR code frame (responsive clamp sizing), green "Live" badge, attendance counter, "End Session" button. Error state view. Closed state with final count + back button. Socket.IO for real-time QR refresh + HTTP polling fallback |
+| `instructor/session-detail.html` | Instructor | Historical session drill-in (reached by clicking a closed session row on `course.html`). Crimson hero + 4 stat tiles (Present/Absent/Excused/Enrolled). Roster with status pills + scan times + inline Override sheet. Bulk select + bulk override. Free-text notes textarea (sessions.notes via migration 0008). Collapsible rejected-scans section grouped by reason. Backed by single endpoint `GET /api/sessions/:id/detail`. |
 
 ---
 
