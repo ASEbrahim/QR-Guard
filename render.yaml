@@ -11,6 +11,8 @@ services:
         sync: false  # Set manually in Render dashboard (Neon connection string)
       - key: SESSION_SECRET
         generateValue: true
+      - key: QR_SIGNING_SECRET
+        generateValue: true  # HMAC-SHA256 key for QR token signing (Layer 1)
       - key: EMAIL_PROVIDER
         value: console
       - key: BASE_URL

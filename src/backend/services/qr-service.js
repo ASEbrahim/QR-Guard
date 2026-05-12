@@ -1,13 +1,21 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '../config/database.js';
 import { qrTokens } from '../db/schema/index.js';
+import { signPayload } from './qr-signing.js';
 
 /** @type {Map<string, NodeJS.Timeout>} Active refresh loops keyed by sessionId */
 const activeLoops = new Map();
 
 /**
  * Generates a new QR token for a session.
- * Payload = Base64({sessionId, courseId, ts, lat, lng, r})
+ * Token = `<base64-payload>.<base64-hmac>` where:
+ *   payload = JSON({sessionId, courseId, ts, lat, lng, r})
+ *   hmac    = HMAC-SHA256(base64-payload, QR_SIGNING_SECRET)
+ *
+ * The signature is Layer 1 of the scan pipeline's defence-in-depth. The
+ * existing DB-freshness lookup in qr-validator still runs after a valid
+ * signature, so a forged signature is rejected before the lookup, and a
+ * stale-but-validly-signed token is still rejected at the lookup.
  *
  * @param {string} sessionId
  * @param {object} course - the course row (for geofence + refresh interval)
@@ -28,7 +36,7 @@ export async function generateQrToken(sessionId, course) {
   const lng = parseFloat(match[1]);
   const lat = parseFloat(match[2]);
 
-  const payload = Buffer.from(
+  const base64Payload = Buffer.from(
     JSON.stringify({
       sessionId,
       courseId: course.courseId,
@@ -39,6 +47,7 @@ export async function generateQrToken(sessionId, course) {
     }),
   ).toString('base64');
 
+  const payload = signPayload(base64Payload);
   const expiresAt = new Date(Date.now() + course.qrRefreshIntervalSeconds * 1000);
 
   await db.insert(qrTokens).values({

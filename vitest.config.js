@@ -12,6 +12,8 @@ export default defineConfig({
       SESSION_SECRET: 'test-secret',
       EMAIL_PROVIDER: 'console',
       BASE_URL: 'http://localhost:3000',
+      // Fixed signing key keeps QR token signatures deterministic in tests.
+      QR_SIGNING_SECRET: 'test-qr-signing-secret',
     },
   },
 });
