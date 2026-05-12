@@ -485,9 +485,12 @@ button:active:not(.password-toggle), .btn:active {
   line-height: 1;
 }
 
-/* Add padding to body so content isn't hidden behind bottom nav */
+/* Reserve room at the bottom of every page for the fixed bottom-nav AND
+   any home-bar safe area (iPhone X+, Android 3-button gesture bar).
+   Without the env() addition, content collides with the nav on devices
+   that have a non-zero safe-area-inset-bottom. */
 body.has-bottom-nav {
-  padding-bottom: 70px;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1311,17 +1314,17 @@ body:not(.has-bottom-nav) .fab {
   font-weight: 600;
   color: var(--text);
   font-size: 0.95rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Let long names wrap rather than ellipsis-clip. overflow-wrap: anywhere
+     handles strings without spaces (rare for names, common for emails). */
+  overflow-wrap: anywhere;
 }
 
 .student-row-sub {
   font-size: 0.78rem;
   color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* "Univ ID . email@auk.edu.kw" - allow wrap so the email stays readable
+     instead of getting clipped on narrow viewports. */
+  overflow-wrap: anywhere;
   margin-top: 0.1rem;
 }
 
